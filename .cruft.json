@@ -1,0 +1,18 @@
+{
+  "template": "git@github.com:JoseJuan98/data-science-template.git",
+  "commit": "20898ed4f9391bfb5dbf0af562da89c997ab6f2d",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "project_name": "Enhancing Transformer's Attention with HDC Binding for Positional Encoding",
+      "repo_name": "transformer-attention-with-hdc-binding",
+      "author_name": "(I) josejuan98",
+      "description": "Enhancing Transformer's Attention with HDC Binding for Positional Encoding",
+      "open_source_license": "MIT",
+      "python_version": "3.12",
+      "_template": "git@github.com:JoseJuan98/data-science-template.git",
+      "_commit": "20898ed4f9391bfb5dbf0af562da89c997ab6f2d"
+    }
+  },
+  "directory": null
+}
