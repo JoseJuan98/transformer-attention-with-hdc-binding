@@ -20,15 +20,9 @@ class SelfAttention(torch.nn.Module):
         self.embed_dim = embed_dim
 
         # Linear transformations for queries, keys, and values.
-        self.query_projection = torch.nn.Linear(
-            in_features=embed_dim, out_features=embed_dim
-        )
-        self.key_projection = torch.nn.Linear(
-            in_features=embed_dim, out_features=embed_dim
-        )
-        self.value_projection = torch.nn.Linear(
-            in_features=embed_dim, out_features=embed_dim
-        )
+        self.query_projection = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
+        self.key_projection = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
+        self.value_projection = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
 
     def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
         """Performs the forward pass of the self-attention mechanism.

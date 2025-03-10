@@ -69,12 +69,7 @@ def test_self_attention(batch_size, seq_len, embed_dim, use_mask):
     mask = None
     if use_mask:
         # mask = torch.randint(0, 2, (batch_size, seq_len)).bool() # Random mask
-        mask = (
-            torch.tril(torch.ones(seq_len, seq_len))
-            .bool()
-            .unsqueeze(0)
-            .repeat(batch_size, 1, 1)
-        )  # Causal mask
+        mask = torch.tril(torch.ones(seq_len, seq_len)).bool().unsqueeze(0).repeat(batch_size, 1, 1)  # Causal mask
 
     # Calculate attention using the module.
     output_module = attention(x, mask)
@@ -179,9 +174,7 @@ def test_causal_mask_behavior():
         for i in range(seq_len):
             # The first position should only attend to itself
             if i == 0:
-                assert torch.allclose(
-                    output[b, i], x[b, i]
-                ), "Position 0 should only attend to itself"
+                assert torch.allclose(output[b, i], x[b, i]), "Position 0 should only attend to itself"
             # Other positions should have a weighted average of current and previous positions
             else:
                 # Check that the output at position i is a weighted average of positions 0 to i
@@ -225,12 +218,8 @@ def test_attention_with_padding_mask():
     ), "Masking attention should be different from zeroing out inputs"
 
     # But the valid positions should still receive some attention
-    assert torch.all(
-        torch.abs(output_masked[0, :3]) > 1e-6
-    ), "Valid positions should receive attention"
-    assert torch.all(
-        torch.abs(output_masked[1, :4]) > 1e-6
-    ), "Valid positions should receive attention"
+    assert torch.all(torch.abs(output_masked[0, :3]) > 1e-6), "Valid positions should receive attention"
+    assert torch.all(torch.abs(output_masked[1, :4]) > 1e-6), "Valid positions should receive attention"
 
 
 def test_gradient_flow():
@@ -254,16 +243,12 @@ def test_gradient_flow():
 
     # Check that gradients are computed for input
     assert x.grad is not None, "Input should have gradients"
-    assert not torch.allclose(
-        x.grad, torch.zeros_like(x.grad)
-    ), "Input gradients should not be zero"
+    assert not torch.allclose(x.grad, torch.zeros_like(x.grad)), "Input gradients should not be zero"
 
     # Check that gradients are computed for parameters
     for name, param in self_attn.named_parameters():
         assert param.grad is not None, f"{name} should have gradients"
-        assert not torch.allclose(
-            param.grad, torch.zeros_like(param.grad)
-        ), f"{name} gradients should not be zero"
+        assert not torch.allclose(param.grad, torch.zeros_like(param.grad)), f"{name} gradients should not be zero"
 
 
 def test_numerical_stability():
@@ -311,12 +296,7 @@ def test_attention_weights_sum_to_one():
     attention_weights_list = []
 
     def mock_matmul(a, b):
-        if (
-            a.dim() == 3
-            and b.dim() == 3
-            and a.shape[-1] == seq_len
-            and b.shape[1] == seq_len
-        ):
+        if a.dim() == 3 and b.dim() == 3 and a.shape[-1] == seq_len and b.shape[1] == seq_len:
             # This is the attention weights @ values multiplication
             attention_weights_list.append(a.detach().clone())
         return original_matmul(a, b)
@@ -358,6 +338,4 @@ def test_deterministic_output():
     output2 = self_attn(x)
 
     # Check that outputs are identical
-    assert torch.allclose(
-        output1, output2
-    ), "Output should be deterministic for the same input"
+    assert torch.allclose(output1, output2), "Output should be deterministic for the same input"

@@ -23,6 +23,6 @@ For the setup of the project follow the instructions in the [SETUP.md](docs/SETU
 │
 ├── dev-requirements.txt     # development dependencies
 ├── pyproject.toml           #  dependencies and configuration of the project
-├── README.md                
+├── README.md
 └── requirements.txt         # core dependencies of the library in pip format
 ```

@@ -17,7 +17,7 @@ install-dev: install-poetry
 
 ## Start the tensorboard server
 tensorboard:
-	tensorboard --logdir=$(ROOT_DIR)/artifacts/logs/board/ --port=6006 --load_fast=false
+	@tensorboard --logdir=$(ROOT_DIR)/artifacts/logs/board/ --port=6006 --load_fast=false
 
 ## Kill tensorboard server
 kill-tensorboard:
@@ -27,9 +27,13 @@ kill-tensorboard:
 clean-files:
 	find . | grep -E "build$|\/__pycache__$|\.pyc$|\.pyo$|\.egg-info$|\.ipynb_checkpoints" | xargs rm -rf || echo "Already clean"
 
+## Lint
+lint:
+	@poetry run pre-commit run --all-files --color always || echo "Linting failed"
+
 ## Test the code
 test:
-	poetry run pytest
+	@poetry run pytest
 
 DEFAULT_GOAL := help
 .PHONY: help
