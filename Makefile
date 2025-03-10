@@ -29,7 +29,7 @@ clean-files:
 
 ## Lint
 lint:
-	@poetry run pre-commit run --all-files --color always || echo "Linting failed"
+	@poetry run pre-commit run --all-files --color always
 
 ## Test the code
 test:

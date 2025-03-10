@@ -18,8 +18,6 @@ dependencies = [
     "seaborn (>=0.13.2)"
 ]
 
-[tool.poetry]
-
 [tool.poetry.group.dev.dependencies]
 black = ">=25.1.0"
 flake8 = ">=7.1.2"
@@ -59,7 +57,10 @@ import_heading_thirdparty = "Third party imports"
 import_heading_firstparty = "First party imports"
 import_heading_localfolder = "Local imports"
 
-
 [tool.pydocstyle]
 inherit = false
 ignore = ["D104","D107","D202","D203","D213","D214","D400","D401","D404","D406","D407","D411","D413","D141","D415","D417"]
+
+[tool.deptry.per_rule_ignores]
+DEP002 = ["torch", "torchmetrics", "lightning", "tensorboard", "matplotlib", "seaborn", "numpy"]
+DEP004 = ["pytest"]
