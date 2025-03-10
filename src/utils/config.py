@@ -3,6 +3,7 @@
 
 This module contains the configuration class for the project.
 """
+# Standard imports
 import pathlib
 
 

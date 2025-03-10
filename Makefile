@@ -27,6 +27,10 @@ kill-tensorboard:
 clean-files:
 	find . | grep -E "build$|\/__pycache__$|\.pyc$|\.pyo$|\.egg-info$|\.ipynb_checkpoints" | xargs rm -rf || echo "Already clean"
 
+## Test the code
+test:
+	poetry run pytest
+
 DEFAULT_GOAL := help
 .PHONY: help
 help:

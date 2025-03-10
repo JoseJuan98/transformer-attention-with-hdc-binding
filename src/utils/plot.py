@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """Utility functions."""
 
+# Third party imports
 from matplotlib import pyplot
 
+# First party imports
 from utils.config import Config
 
 

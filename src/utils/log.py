@@ -4,14 +4,18 @@
 This module contains the logger utilities to be used in the project.
 """
 
+# Standard imports
 import logging
 import pathlib
 
+# First party imports
 from utils.config import Config
 
 
 def get_logger(
-    name: str = "main", level: int = logging.INFO, log_filename: str | pathlib.Path = None
+    name: str = "main",
+    level: int = logging.INFO,
+    log_filename: str | pathlib.Path | None = None,
 ) -> logging.Logger:
     """Get the main logger.
 
@@ -43,7 +47,7 @@ def get_logger(
     return logger
 
 
-def msg_task(msg: str, logger: logging.Logger = None) -> None:
+def msg_task(msg: str, logger: logging.Logger | None = None) -> None:
     """Print the title message for a task.
 
     Args:
