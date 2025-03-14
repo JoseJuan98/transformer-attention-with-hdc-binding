@@ -5,18 +5,20 @@ import torch
 
 
 class SelfAttention(torch.nn.Module):
-    """Self-attention implementation using the scaled dot-product attention and supports optional masking.
+    r"""Self-attention implementation using the scaled dot-product attention and supports optional masking.
 
     It does *not* include multi-head attention, positional encoding, or any optimizations.
 
     Notes:
-        $Attention(Q, K, V) = softmax(Q @ K^T / sqrt(d_k)) @ V$
-        where Q, K, and V are the queries, keys, and values, respectively. d_k is the dimension of the keys.
+        .. math::
+            $Attention(Q, K, V) = softmax(Q K^T / \sqrt{d_k}) V$
+        where :math:`Q`, :math:`K`, and :math:`V` are the queries, keys, and values, respectively. :math:`d_k` is
+        the dimension of the keys.
 
         If a mask is provided, it will be applied to the attention scores before the softmax operation.
 
         The embedding dimension "embed_dim" is used interchangeably with the dimension of the queries, keys, and values
-        $d_K$.
+        :math:`d_K`.
 
         The input tensor `token_encodings` should have shape (batch_size, seq_len, embed_dim).
 
@@ -39,6 +41,7 @@ class SelfAttention(torch.nn.Module):
         """
         super(SelfAttention, self).__init__()
         self.d_k = embed_dim
+        self.sqrt_d_k = self.d_k**0.5
 
         # Linear transformations for queries, keys, and values.
         self.query_projection = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
@@ -68,12 +71,13 @@ class SelfAttention(torch.nn.Module):
 
         # Calculate attention scores, $Z$ (scaled dot-product):
         # Z = Q @ K^T
-        # (batch_size, seq_len, embed_dim) @ (batch_size, embed_dim, seq_len) -> (batch_size, seq_len, seq_len)
+        # (batch_size, seq_len, embed_dim) @ (batch_size, embed_dim, seq_len)^T -> (batch_size, seq_len, seq_len)
+        # `keys.transpose(-2, -1)` swaps the seq_len and embed_dim dimensions of the keys tensor.
         attention_scores = torch.matmul(queries, keys.transpose(dim0=-2, dim1=-1))
 
         # Scale by the square root of the embedding dimension.
         # Z = Z / sqrt(embed_dim)
-        attention_scores = attention_scores / self.d_k**0.5
+        attention_scores = attention_scores / self.sqrt_d_k
 
         # Apply mask (if provided). Mask should be of shape (batch_size, seq_len), (batch_size, 1, seq_len)
         # or (batch_size, seq_len, seq_len).
@@ -89,7 +93,9 @@ class SelfAttention(torch.nn.Module):
             if mask.dim() == 2:
                 mask = mask.unsqueeze(1)
 
-            attention_scores = attention_scores.masked_fill(mask=torch.Tensor(mask == 0), value=-1e9)
+            attention_scores = attention_scores.masked_fill_(
+                mask=mask.logical_not(), value=float("-inf")
+            )  # or value=-1e9
 
         # Apply softmax to get attention scores.
         # Z = softmax(Z)
