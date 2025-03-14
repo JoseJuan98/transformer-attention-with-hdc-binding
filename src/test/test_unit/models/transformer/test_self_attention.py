@@ -101,9 +101,9 @@ def test_mask_shapes():
     mask3d_1 = torch.randint(0, 2, (batch_size, 1, seq_len)).bool()
     mask3d_full = torch.randint(0, 2, (batch_size, seq_len, seq_len)).bool()
 
-    attention(x=x, mask=mask2d)  # Should work
-    attention(x=x, mask=mask3d_1)  # Should work
-    attention(x=x, mask=mask3d_full)  # Should work
+    attention(token_encodings=x, mask=mask2d)  # Should work
+    attention(token_encodings=x, mask=mask3d_1)  # Should work
+    attention(token_encodings=x, mask=mask3d_full)  # Should work
 
     # Test invalid mask shape
     invalid_mask = torch.randint(0, 2, (batch_size, seq_len, seq_len, 2)).bool()

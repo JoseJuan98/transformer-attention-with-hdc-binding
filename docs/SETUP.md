@@ -126,7 +126,8 @@ To ensure consistent docstring formatting (Google style) in PyCharm:
 
 ## Pre-commit Hooks (Optional, but Recommended)
 
-If you installed the development dependencies, the pre-commit hooks should be installed.
+If you installed the development dependencies, the pre-commit hooks should be installed. It's recommended to run these hooks before committing changes to ensure code quality.
+
 To check that they are installed correctly, run:
 
 ```bash
