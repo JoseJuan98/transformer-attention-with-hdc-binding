@@ -10,22 +10,22 @@ import torch
 from models.transformer.self_attention import SelfAttention
 
 
-def calculate_attention_manually(x, query_proj, key_proj, value_proj, mask=None):
+def calculate_attention_manually(q, k, v, query_proj, key_proj, value_proj, mask=None):
     """
     Calculates self-attention manually, step-by-step, without using PyTorch's
     matrix multiplication functions (except for the final weighted sum).  This
     is for verification purposes.
     """
-    batch_size, seq_len, embed_dim = x.shape
-    output = torch.zeros_like(x)
+    batch_size, seq_len, embed_dim = q.shape
+    output = torch.zeros_like(q)
 
     for b in range(batch_size):
         for i in range(seq_len):
-            query = torch.matmul(x[b, i], query_proj.weight.T) + query_proj.bias
+            query = torch.matmul(q[b, i], query_proj.weight.T) + query_proj.bias
             attention_weights = []
 
             for j in range(seq_len):
-                key = torch.matmul(x[b, j], key_proj.weight.T) + key_proj.bias
+                key = torch.matmul(k[b, j], key_proj.weight.T) + key_proj.bias
                 score = torch.dot(query, key) / embed_dim**0.5
 
                 if mask is not None:
@@ -41,7 +41,7 @@ def calculate_attention_manually(x, query_proj, key_proj, value_proj, mask=None)
 
             weighted_value_sum = torch.zeros(embed_dim)
             for j in range(seq_len):
-                value = torch.matmul(x[b, j], value_proj.weight.T) + value_proj.bias
+                value = torch.matmul(v[b, j], value_proj.weight.T) + value_proj.bias
                 weighted_value_sum += attention_weights[j] * value
 
             output[b, i] = weighted_value_sum
@@ -72,15 +72,17 @@ def test_self_attention(batch_size, seq_len, embed_dim, use_mask):
         mask = torch.tril(torch.ones(seq_len, seq_len)).bool().unsqueeze(0).repeat(batch_size, 1, 1)  # Causal mask
 
     # Calculate attention using the module.
-    output_module = attention(x, mask)
+    output_module = attention(q=x, k=x, v=x, mask=mask)
 
     # Calculate attention manually.
     output_manual = calculate_attention_manually(
-        x,
-        attention.query_projection,
-        attention.key_projection,
-        attention.value_projection,
-        mask,
+        q=x,
+        k=x,
+        v=x,
+        query_proj=attention.W_q,
+        key_proj=attention.W_k,
+        value_proj=attention.W_v,
+        mask=mask,
     )
 
     # Check if the outputs are close.
@@ -101,20 +103,20 @@ def test_mask_shapes():
     mask3d_1 = torch.randint(0, 2, (batch_size, 1, seq_len)).bool()
     mask3d_full = torch.randint(0, 2, (batch_size, seq_len, seq_len)).bool()
 
-    attention(token_encodings=x, mask=mask2d)  # Should work
-    attention(token_encodings=x, mask=mask3d_1)  # Should work
-    attention(token_encodings=x, mask=mask3d_full)  # Should work
+    attention(q=x, k=x, v=x, mask=mask2d)  # Should work
+    attention(q=x, k=x, v=x, mask=mask3d_1)  # Should work
+    attention(q=x, k=x, v=x, mask=mask3d_full)  # Should work
 
     # Test invalid mask shape
     invalid_mask = torch.randint(0, 2, (batch_size, seq_len, seq_len, 2)).bool()
     with pytest.raises(ValueError):
-        attention(x, invalid_mask)
+        attention(q=x, k=x, v=x, mask=invalid_mask)
 
 
 def test_single_element_seq():
     attention = SelfAttention(embed_dim=4)
     x = torch.randn(1, 1, 4)
-    out = attention(x)
+    out = attention(q=x, k=x, v=x)
     assert out.shape == (1, 1, 4)
 
 
@@ -130,7 +132,7 @@ def test_self_attention_output_shape():
                 self_attn = SelfAttention(embed_dim)
 
                 # Forward pass
-                output = self_attn(x)
+                output = self_attn(q=x, k=x, v=x)
 
                 # Check output shape
                 assert output.shape == (
@@ -159,15 +161,15 @@ def test_causal_mask_behavior():
     self_attn = SelfAttention(embed_dim)
     with torch.no_grad():
         # Set weights to identity matrices for easier verification
-        self_attn.query_projection.weight.copy_(torch.eye(embed_dim))
-        self_attn.query_projection.bias.zero_()
-        self_attn.key_projection.weight.copy_(torch.eye(embed_dim))
-        self_attn.key_projection.bias.zero_()
-        self_attn.value_projection.weight.copy_(torch.eye(embed_dim))
-        self_attn.value_projection.bias.zero_()
+        self_attn.W_q.weight.copy_(torch.eye(embed_dim))
+        self_attn.W_q.bias.zero_()
+        self_attn.W_k.weight.copy_(torch.eye(embed_dim))
+        self_attn.W_k.bias.zero_()
+        self_attn.W_v.weight.copy_(torch.eye(embed_dim))
+        self_attn.W_v.bias.zero_()
 
     # Forward pass
-    output = self_attn(x, mask)
+    output = self_attn(q=x, k=x, v=x, mask=mask)
 
     # For each position, verify it only attends to itself and previous positions
     for b in range(batch_size):
@@ -204,13 +206,13 @@ def test_attention_with_padding_mask():
     self_attn = SelfAttention(embed_dim)
 
     # Forward pass with padding mask
-    output_masked = self_attn(x, padding_mask)
+    output_masked = self_attn(q=x, k=x, v=x, mask=padding_mask)
 
     # Forward pass without mask but with padded positions zeroed out
     x_padded = x.clone()
     x_padded[0, 3:] = 0
     x_padded[1, 4:] = 0
-    output_zeroed = self_attn(x_padded)
+    output_zeroed = self_attn(q=x_padded, k=x_padded, v=x_padded)
 
     # The outputs should be different because zeroing out inputs is not the same as masking attention
     assert not torch.allclose(
@@ -235,7 +237,7 @@ def test_gradient_flow():
     self_attn = SelfAttention(embed_dim)
 
     # Forward pass
-    output = self_attn(x)
+    output = self_attn(q=x, k=x, v=x)
 
     # Compute loss and backward
     loss = output.sum()
@@ -262,19 +264,19 @@ def test_numerical_stability():
 
     # Test with very large values
     x_large = torch.ones(batch_size, seq_len, embed_dim) * 1e6
-    output_large = self_attn(x_large)
+    output_large = self_attn(q=x_large, k=x_large, v=x_large)
     assert not torch.isnan(output_large).any(), "Output contains NaN with large inputs"
     assert not torch.isinf(output_large).any(), "Output contains Inf with large inputs"
 
     # Test with very small values
     x_small = torch.ones(batch_size, seq_len, embed_dim) * 1e-6
-    output_small = self_attn(x_small)
+    output_small = self_attn(q=x_small, k=x_small, v=x_small)
     assert not torch.isnan(output_small).any(), "Output contains NaN with small inputs"
     assert not torch.isinf(output_small).any(), "Output contains Inf with small inputs"
 
     # Test with mixed values
     x_mixed = torch.randn(batch_size, seq_len, embed_dim) * 1e3
-    output_mixed = self_attn(x_mixed)
+    output_mixed = self_attn(q=x_mixed, k=x_mixed, v=x_mixed)
     assert not torch.isnan(output_mixed).any(), "Output contains NaN with mixed inputs"
     assert not torch.isinf(output_mixed).any(), "Output contains Inf with mixed inputs"
 
@@ -305,7 +307,7 @@ def test_attention_weights_sum_to_one():
     torch.matmul = mock_matmul
 
     # Forward pass
-    self_attn(x)
+    self_attn(q=x, k=x, v=x)
 
     # Restore torch.matmul
     torch.matmul = original_matmul
@@ -334,8 +336,8 @@ def test_deterministic_output():
     self_attn = SelfAttention(embed_dim)
 
     # Forward pass twice
-    output1 = self_attn(x)
-    output2 = self_attn(x)
+    output1 = self_attn(q=x, k=x, v=x)
+    output2 = self_attn(q=x, k=x, v=x)
 
     # Check that outputs are identical
     assert torch.allclose(output1, output2), "Output should be deterministic for the same input"

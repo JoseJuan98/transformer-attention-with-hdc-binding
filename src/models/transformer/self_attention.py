@@ -28,9 +28,9 @@ class SelfAttention(torch.nn.Module):
 
     Attributes:
         d_k (int): The dimension of the keys.
-        query_projection (torch.nn.Linear): Linear transformation for queries.
-        key_projection (torch.nn.Linear): Linear transformation for keys.
-        value_projection (torch.nn.Linear): Linear transformation for values.
+        W_q (torch.nn.Linear): Linear transformation for queries.
+        W_k (torch.nn.Linear): Linear transformation for keys.
+        W_v (torch.nn.Linear): Linear transformation for values.
     """
 
     def __init__(self, embed_dim: int):
@@ -44,15 +44,19 @@ class SelfAttention(torch.nn.Module):
         self.sqrt_d_k = self.d_k**0.5
 
         # Linear transformations for queries, keys, and values.
-        self.query_projection = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
-        self.key_projection = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
-        self.value_projection = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
+        self.W_q = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
+        self.W_k = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
+        self.W_v = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
 
-    def forward(self, token_encodings: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
+    def forward(
+        self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, mask: torch.Tensor | None = None
+    ) -> torch.Tensor:
         """Performs the forward pass of the self-attention mechanism.
 
         Args:
-            token_encodings (torch.Tensor): The token encodings tensor of shape (batch_size, seq_len, embed_dim).
+            q (torch.Tensor): The queries tensor of shape (batch_size, seq_len, embed_dim).
+            k (torch.Tensor): The keys tensor of shape (batch_size, seq_len, embed_dim).
+            v (torch.Tensor): The values tensor of shape (batch_size, seq_len, embed_dim).
             mask (torch.Tensor, optional): An optional mask tensor (boolean) of shape (batch_size, seq_len) or
                 (batch_size, 1, seq_len) or (batch_size, seq_len, seq_len).
                 If provided, masked positions will have attention scores set to -inf (or a very large negative number).
@@ -65,9 +69,9 @@ class SelfAttention(torch.nn.Module):
 
         # Project input to queries $Q$, keys $K$, and values $V$.
         # (batch_size, seq_len, embed_dim)
-        queries = self.query_projection(token_encodings)
-        keys: torch.Tensor = self.key_projection(token_encodings)
-        values = self.value_projection(token_encodings)
+        queries = self.W_q(q)
+        keys: torch.Tensor = self.W_k(k)
+        values = self.W_v(v)
 
         # Calculate attention scores, $Z$ (scaled dot-product):
         # Z = Q @ K^T
