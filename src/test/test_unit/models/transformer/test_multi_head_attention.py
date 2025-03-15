@@ -72,8 +72,10 @@ def test_multihead_attention_forward_dtype(multihead_attention, dtype):
         pytest.skip("Half precision tests require a CUDA-enabled GPU.")
     batch_size, seq_len, embed_dim = 2, 10, multihead_attention.embed_dim
     token_encodings = torch.randn(batch_size, seq_len, embed_dim, dtype=dtype)
-    if dtype == torch.float16:
-        multihead_attention.to(dtype=dtype)  # Convert model to float16
+
+    # Convert the model to the specified dtype
+    multihead_attention.to(dtype=dtype)  # This line is crucial for float64
+
     output = multihead_attention(token_encodings)
     assert output.shape == (batch_size, seq_len, embed_dim)
     assert output.dtype == dtype
