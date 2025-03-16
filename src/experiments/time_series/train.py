@@ -6,53 +6,39 @@ import lightning
 import torch
 from lightning.pytorch.callbacks import ModelSummary
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
-from torch.utils.data import DataLoader, TensorDataset
-from tsai.data.core import TSDatasets
-from tsai.data.external import get_UCR_data
-from tsai.data.preprocessing import TSStandardize
+from torch.utils.data import DataLoader
 
 # First party imports
 from experiments import ExperimentConfig
+from experiments.time_series.dataset import get_ucr_datasets
 from models import EncoderOnlyTransformerTSClassifier, SinusoidalPositionalEncoding
 from utils import Config, get_logger, msg_task, plot_csv_logger_metrics
 
 
 def train():
     """Trains the model."""
-    # Load data
+
     task = "time_series_classification"
     dataset_name = "ArticularyWordRecognition"
     model_name = "transformer_encoder_only"
-    X, y, X_test, y_test = get_UCR_data(dataset_name, split_data=True, return_type="tsai")
 
-    # Create directories for the experiment
-    Config.create_dirs()
-
-    # Preprocess data
-    X, y = TSDatasets(X, y)
-    X_test, y_test = TSDatasets(X_test, y_test)
-
-    # Standardize data
-    X = TSStandardize().fit_transform(X)
-    X_test = TSStandardize().fit_transform(X_test)
-
-    # Convert data to PyTorch tensors
-    X_train_tensor = torch.from_numpy(X).float()
-    y_train_tensor = torch.from_numpy(y).long()
-    X_test_tensor = torch.from_numpy(X_test).float()
-    y_test_tensor = torch.from_numpy(y_test).long()
-
-    # Create TensorDatasets and DataLoaders
-    train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
-    test_dataset = TensorDataset(X_test_tensor, y_test_tensor)
+    logger = get_logger(
+        name="main", log_filename=f"{task}/{dataset_name.lower().replace(' ', '_')}/{model_name.lower()}.log"
+    )
 
     if not torch.cuda.is_available():
         raise Exception("CUDA not available. No GPU found.")
 
+    msg_task(msg="Loading data", logger=logger)
+    train_dataset, test_dataset, max_len, num_classes = get_ucr_datasets(
+        dsid=dataset_name, extract_path=Config.data_dir / task, logger=logger
+    )
+
     # Configuration
     experiment_cfg = ExperimentConfig(
-        input_size=1000,  # Not used, placeholder
-        max_len=X_train_tensor.shape[1],  # Sequence length
+        num_epochs=100,
+        input_size=1000,
+        max_len=max_len,
         d_model=128,
         num_heads=8,
         d_ff=256,
@@ -60,19 +46,18 @@ def train():
         dropout=0.1,
         batch_size=32,
         learning_rate=1e-3,
-        num_epochs=100,  # Reduced for demonstration
         device="cuda",
         model_path=f"{task}/{dataset_name.lower().replace(' ', '_')}/{model_name.lower()}.pth",
         description=f"{model_name.replace('_', ' ').title()} for {task.replace('_', ' ').title()} for {dataset_name.replace('_', ' ').title()} dataset",
-        num_classes=len(set(y)),
+        num_classes=num_classes,
         dataset=dataset_name,
         experiment_name=model_name.replace("_", " ").title(),
         precision="16-mixed",
     )
 
     # Create data loaders
-    train_dataloader = DataLoader(train_dataset, batch_size=experiment_cfg.batch_size, shuffle=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=experiment_cfg.batch_size, shuffle=False)
+    train_dataloader = DataLoader(dataset=train_dataset, batch_size=experiment_cfg.batch_size, shuffle=True)
+    test_dataloader = DataLoader(dataset=test_dataset, batch_size=experiment_cfg.batch_size, shuffle=False)
 
     # Create the model
     model = EncoderOnlyTransformerTSClassifier(
@@ -80,7 +65,7 @@ def train():
         d_model=experiment_cfg.d_model,
         num_heads=experiment_cfg.num_heads,
         d_ff=experiment_cfg.d_ff,
-        input_size=X_train_tensor.shape[2],  # Input size (number of features)
+        input_size=experiment_cfg.input_size,
         max_len=experiment_cfg.max_len,
         positional_encoding=SinusoidalPositionalEncoding(
             d_model=experiment_cfg.d_model, max_len=experiment_cfg.max_len
@@ -90,8 +75,6 @@ def train():
         learning_rate=experiment_cfg.learning_rate,
     )
 
-    # Create a logger
-    logger = get_logger()
     msg_task("Starting training", logger=logger)
 
     # Create a trainer
@@ -104,6 +87,7 @@ def train():
         logger=[
             CSVLogger(save_dir=Config.log_dir / task / dataset_name, name=f"metrics_{model_name}"),
             TensorBoardLogger(save_dir=Config.log_dir / task / dataset_name, name=f"board_{model_name}_logs"),
+            logger,
         ],
         log_every_n_steps=1,
         callbacks=[ModelSummary(max_depth=-1)],

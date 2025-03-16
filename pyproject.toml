@@ -7,7 +7,7 @@ authors = [
 ]
 license = "LICENSE"
 readme = "README.md"
-requires-python = ">=3.11,<4.0"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "numpy (>=2.1.3)",
     "torch (>=2.6.0)",
@@ -17,7 +17,8 @@ dependencies = [
     "matplotlib (>=3.10.1)",
     "seaborn (>=0.13.2)",
     "pandas[computation,performance] (>=2.2.3)",
-    "tsai (>=0.2.17)"
+    "scikit-learn (>=1.6.1)",
+    "sktime (>=0.36.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]

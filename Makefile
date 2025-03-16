@@ -35,6 +35,10 @@ lint:
 test:
 	@poetry run pytest
 
+## Run experiment
+run-ts:
+	@poetry run python src/experiments/time_series/train.py
+
 DEFAULT_GOAL := help
 .PHONY: help
 help:
