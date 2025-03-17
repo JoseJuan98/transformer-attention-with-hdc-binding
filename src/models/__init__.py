@@ -2,5 +2,5 @@
 """Import shortcuts for models."""
 
 # Local imports
-from .transformer.positional_encoding import SinusoidalPositionalEncoding
+from .positional_encoding.sinusoidal_positional_encoding import SinusoidalPositionalEncoding
 from .transformer.transformer import EncoderOnlyTransformerTSClassifier

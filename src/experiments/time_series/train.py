@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Training script for the Transformer model."""
+# Standard imports
+import multiprocessing
 
 # Third party imports
 import lightning
@@ -21,6 +23,7 @@ def train():
     task = "time_series_classification"
     dataset_name = "ArticularyWordRecognition"
     model_name = "transformer_encoder_only"
+    run_path = Config.model_dir / "runs" / task / dataset_name
 
     logger = get_logger(
         name="main", log_filename=f"{task}/{dataset_name.lower().replace(' ', '_')}/{model_name.lower()}.log"
@@ -30,16 +33,20 @@ def train():
         raise Exception("CUDA not available. No GPU found.")
 
     msg_task(msg="Loading data", logger=logger)
-    train_dataset, test_dataset, max_len, num_classes = get_ucr_datasets(
-        dsid=dataset_name, extract_path=Config.data_dir / task, logger=logger
+    train_dataset, test_dataset, max_len, num_classes, num_channels = get_ucr_datasets(
+        dsid=dataset_name,
+        extract_path=Config.data_dir / task,
+        logger=logger,
+        plot_first_row=True,
+        plot_path=Config.plot_dir / task / f"{dataset_name}_sample.png",
     )
 
     # Configuration
     experiment_cfg = ExperimentConfig(
         num_epochs=100,
         input_size=1000,
-        max_len=max_len,
-        d_model=128,
+        context_lenght=max_len,
+        d_model=num_channels,
         num_heads=8,
         d_ff=256,
         num_layers=3,
@@ -55,9 +62,20 @@ def train():
         precision="16-mixed",
     )
 
+    logger.info(f"Saving experiment configuration to {run_path}")
+    experiment_cfg.dump(path=run_path / "experiment_config.json")
+
     # Create data loaders
-    train_dataloader = DataLoader(dataset=train_dataset, batch_size=experiment_cfg.batch_size, shuffle=True)
-    test_dataloader = DataLoader(dataset=test_dataset, batch_size=experiment_cfg.batch_size, shuffle=False)
+    # TODO: balance the number of workers depending on the dataset size and pin memory
+    cpu_count = multiprocessing.cpu_count()
+    num_workers = cpu_count - 2 if cpu_count > 4 else 1
+
+    train_dataloader = DataLoader(
+        dataset=train_dataset, batch_size=experiment_cfg.batch_size, shuffle=True, num_workers=num_workers
+    )
+    test_dataloader = DataLoader(
+        dataset=test_dataset, batch_size=experiment_cfg.batch_size, shuffle=False, num_workers=num_workers
+    )
 
     # Create the model
     model = EncoderOnlyTransformerTSClassifier(
@@ -65,17 +83,21 @@ def train():
         d_model=experiment_cfg.d_model,
         num_heads=experiment_cfg.num_heads,
         d_ff=experiment_cfg.d_ff,
-        input_size=experiment_cfg.input_size,
-        max_len=experiment_cfg.max_len,
+        embed_dim=experiment_cfg.context_lenght,
+        batch_size=experiment_cfg.batch_size,
         positional_encoding=SinusoidalPositionalEncoding(
-            d_model=experiment_cfg.d_model, max_len=experiment_cfg.max_len
+            d_model=experiment_cfg.d_model, max_len=experiment_cfg.context_lenght
         ),
         num_classes=experiment_cfg.num_classes,
         dropout=experiment_cfg.dropout,
         learning_rate=experiment_cfg.learning_rate,
     )
 
-    msg_task("Starting training", logger=logger)
+    msg_task(msg=f"Experiment {model_name.replace("_", " ").title()}", logger=logger)
+
+    logger.info(f"Experiment Configuration:\n\n{experiment_cfg.pretty_str()}\n\n")
+
+    logger.info("Trainer Configuration:\n")
 
     # Create a trainer
     trainer = lightning.Trainer(
@@ -86,7 +108,7 @@ def train():
         precision=experiment_cfg.precision,
         logger=[
             CSVLogger(save_dir=Config.log_dir / task / dataset_name, name=f"metrics_{model_name}"),
-            TensorBoardLogger(save_dir=Config.log_dir / task / dataset_name, name=f"board_{model_name}_logs"),
+            TensorBoardLogger(save_dir=run_path, name=f"board_{model_name}_logs"),
             logger,
         ],
         log_every_n_steps=1,

@@ -10,9 +10,11 @@ import lightning
 import torch
 import torchmetrics
 
+# First party imports
+from models.positional_encoding.sinusoidal_positional_encoding import SinusoidalPositionalEncoding
+
 # Local imports
 from .encoder import Encoder
-from .positional_encoding import SinusoidalPositionalEncoding
 
 
 class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
@@ -22,7 +24,7 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
     layer, positional encoding,a Transformer encoder, and a classification head.
 
     Notes:
-        Use Embedding layer is a Linear layer, because it deals with continuous time series data, instead of discrete
+        Embedding layer is a Linear layer, because it deals with continuous time series data, instead of discrete
         tokens. The linear layer projects the input features to the model's embedding dimension (d_model).
 
     Args:
@@ -30,7 +32,7 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
         d_model (int): The dimensionality of the embeddings.
         num_heads (int): The number of attention heads.
         d_ff (int): The dimensionality of the inner layer of the feed-forward network.
-        input_size (int): The size of the vocabulary.
+        embed_dim (int): The size of the vocabulary.
         max_len (int): The maximum sequence length.
         dropout (float, optional): The dropout probability. Defaults to 0.1.
 
@@ -44,8 +46,8 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
         d_model: int,
         num_heads: int,
         d_ff: int,
-        input_size: int,
-        max_len: int,
+        embed_dim: int,
+        batch_size: int,
         positional_encoding: SinusoidalPositionalEncoding,
         num_classes: int,
         dropout: float = 0.1,
@@ -58,25 +60,34 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
             d_model (int): The dimensionality of the embeddings.
             num_heads (int): The number of attention heads.
             d_ff (int): The dimensionality of the inner layer of the feed-forward network.
-            input_size (int): The size of the vocabulary.
-            max_len (int): The maximum sequence length.
+            embed_dim (int): The dimensionality of the input features.
+            batch_size (int): The batch size.
             dropout (float, optional): The dropout probability. Defaults to 0.1.
         """
         super(EncoderOnlyTransformerTSClassifier, self).__init__()
+        # Layers
         # Use Linear instead of Embedding
-        self.embedding = torch.nn.Linear(in_features=input_size, out_features=d_model)
+        self.embedding = torch.nn.Linear(in_features=embed_dim * batch_size, out_features=d_model, bias=False)
         self.positional_encoding = positional_encoding
         self.encoder = Encoder(num_layers=num_layers, d_model=d_model, num_heads=num_heads, d_ff=d_ff, dropout=dropout)
         self.fc = torch.nn.Linear(in_features=d_model, out_features=num_classes)
         self.dropout = torch.nn.Dropout(dropout)
+        # Hyperparameters
+        self.embed_dim = embed_dim
+        self.batch_size = batch_size
         self.d_model = d_model
         self.learning_rate = learning_rate
-        self.loss_fn = torch.nn.CrossEntropyLoss()
-        self.num_classes = num_classes
         self.num_heads = num_heads
+        # Others
+        self.loss_fn = torch.nn.CrossEntropyLoss()
+        self.sqrt_d_model = math.sqrt(d_model)
+        self.num_classes = num_classes
+        self.positional_encoding_name = positional_encoding.__class__.__name__
         self.classification_task: Literal["binary", "multiclass", "multilabel"] = (
             "multiclass" if num_classes > 1 else "binary"
         )
+
+        self._example_input_array = torch.zeros(size=(self.batch_size, self.embed_dim, self.d_model))
 
         self.save_hyperparameters(
             ignore=["classification_task", "embedding", "positional_encoding", "encoder", "fc", "dropout"]
@@ -93,7 +104,7 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
             torch.Tensor: The output tensor of shape (batch_size, 2).
         """
         # Scale embedding
-        x = self.embedding(x) * math.sqrt(self.d_model)
+        x = self.embedding(x) * self.sqrt_d_model
         x = self.positional_encoding(x)
         x = self.dropout(x)
         x = self.encoder(x, mask)
@@ -110,10 +121,7 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
         loss = self.loss_fn(logits, y)
 
         # Calculate and log accuracy
-        preds = torch.argmax(logits, dim=1)
-        correct = (preds == y).sum().item()
-        total = y.size(0)
-        accuracy = correct / total
+        # preds = torch.argmax(logits, dim=1)
         accuracy = torchmetrics.functional.accuracy(
             preds=logits, target=y, task=self.classification_task, num_classes=self.num_classes
         )
@@ -121,7 +129,7 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
         metrics = {f"{stage}_loss": loss, f"{stage}_acc": accuracy, "n_samples": len(y)}
         self.log_dict(dictionary=metrics, prog_bar=progress_bar, logger=True, reduce_fx="mean")
 
-        # it's needed for the train step
+        # It's needed for the train step
         if stage == "train":
             metrics["loss"] = loss
 
@@ -131,18 +139,17 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
         """Compute and return the training loss and some additional metrics for e.g. the progress bar or logger.
 
         Args:
-            batch: The output of your data iterable, normally a :class:`~torch.utils.data.DataLoader`.
-            batch_idx: The index of this batch.
-            dataloader_idx: The index of the dataloader that produced this batch.
-                (only if multiple dataloaders used)
+            batch (tuple[torch.Tensor, torch.Tensor]): The output of your data iterable, normally a
+            :class:`~torch.utils.data.DataLoader`.
+            batch_idx (int): The index of this batch.
 
-        Return:
-            - :class:`~torch.Tensor` - The loss tensor
-            - ``dict`` - A dictionary which can include any keys, but must include the key ``'loss'`` in the case of
-              automatic optimization.
-            - ``None`` - In automatic optimization, this will skip to the next batch (but is not supported for
-              multi-GPU, TPU, or DeepSpeed). For manual optimization, this has no special meaning, as returning
-              the loss is not required.
+        Returns:
+            torch.Tensor: The loss tensor
+            dict: A dictionary which can include any keys, but must include the key ``'loss'`` in the case of
+            automatic optimization.
+            None: In automatic optimization, this will skip to the next batch (but is not supported for
+            multi-GPU, TPU, or DeepSpeed). For manual optimization, this has no special meaning, as returning
+            the loss is not required.
 
         In this step you'd normally do the forward pass and calculate the loss for a batch.
         You can also do fancier things like multiple forward passes or something model specific.

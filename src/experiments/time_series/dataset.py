@@ -8,6 +8,7 @@ import pathlib
 import numpy
 import pandas
 import torch
+from matplotlib import pyplot
 from sklearn.preprocessing import StandardScaler
 from sktime.datasets import load_UCR_UEA_dataset
 from torch.utils.data import TensorDataset
@@ -38,18 +39,27 @@ def __convert_to_numpy(data: pandas.DataFrame) -> numpy.ndarray:
 
 
 def get_ucr_datasets(
-    dsid: str, extract_path: pathlib.Path, logger: logging.Logger | None = None
-) -> tuple[TensorDataset, TensorDataset, int, int]:
+    dsid: str,
+    extract_path: pathlib.Path,
+    logger: logging.Logger | None = None,
+    plot_first_row: bool = False,
+    plot_path: pathlib.Path | None = None,
+) -> tuple[TensorDataset, TensorDataset, int, int, int]:
     """Loads and standardizes a UCR dataset using sktime.
 
     Args:
         dsid (str): The name of the UCR dataset.
-        extract_path (pathlib.Path): The path to extract the dataset to.
+        extract_path (`pathlib.Path`): The path to extract the dataset to.
+        logger (`logging.Logger`, optional): The logger to use. Defaults to None.
+        plot_first_row (bool, optional): Whether to plot the first row of the dataset. Defaults to False.
+        plot_path (`pathlib.Path`, optional): The path to save the plot. Defaults to None.
 
     Returns:
-        tuple[TensorDataset, TensorDataset, int, int]: A tuple containing the
-            training dataset, testing dataset, maximum sequence length, and
-            number of classes.
+        ~`torch.utils.data.TensorDataset`: The training dataset.
+        TensorDataset: The testing dataset.
+        int: The maximum sequence length.
+        int: The number of classes in the dataset.
+        int: The number of dimensions in the dataset.
     """
     # Load data using sktime
     extract_path.mkdir(parents=True, exist_ok=True)
@@ -65,6 +75,37 @@ def get_ucr_datasets(
     num_cases_train, max_len, num_dimensions = X_train.shape
     # max_len and num_dimensions should be the same
     num_cases_test, _, _ = X_test.shape
+
+    if plot_first_row and num_dimensions >= 1:
+        pyplot.figure(figsize=(16, 9))
+
+        # plot all dimensions in a heatmap
+        data_row = X_train[0]
+        if data_row.shape[0] >= data_row.shape[1]:
+            data_row = data_row.T
+
+        pyplot.imshow(data_row)
+        pyplot.title(f"{dsid} Sample")
+        pyplot.show()
+
+        if plot_path is not None:
+            plot_path.parent.mkdir(parents=True, exist_ok=True)
+            pyplot.savefig(plot_path)
+        pyplot.close()
+
+        # plot dimensions separately in a line plot
+        fig, ax = pyplot.subplots(nrows=1, ncols=1, figsize=(16, 9))
+        for i in range(num_dimensions):
+            ax.plot(data_row[:, i], label=f"Dimension {i}")
+        pyplot.title(f"{dsid} Sample")
+        pyplot.legend()
+        pyplot.show()
+
+        if plot_path is not None:
+            plot_path.parent.mkdir(parents=True, exist_ok=True)
+            pyplot.savefig(plot_path.parent / plot_path.name.replace(".png", "_line_plot.png"))
+
+        pyplot.close()
 
     scaler = StandardScaler()
     X_train = X_train.reshape(num_cases_train * max_len, num_dimensions)
@@ -93,5 +134,6 @@ def get_ucr_datasets(
         logger.info(f"  Number of training samples: {len(train_dataset)}")
         logger.info(f"  Number of testing samples: {len(test_dataset)}")
         logger.info(f"  Maximum sequence length: {max_len}")
+        logger.info(f"  Number of dimensions: {num_dimensions}")
 
-    return train_dataset, test_dataset, max_len, num_classes
+    return train_dataset, test_dataset, max_len, num_classes, num_dimensions

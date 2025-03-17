@@ -17,7 +17,7 @@ class ExperimentConfig:
 
     Attributes:
         input_size (int): The size of the input features or vocabulary in case of text.
-        max_len (int): The maximum sequence length.
+        context_lenght (int): The maximum sequence length.
         d_model (int): The dimensionality of the embeddings.
         num_heads (int): The number of attention heads.
         d_ff (int): The dimensionality of the inner layer of the feed-forward network.
@@ -40,7 +40,7 @@ class ExperimentConfig:
     num_epochs: int
     learning_rate: float
     input_size: int
-    max_len: int
+    context_lenght: int
     d_model: int
     num_heads: int
     d_ff: int
@@ -62,5 +62,15 @@ class ExperimentConfig:
 
     def dump(self, path: str | pathlib.Path):
         """Dumps the configuration to a JSON file."""
+        if isinstance(path, str):
+            path = pathlib.Path(path)
+
+        # Create the directories if it does not exist
+        path.parent.mkdir(parents=True, exist_ok=True)
+
         with open(path, "w") as file:
             json.dump(obj=self.to_dict(), fp=file, indent=4)
+
+    def pretty_str(self):
+        """List the attributes of the class."""
+        return "\n".join([f"\t{k}: {v}" for k, v in self.to_dict().items()])
