@@ -1,28 +1,16 @@
 # -*- coding: utf-8 -*-
-# This project incorporates code from the following projects:
-#
-# Hugging Face Transformers
-# Copyright 2022 The HuggingFace Inc. team. All rights reserved.
-# Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# Original code:
-# https://github.com/huggingface/transformers/blob/9e94801146ceeb3b215bbdb9492be74d7d7b7210/src/transformers/models/time_series_transformer/modeling_time_series_transformer.py#L1-L271
-#
-# Specifically, the following classes were adapted:
-# - TimeSeriesSinusoidalPositionalEmbedding
-"""Positional encoding module."""
+# -*- coding: utf-8 -*-
+"""Positional encoding module.
 
+The TimeSeriesSinusoidalPositionalEmbedding class in this module are adapted from the Hugging Face Transformers library,
+licensed under the Apache License, Version 2.0.
+
+Original code:
+https://github.com/huggingface/transformers/blob/9e94801146ceeb3b215bbdb9492be74d7d7b7210/src/transformers/models/time_series_transformer/modeling_time_series_transformer.py#L1-L271
+
+Copyright 2022 The HuggingFace Inc. team. All rights reserved.
+Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+"""
 # Standard imports
 import math
 
