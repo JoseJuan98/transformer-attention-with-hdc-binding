@@ -85,7 +85,7 @@ class MultiHeadAttention(torch.nn.Module):
         ]
 
         # Concatenate the outputs of all heads.
-        # (batch_size, seq_len, num_heads * head_dim) == (batch_size, seq_len, embed_dim)
+        # (batch_size, seq_len, num_heads * head_dim) = (batch_size, seq_len, embed_dim)
         concatenated_outputs = torch.cat(attention_outputs, dim=-1)
 
         # Apply the output projection.
