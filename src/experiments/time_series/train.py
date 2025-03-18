@@ -93,6 +93,14 @@ def train():
         learning_rate=experiment_cfg.learning_rate,
     )
 
+    # TODO: Compile model
+    # model.compile(
+    #     optimizer=torch.optim.AdamW(model.parameters(), lr=experiment_cfg.learning_rate),
+    #     loss_fn=torch.nn.CrossEntropyLoss(),
+    #     metrics=lightning.metrics.Accuracy(),
+    # )
+    # => is this the same as torch.compile()? *** compile torch model vs compile lightning model ***
+
     msg_task(msg=f"Experiment {model_name.replace("_", " ").title()}", logger=logger)
 
     logger.info(f"Experiment Configuration:\n\n{experiment_cfg.pretty_str()}\n\n")
