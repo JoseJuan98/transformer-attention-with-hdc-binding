@@ -2720,6 +2720,28 @@ opt-einsum = ["opt-einsum (>=3.3)"]
 optree = ["optree (>=0.13.0)"]
 
 [[package]]
+name = "torch-tb-profiler"
+version = "0.4.3"
+description = "PyTorch Profiler TensorBoard Plugin"
+optional = false
+python-versions = ">=3.6.2"
+groups = ["main"]
+files = [
+    {file = "torch_tb_profiler-0.4.3-py3-none-any.whl", hash = "sha256:207a49b05572dd983e4ab29eb5e0fcadd60374a8f93c78ec638217e8d18788dc"},
+    {file = "torch_tb_profiler-0.4.3.tar.gz", hash = "sha256:8b8d29b2de960b3c4423087b23cec29beaf9ac3a8c7b046c18fd25b218f726b1"},
+]
+
+[package.dependencies]
+pandas = ">=1.0.0"
+tensorboard = ">=1.15,<2.1.0 || >2.1.0"
+
+[package.extras]
+blob = ["azure-storage-blob"]
+gs = ["google-cloud-storage"]
+hdfs = ["fsspec", "pyarrow"]
+s3 = ["boto3"]
+
+[[package]]
 name = "torchmetrics"
 version = "1.6.2"
 description = "PyTorch native Metrics"
@@ -2995,4 +3017,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "7497854a56de3784d154caadda05f2930b2b0fc5cdf1e9adee086092e7f8b9cb"
+content-hash = "6c526e976baaf7a962171b5fcb1f2901704e95dce7b30451014dcba04dc93baa"

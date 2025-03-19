@@ -19,6 +19,7 @@ dependencies = [
     "pandas[computation,performance] (>=2.2.3)",
     "scikit-learn (>=1.6.1)",
     "sktime (>=0.36.0)",
+    "torch-tb-profiler (>=0.4.3)",
 ]
 
 [tool.poetry.group.dev.dependencies]
@@ -65,5 +66,5 @@ inherit = false
 ignore = ["D104","D107","D202","D203","D213","D214","D400","D401","D404","D406","D407","D411","D413","D141","D415","D417"]
 
 [tool.deptry.per_rule_ignores]
-DEP002 = ["torch", "torchmetrics", "lightning", "tensorboard", "matplotlib", "seaborn", "numpy"]
+DEP002 = ["tensorboard", "torch-tb-profiler"]
 DEP004 = ["pytest"]
