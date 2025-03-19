@@ -21,7 +21,7 @@ class Config:
     data_dir = root_dir / "data"
     model_dir = root_dir / "model"
     log_dir = root_dir / "log"
-    plot_dir = root_dir.parent / "docs" / "img"
+    plot_dir = root_dir.parent / "docs" / "plots"
 
     # Create directories
     @classmethod
