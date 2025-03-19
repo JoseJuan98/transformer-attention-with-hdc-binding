@@ -206,9 +206,9 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
             preds=logits, target=y, task=self.classification_task, num_classes=self.num_classes
         )
 
-        metrics = {f"{stage}_loss": loss, f"{stage}_acc": accuracy.round(decimals=4)}  # , "n_samples": len(y)}
+        metrics = {f"{stage}_loss": loss, f"{stage}_acc": accuracy.round(decimals=4)}
         self.log_dict(
-            dictionary=metrics, prog_bar=progress_bar, logger=True, reduce_fx="mean", on_step=False, on_epoch=True
+            dictionary=metrics, prog_bar=progress_bar, logger=True, reduce_fx="mean", on_epoch=True, on_step=False
         )
 
         # It's needed for the gradient accumulation

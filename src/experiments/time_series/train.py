@@ -45,15 +45,15 @@ def train():
 
     # --- Configuration ---
     experiment_cfg = ExperimentConfig(
-        num_epochs=10,
+        num_epochs=30,
         input_size=num_channels,  # Number of variates (channels)
         context_length=max_len,  # Sequence length
         d_model=128,
         num_heads=8,
         d_ff=128,
-        num_layers=3,
+        num_layers=4,
         dropout=0.1,
-        batch_size=32,
+        batch_size=64,
         learning_rate=1e-3,
         device="cuda",
         model_relative_path=f"runs/{task}/{model_name.lower()}/{dataset_name}/{run_version}/model.pth",

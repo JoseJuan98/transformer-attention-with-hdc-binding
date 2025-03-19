@@ -17,7 +17,7 @@ install-dev: install-poetry
 
 ## Start the tensorboard server
 tensorboard:
-	@tensorboard --logdir=$(ROOT_DIR)/artifacts/logs/board/ --port=6006 --load_fast=false
+	@tensorboard --logdir=$(ROOT_DIR)/artifacts/model/runs/ --port=6006 --load_fast=false
 
 ## Kill tensorboard server
 kill-tensorboard:
