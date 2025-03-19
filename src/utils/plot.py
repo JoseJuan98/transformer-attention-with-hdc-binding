@@ -25,13 +25,25 @@ def save_plot(filename: str) -> None:
     pyplot.savefig(plot_path, bbox_inches="tight")
 
 
-def plot_csv_logger_metrics(
-    plots_path: pathlib.Path, csv_dir: str, experiment: str, logger: logging.Logger | None = None
+def save_csv_logger_metrics_plot(
+    plots_path: pathlib.Path,
+    csv_dir: str,
+    experiment: str,
+    logger: logging.Logger | None = None,
+    plotting: bool = False,
 ) -> None:
-    """Plot the metrics."""
+    """Save the metrics plot.
+
+    Args:
+        plots_path (pathlib.Path): Path to save the plot.
+        csv_dir (str): Path to the directory containing the metrics.csv file.
+        experiment (str): Name of the experiment.
+        logger (logging.Logger, optional): Logger object. Defaults to None.
+        plotting (bool, optional): Whether to display the plot. Defaults to False.
+    """
     metrics = pandas.read_csv(filepath_or_buffer=os.path.join(csv_dir, "metrics.csv"))
 
-    metrics.drop(columns=["step", "n_samples"], axis=1, inplace=True)
+    metrics.drop(columns=["step", "n_samples"], axis=1, inplace=True, errors="ignore")
     metrics.set_index("epoch", inplace=True)
 
     test_loss = metrics["test_loss"].dropna(how="all").mean()
@@ -42,9 +54,13 @@ def plot_csv_logger_metrics(
     else:
         logger.info(f"\nExperiment {experiment}\n\tTest loss: {test_loss}.\n\tTest accuracy: {test_acc}.\n\n")
 
-    plots_path.mkdir(parents=True, exist_ok=True)
-
-    metrics.drop(columns=["test_loss", "test_acc"], axis=1, inplace=True)
+    metrics.drop(columns=["test_loss", "test_acc"], axis=1, inplace=True, errors="ignore")
     seaborn.relplot(data=metrics, kind="line")
-    pyplot.savefig(fname=plots_path / f"metrics_{experiment}.png")
-    pyplot.show()
+
+    plots_path.parent.mkdir(parents=True, exist_ok=True)
+    pyplot.savefig(fname=plots_path)
+
+    if plotting:
+        pyplot.show()
+
+    pyplot.close()

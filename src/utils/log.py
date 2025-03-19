@@ -7,6 +7,7 @@ This module contains the logger utilities to be used in the project.
 # Standard imports
 import logging
 import pathlib
+from typing import Literal
 
 # First party imports
 from utils.config import Config
@@ -16,6 +17,8 @@ def get_logger(
     name: str = "main",
     level: int = logging.INFO,
     log_filename: str | pathlib.Path | None = None,
+    propagate: bool | None = None,
+    log_file_mode: Literal["w", "a"] = "w",
 ) -> logging.Logger:
     """Get the main logger.
 
@@ -23,11 +26,14 @@ def get_logger(
         name (str, optional): The logger name. Defaults to "main".
         level (int, optional): The logger level. Defaults to logging.INFO.
         log_filename (str, optional): The log file within the `utils.Config.log_dir`. Defaults to None.
+        propagate (bool, optional): Whether to propagate the logs to the root logger. Defaults to False.
+        log_file_mode (Literal["w", "a"], optional): The log file mode. Defaults to "w".
     """
     logger = logging.getLogger(name)
     logger.setLevel(level=level)
 
-    logger.propagate = False
+    if propagate is not None:
+        logger.propagate = propagate
 
     if not logger.handlers:
 
@@ -41,7 +47,7 @@ def get_logger(
             log_file.parent.mkdir(parents=True, exist_ok=True)
 
             logger.addHandler(
-                logging.FileHandler(filename=log_file, mode="w"),
+                logging.FileHandler(filename=log_file, mode=log_file_mode),
             )
 
     return logger
