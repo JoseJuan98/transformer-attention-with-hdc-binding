@@ -75,6 +75,7 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
         learning_rate: float = 1e-3,
         scaling: Literal["mean", "std", "none"] | None = "mean",
         mask_input: bool = False,
+        torch_profiling: torch.profiler.profile | None = None,
     ):
         """Initializes the EncoderOnlyTransformerClassifier model.
 
@@ -115,6 +116,7 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
         self.classification_task: Literal["binary", "multiclass", "multilabel"] = (
             "multiclass" if num_classes > 1 else "binary"
         )
+        self.profiler = torch_profiling
 
         self._example_input_array = torch.zeros(size=(1, self.context_length, self.input_size))
 
@@ -129,7 +131,16 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
             raise ValueError(f"Invalid scaling method: {scaling}.  Must be 'mean', 'std', or None.")
 
         self.save_hyperparameters(
-            ignore=["classification_task", "embedding", "positional_encoding", "encoder", "fc", "dropout", "scaler"]
+            ignore=[
+                "classification_task",
+                "embedding",
+                "positional_encoding",
+                "encoder",
+                "fc",
+                "dropout",
+                "scaler",
+                "profiler",
+            ]
         )
 
     def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
@@ -178,10 +189,15 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
         return x
 
     def evaluate(self, batch: tuple[torch.Tensor, torch.Tensor], stage: str, progress_bar: bool = True) -> dict:
-        """Evaluates the model on a batch of data."""
+        """Evaluates the model on a batch of data.
+
+        Args:
+            batch (tuple[torch.Tensor, torch.Tensor]): The batch of data (x,y) of shape (batch_size, seq_len, input_size)
+            and (batch_size,).
+            stage (str): The stage of the evaluation (train, val, test).
+            progress_bar (bool): Whether to display the progress bar.
+        """
         x, y = batch
-        # x: (batch_size, seq_len, input_size)
-        # y: (batch_size,)
         logits = self(x)  # No mask needed, handled in forward
         loss = self.loss_fn(logits, y)
 
@@ -190,12 +206,12 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
             preds=logits, target=y, task=self.classification_task, num_classes=self.num_classes
         )
 
-        metrics = {f"{stage}_loss": loss, f"{stage}_acc": accuracy, "n_samples": len(y)}
+        metrics = {f"{stage}_loss": loss, f"{stage}_acc": accuracy.round(decimals=4)}  # , "n_samples": len(y)}
         self.log_dict(
             dictionary=metrics, prog_bar=progress_bar, logger=True, reduce_fx="mean", on_step=False, on_epoch=True
         )
 
-        # It's needed for the train step
+        # It's needed for the gradient accumulation
         if stage == "train":
             metrics["loss"] = loss
 
@@ -233,3 +249,15 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
     def configure_optimizers(self):
         """Configures the optimizer."""
         return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+
+    def on_train_epoch_start(self) -> None:
+        """Called when the train epoch begins."""
+        if self.profiler is not None:
+            self.profiler.start()
+        super().on_train_epoch_start()
+
+    def on_train_epoch_end(self):
+        """Called when the train epoch ends."""
+        if self.profiler is not None:
+            self.profiler.stop()
+        super().on_train_epoch_end()

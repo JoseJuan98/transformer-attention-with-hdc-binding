@@ -8,26 +8,27 @@ import lightning
 import torch
 from lightning.pytorch.callbacks import ModelSummary
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
+from lightning.pytorch.profilers import SimpleProfiler
 from torch.utils.data import DataLoader
 
 # First party imports
 from experiments import ExperimentConfig
 from experiments.time_series.dataset import get_ucr_datasets
 from models import EncoderOnlyTransformerTSClassifier, TimeSeriesSinusoidalPositionalEmbedding
-from utils import Config, get_logger, msg_task, plot_csv_logger_metrics
+from utils import Config, get_logger, msg_task, save_csv_logger_metrics_plot
 
 
 def train():
     """Trains the model."""
-
     task = "time_series_classification"
     dataset_name = "ArticularyWordRecognition"
     model_name = "transformer_encoder_only"
-    run_path = Config.model_dir / "runs" / task / dataset_name
+    run_path = Config.model_dir / "runs" / task / model_name
+    run_version = "version_0"
+    test_only = False  # Set to True to only test the model
 
-    logger = get_logger(
-        name="main", log_filename=f"{task}/{dataset_name.lower().replace(' ', '_')}/{model_name.lower()}.log"
-    )
+    log_file = Config.log_dir / f"{task}/{model_name}/{dataset_name}/{run_version}/main.log"
+    logger = get_logger(name="lightning.pytorch.core", log_filename=log_file, propagate=False)
 
     if not torch.cuda.is_available():
         raise Exception("CUDA not available. No GPU found.")
@@ -37,13 +38,14 @@ def train():
         dsid=dataset_name,
         extract_path=Config.data_dir / task,
         logger=logger,
-        plot_first_row=True,
+        # TODO:
+        plot_first_row=False,
         plot_path=Config.plot_dir / task / f"{dataset_name}_sample.png",
     )
 
     # --- Configuration ---
     experiment_cfg = ExperimentConfig(
-        num_epochs=1,
+        num_epochs=10,
         input_size=num_channels,  # Number of variates (channels)
         context_length=max_len,  # Sequence length
         d_model=128,
@@ -54,7 +56,7 @@ def train():
         batch_size=32,
         learning_rate=1e-3,
         device="cuda",
-        model_path=f"{task}/{dataset_name.lower().replace(' ', '_')}/{model_name.lower()}.pth",
+        model_relative_path=f"runs/{task}/{model_name.lower()}/{dataset_name}/{run_version}/model.pth",
         description=f"{model_name.replace('_', ' ').title()} for {task.replace('_', ' ').title()} for {dataset_name.replace('_', ' ').title()} dataset",
         num_classes=num_classes,
         dataset=dataset_name,
@@ -62,8 +64,8 @@ def train():
         precision="16-mixed",
     )
 
-    logger.info(f"Saving experiment configuration to {run_path}")
-    experiment_cfg.dump(path=run_path / "experiment_config.json")
+    logger.info(f"Saving experiment configuration to {run_path}/{run_version}")
+    experiment_cfg.dump(path=run_path / dataset_name / run_version / "experiment_config.json")
 
     # --- Data Loaders ---
     cpu_count = multiprocessing.cpu_count()
@@ -99,11 +101,19 @@ def train():
         scaling="mean",
         mask_input=True,
         loss_fn=torch.nn.CrossEntropyLoss() if experiment_cfg.num_classes > 2 else torch.nn.BCELoss(),
+        # TODO: remove profiler for systematic runs
+        # TODO: move all configurations outside to make it composible
+        # Torch Profiler: https://pytorch.org/tutorials/intermediate/tensorboard_profiler_tutorial.html
+        torch_profiling=torch.profiler.profile(
+            schedule=torch.profiler.schedule(wait=1, warmup=1, active=3, repeat=1),
+            on_trace_ready=torch.profiler.tensorboard_trace_handler(dir_name=(run_path / run_version).as_posix()),
+            record_shapes=True,
+            with_stack=True,
+        ),
     )
 
     msg_task(msg=f"Experiment {model_name.replace("_", " ").title()}", logger=logger)
     logger.info(f"Experiment Configuration:\n\n{experiment_cfg.pretty_str()}\n\n")
-    logger.info("Trainer Configuration:\n")
 
     # --- Trainer ---
     trainer = lightning.Trainer(
@@ -113,38 +123,41 @@ def train():
         devices="auto",
         precision=experiment_cfg.precision,
         logger=[
-            CSVLogger(save_dir=Config.log_dir / task / dataset_name, name=f"metrics_{model_name}"),
-            TensorBoardLogger(save_dir=run_path, name=f"board_{model_name}_logs"),
-            logger,
+            CSVLogger(save_dir=Config.log_dir / task / model_name, name=dataset_name, version=run_version),
+            TensorBoardLogger(save_dir=run_path, name=dataset_name, version=run_version),
         ],
         log_every_n_steps=1,
         callbacks=[ModelSummary(max_depth=-1)],
+        # TODO: remove profiler for systematic runs
         # measures all the key methods across Callbacks, DataModules and the LightningModule in the training loop.
-        profiler="simple",
+        profiler=SimpleProfiler(filename="simple_profiler"),
         # If True, runs 1 batch of train, test and val to find any bugs. Also, it can be specified the number of
         # batches to run as an integer
         fast_dev_run=False if experiment_cfg.num_epochs > 0 else True,
     )
 
     # --- Train and Test ---
-    if experiment_cfg.num_epochs > 0:
+    msg_task(msg="Train and Test", logger=logger)
+    logger.info(f"Training {model_name} for {dataset_name} in {run_version} for {experiment_cfg.num_epochs} epochs...")
+    if experiment_cfg.num_epochs > 0 and not test_only:
         trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=test_dataloader)
+    logger.info(f"{model_name.title()} training finished!")
     trainer.test(model, dataloaders=test_dataloader)
 
     # --- Save Model ---
-    model_path = Config.model_dir / experiment_cfg.model_path
+    model_path = Config.model_dir / experiment_cfg.model_relative_path
     model_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(model.state_dict(), model_path)
-    msg_task(f"Model saved to {model_path}", logger=logger)
+    logger.info(f"\nModel saved to {model_path}")
 
     # --- Plot Metrics ---
     if experiment_cfg.num_epochs > 0:
         print(f"Log dir: {trainer.log_dir}")
-        plot_csv_logger_metrics(
+        save_csv_logger_metrics_plot(
             csv_dir=trainer.log_dir,
-            experiment=model_name,
+            experiment=f"{model_name.replace("_", " ").title()} for {dataset_name.replace('_', ' ').title()} in {run_version}",
             logger=logger,
-            plots_path=Config.plot_dir / task / dataset_name,
+            plots_path=Config.plot_dir / task / model_name / f"epoch_metrics_{dataset_name}_{run_version}.png",
         )
 
 

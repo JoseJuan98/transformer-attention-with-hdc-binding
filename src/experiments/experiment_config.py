@@ -27,7 +27,7 @@ class ExperimentConfig:
         learning_rate (float): The learning rate.
         num_epochs (int): The number of training epochs.
         device (str): The device to use for training ('cpu' or 'cuda').
-        model_path (str): The path to save the trained model.
+        model_relative_path (str): The relative path to ~`Config.model_dir` to save the model to.
         experiment_name (str): The name of the experiment.
         description (str): A description of the experiment.
         dataset (str): The dataset used for training.
@@ -46,11 +46,13 @@ class ExperimentConfig:
     d_ff: int
     num_layers: int
     dropout: float
+
     # Hardware settings
     device: str
     precision: _PRECISION_INPUT
+
     # Experiment settings
-    model_path: str
+    model_relative_path: str
     experiment_name: str
     description: str
     dataset: str
