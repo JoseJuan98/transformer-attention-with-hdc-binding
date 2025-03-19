@@ -1,9 +1,27 @@
 # -*- coding: utf-8 -*-
-"""Transformer model implementation."""
+"""Transformer model implementation.
+
+The TimeSeriesFeatureEmbedder class in this module are adapted from the Hugging Face Transformers library, licensed
+under the Apache License, Version 2.0.
+
+Original code:
+https://github.com/huggingface/transformers/blob/9e94801146ceeb3b215bbdb9492be74d7d7b7210/src/transformers/models/time_series_transformer/modeling_time_series_transformer.py
+
+Copyright 2022 The HuggingFace Inc. team. All rights reserved.
+Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+The following modifications were made:
+- Adapted for time series classification.
+- Added TimeSeriesSinusoidalPositionalEmbedding for continuous time series data.
+- Integrated scaling (mean, std, or none) before the embedding layer.
+- Improved masking to handle multivariate inputs and missing values.
+- Simplified the model to be encoder-only.
+- Added clear docstrings and type hints.
+"""
 
 # Standard imports
 import math
-from typing import Literal
+from typing import Literal, Optional
 
 # Third party imports
 import lightning
@@ -11,10 +29,9 @@ import torch
 import torchmetrics
 
 # First party imports
-from models.positional_encoding.sinusoidal_positional_encoding import SinusoidalPositionalEncoding
-
-# Local imports
-from .encoder import Encoder
+from models.positional_encoding import SinusoidalPositionalEncoding, TimeSeriesSinusoidalPositionalEmbedding
+from models.time_series.scaler import TimeSeriesMeanScaler, TimeSeriesNOPScaler, TimeSeriesStdScaler
+from models.transformer.encoder import Encoder
 
 
 class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
@@ -32,9 +49,12 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
         d_model (int): The dimensionality of the embeddings.
         num_heads (int): The number of attention heads.
         d_ff (int): The dimensionality of the inner layer of the feed-forward network.
-        embed_dim (int): The size of the vocabulary.
-        max_len (int): The maximum sequence length.
+        input_size (int): The size of the input (number of variates in the time series).
+        context_length (int): The length of the input sequence.
         dropout (float, optional): The dropout probability. Defaults to 0.1.
+        learning_rate (float, optional): The learning rate. Defaults to 1e-3.
+        scaling (Literal["mean", "std", "none"] | None, optional): The scaling method. Defaults to "mean".
+        mask_input (bool, optional): Whether to mask the input. Defaults to False.
 
     Methods:
         forward(x, mask): Performs a forward pass through the model.
@@ -46,12 +66,15 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
         d_model: int,
         num_heads: int,
         d_ff: int,
-        embed_dim: int,
-        batch_size: int,
-        positional_encoding: SinusoidalPositionalEncoding,
+        input_size: int,
+        context_length: int,
+        positional_encoding: TimeSeriesSinusoidalPositionalEmbedding | SinusoidalPositionalEncoding,
+        loss_fn: torch.nn.Module | torch.nn.CrossEntropyLoss | torch.nn.BCELoss,
         num_classes: int,
         dropout: float = 0.1,
-        learning_rate: float = 1e-3,  # Add learning_rate as an argument
+        learning_rate: float = 1e-3,
+        scaling: Literal["mean", "std", "none"] | None = "mean",
+        mask_input: bool = False,
     ):
         """Initializes the EncoderOnlyTransformerClassifier model.
 
@@ -60,26 +83,32 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
             d_model (int): The dimensionality of the embeddings.
             num_heads (int): The number of attention heads.
             d_ff (int): The dimensionality of the inner layer of the feed-forward network.
-            embed_dim (int): The dimensionality of the input features.
-            batch_size (int): The batch size.
+            input_size (int): The dimensionality of the input features.
+            context_length (int): The length of the input sequence.
             dropout (float, optional): The dropout probability. Defaults to 0.1.
+            learning_rate (float, optional): The learning rate. Defaults to 1e-3.
+            scaling (Literal["mean", "std", "none"] | None, optional): The scaling method. Defaults to "mean".
+            mask_input (bool, optional): Whether to mask the input. Defaults to False.
         """
         super(EncoderOnlyTransformerTSClassifier, self).__init__()
         # Layers
-        # Use Linear instead of Embedding
-        self.embedding = torch.nn.Linear(in_features=embed_dim * batch_size, out_features=d_model, bias=False)
+        self.embedding = torch.nn.Linear(in_features=input_size, out_features=d_model, bias=False)
         self.positional_encoding = positional_encoding
         self.encoder = Encoder(num_layers=num_layers, d_model=d_model, num_heads=num_heads, d_ff=d_ff, dropout=dropout)
         self.fc = torch.nn.Linear(in_features=d_model, out_features=num_classes)
         self.dropout = torch.nn.Dropout(dropout)
+
         # Hyperparameters
-        self.embed_dim = embed_dim
-        self.batch_size = batch_size
+        self.input_size = input_size
+        self.context_length = context_length
         self.d_model = d_model
         self.learning_rate = learning_rate
         self.num_heads = num_heads
+        self.scaling = scaling  # Store scaling method
+        self.mask_input = mask_input
+
         # Others
-        self.loss_fn = torch.nn.CrossEntropyLoss()
+        self.loss_fn = loss_fn
         self.sqrt_d_model = math.sqrt(d_model)
         self.num_classes = num_classes
         self.positional_encoding_name = positional_encoding.__class__.__name__
@@ -87,26 +116,61 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
             "multiclass" if num_classes > 1 else "binary"
         )
 
-        self._example_input_array = torch.zeros(size=(self.batch_size, self.embed_dim, self.d_model))
+        self._example_input_array = torch.zeros(size=(1, self.context_length, self.input_size))
+
+        # Scaler (added)
+        if scaling == "mean":
+            self.scaler = TimeSeriesMeanScaler()
+        elif scaling == "std":
+            self.scaler = TimeSeriesStdScaler()
+        elif scaling is None or scaling.lower() == "none":
+            self.scaler = TimeSeriesNOPScaler()
+        else:
+            raise ValueError(f"Invalid scaling method: {scaling}.  Must be 'mean', 'std', or None.")
 
         self.save_hyperparameters(
-            ignore=["classification_task", "embedding", "positional_encoding", "encoder", "fc", "dropout"]
+            ignore=["classification_task", "embedding", "positional_encoding", "encoder", "fc", "dropout", "scaler"]
         )
 
-    def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
         """Performs a forward pass through the model.
 
         Args:
-            x (torch.Tensor): The input tensor of shape (batch_size, seq_len).
+            x (torch.Tensor): The input tensor of shape (batch_size, seq_len, input_size).
             mask (torch.Tensor): The attention mask of shape (batch_size, seq_len).
 
         Returns:
             torch.Tensor: The output tensor of shape (batch_size, 2).
         """
-        # Scale embedding
-        x = self.embedding(x) * self.sqrt_d_model
-        x = self.positional_encoding(x)
-        x = self.dropout(x)
+        # Old one
+        # x = self.embedding(x) * self.sqrt_d_model
+        # x = self.positional_encoding(x)
+        # x = self.dropout(x)
+
+        # TODO: check this mask
+        # Create observed mask if not provided and mask_input is True
+        if mask is None and self.mask_input:
+            mask = ~torch.isnan(x)  # True for observed, False for NaN
+            if mask.ndim == 3:
+                mask = mask.all(dim=2)  # Reduce to (batch_size, seq_len) if multivariate
+        elif mask is None:
+            mask = torch.ones((x.shape[0], x.shape[1]), dtype=torch.bool, device=x.device)
+
+        observed_mask = ~torch.isnan(x)
+        if observed_mask.ndim == 3:
+            observed_mask = observed_mask.all(dim=2)
+
+        # TODO: scale in the forward in the whole dataset?
+        # Scaling (added)
+        x_scaled, _, _ = self.scaler(x, observed_mask.unsqueeze(-1).expand_as(x))
+
+        # Embedding
+        x_embed = self.embedding(x_scaled) * self.sqrt_d_model
+
+        # Positional Encoding
+        x_pos_enc = self.positional_encoding(x_scaled)
+        x = self.dropout(x_embed + x_pos_enc)
+
         x = self.encoder(x, mask)
         # Global average pooling over the sequence length
         x = x.mean(dim=1)
@@ -116,18 +180,20 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
     def evaluate(self, batch: tuple[torch.Tensor, torch.Tensor], stage: str, progress_bar: bool = True) -> dict:
         """Evaluates the model on a batch of data."""
         x, y = batch
-        mask = None
-        logits = self(x, mask)
+        # x: (batch_size, seq_len, input_size)
+        # y: (batch_size,)
+        logits = self(x)  # No mask needed, handled in forward
         loss = self.loss_fn(logits, y)
 
         # Calculate and log accuracy
-        # preds = torch.argmax(logits, dim=1)
         accuracy = torchmetrics.functional.accuracy(
             preds=logits, target=y, task=self.classification_task, num_classes=self.num_classes
         )
 
         metrics = {f"{stage}_loss": loss, f"{stage}_acc": accuracy, "n_samples": len(y)}
-        self.log_dict(dictionary=metrics, prog_bar=progress_bar, logger=True, reduce_fx="mean")
+        self.log_dict(
+            dictionary=metrics, prog_bar=progress_bar, logger=True, reduce_fx="mean", on_step=False, on_epoch=True
+        )
 
         # It's needed for the train step
         if stage == "train":

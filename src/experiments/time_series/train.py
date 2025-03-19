@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 # First party imports
 from experiments import ExperimentConfig
 from experiments.time_series.dataset import get_ucr_datasets
-from models import EncoderOnlyTransformerTSClassifier, SinusoidalPositionalEncoding
+from models import EncoderOnlyTransformerTSClassifier, TimeSeriesSinusoidalPositionalEmbedding
 from utils import Config, get_logger, msg_task, plot_csv_logger_metrics
 
 
@@ -41,14 +41,14 @@ def train():
         plot_path=Config.plot_dir / task / f"{dataset_name}_sample.png",
     )
 
-    # Configuration
+    # --- Configuration ---
     experiment_cfg = ExperimentConfig(
-        num_epochs=100,
-        input_size=1000,
-        context_lenght=max_len,
-        d_model=num_channels,
+        num_epochs=1,
+        input_size=num_channels,  # Number of variates (channels)
+        context_length=max_len,  # Sequence length
+        d_model=128,
         num_heads=8,
-        d_ff=256,
+        d_ff=128,
         num_layers=3,
         dropout=0.1,
         batch_size=32,
@@ -65,49 +65,47 @@ def train():
     logger.info(f"Saving experiment configuration to {run_path}")
     experiment_cfg.dump(path=run_path / "experiment_config.json")
 
-    # Create data loaders
-    # TODO: balance the number of workers depending on the dataset size and pin memory
+    # --- Data Loaders ---
     cpu_count = multiprocessing.cpu_count()
     num_workers = cpu_count - 2 if cpu_count > 4 else 1
 
     train_dataloader = DataLoader(
-        dataset=train_dataset, batch_size=experiment_cfg.batch_size, shuffle=True, num_workers=num_workers
+        dataset=train_dataset,
+        batch_size=experiment_cfg.batch_size,
+        shuffle=True,
+        num_workers=num_workers,
     )
     test_dataloader = DataLoader(
-        dataset=test_dataset, batch_size=experiment_cfg.batch_size, shuffle=False, num_workers=num_workers
+        dataset=test_dataset,
+        batch_size=experiment_cfg.batch_size,
+        shuffle=False,
+        num_workers=num_workers,
     )
 
-    # Create the model
+    # --- Model ---
     model = EncoderOnlyTransformerTSClassifier(
         num_layers=experiment_cfg.num_layers,
         d_model=experiment_cfg.d_model,
         num_heads=experiment_cfg.num_heads,
         d_ff=experiment_cfg.d_ff,
-        embed_dim=experiment_cfg.context_lenght,
-        batch_size=experiment_cfg.batch_size,
-        positional_encoding=SinusoidalPositionalEncoding(
-            d_model=experiment_cfg.d_model, max_len=experiment_cfg.context_lenght
+        input_size=experiment_cfg.input_size,  # Use input_size
+        context_length=experiment_cfg.context_length,  # Use context_length
+        positional_encoding=TimeSeriesSinusoidalPositionalEmbedding(
+            embedding_dim=experiment_cfg.d_model, num_positions=experiment_cfg.context_length
         ),
         num_classes=experiment_cfg.num_classes,
         dropout=experiment_cfg.dropout,
         learning_rate=experiment_cfg.learning_rate,
+        scaling="mean",
+        mask_input=True,
+        loss_fn=torch.nn.CrossEntropyLoss() if experiment_cfg.num_classes > 2 else torch.nn.BCELoss(),
     )
 
-    # TODO: Compile model
-    # model.compile(
-    #     optimizer=torch.optim.AdamW(model.parameters(), lr=experiment_cfg.learning_rate),
-    #     loss_fn=torch.nn.CrossEntropyLoss(),
-    #     metrics=lightning.metrics.Accuracy(),
-    # )
-    # => is this the same as torch.compile()? *** compile torch model vs compile lightning model ***
-
     msg_task(msg=f"Experiment {model_name.replace("_", " ").title()}", logger=logger)
-
     logger.info(f"Experiment Configuration:\n\n{experiment_cfg.pretty_str()}\n\n")
-
     logger.info("Trainer Configuration:\n")
 
-    # Create a trainer
+    # --- Trainer ---
     trainer = lightning.Trainer(
         default_root_dir=Config.root_dir,
         max_epochs=experiment_cfg.num_epochs,
@@ -125,26 +123,25 @@ def train():
         profiler="simple",
         # If True, runs 1 batch of train, test and val to find any bugs. Also, it can be specified the number of
         # batches to run as an integer
-        fast_dev_run=True,
+        fast_dev_run=False if experiment_cfg.num_epochs > 0 else True,
     )
 
-    # Train the model
+    # --- Train and Test ---
     if experiment_cfg.num_epochs > 0:
         trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=test_dataloader)
-
-    # Test the model
     trainer.test(model, dataloaders=test_dataloader)
 
-    # Save the model
+    # --- Save Model ---
     model_path = Config.model_dir / experiment_cfg.model_path
     model_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(model.state_dict(), model_path)
     msg_task(f"Model saved to {model_path}", logger=logger)
 
-    # plot metrics if there was training
+    # --- Plot Metrics ---
     if experiment_cfg.num_epochs > 0:
+        print(f"Log dir: {trainer.log_dir}")
         plot_csv_logger_metrics(
-            csv_dir=trainer.logger.log_dir,
+            csv_dir=trainer.log_dir,
             experiment=model_name,
             logger=logger,
             plots_path=Config.plot_dir / task / dataset_name,

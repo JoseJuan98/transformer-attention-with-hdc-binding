@@ -17,7 +17,7 @@ class ExperimentConfig:
 
     Attributes:
         input_size (int): The size of the input features or vocabulary in case of text.
-        context_lenght (int): The maximum sequence length.
+        context_length (int): The maximum sequence length.
         d_model (int): The dimensionality of the embeddings.
         num_heads (int): The number of attention heads.
         d_ff (int): The dimensionality of the inner layer of the feed-forward network.
@@ -40,7 +40,7 @@ class ExperimentConfig:
     num_epochs: int
     learning_rate: float
     input_size: int
-    context_lenght: int
+    context_length: int
     d_model: int
     num_heads: int
     d_ff: int
