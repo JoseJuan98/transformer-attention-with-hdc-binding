@@ -8,7 +8,7 @@ class FeedForward(torch.nn.Module):
     r"""Position-wise feed-forward network.
 
     This class implements the feed-forward network used in each encoder layer of the Transformer. It consists of two
-    linear layers with a ReLU activation in between.
+    linear layers with a Gaussian Error Linear Unit (GeLU) activation in between.
 
     Args:
         d_model (int): The dimensionality of the input and output embeddings.
@@ -29,7 +29,7 @@ class FeedForward(torch.nn.Module):
         super(FeedForward, self).__init__()
         self.linear1 = torch.nn.Linear(in_features=d_model, out_features=d_ff)
         self.linear2 = torch.nn.Linear(in_features=d_ff, out_features=d_model)
-        self.relu = torch.nn.ReLU()
+        self.activation = torch.nn.GELU()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass of the feed-forward module.
@@ -40,4 +40,4 @@ class FeedForward(torch.nn.Module):
         Returns:
             torch.Tensor: The output tensor of shape (batch_size, seq_len, d_model).
         """
-        return self.linear2(self.relu(self.linear1(x)))
+        return self.linear2(self.activation(self.linear1(x)))
