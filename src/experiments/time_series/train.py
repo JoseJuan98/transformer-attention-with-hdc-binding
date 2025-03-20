@@ -6,7 +6,7 @@ import multiprocessing
 # Third party imports
 import lightning
 import torch
-from lightning.pytorch.callbacks import ModelSummary
+from lightning.pytorch.callbacks import EarlyStopping, ModelSummary
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from lightning.pytorch.profilers import SimpleProfiler
 from torch.utils.data import DataLoader
@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 # First party imports
 from experiments import ExperimentConfig
 from experiments.time_series.dataset import get_ucr_datasets
-from models import EncoderOnlyTransformerTSClassifier, TimeSeriesSinusoidalPositionalEmbedding
+from models import EncoderOnlyTransformerTSClassifier, PocketAlgorithm, TimeSeriesSinusoidalPositionalEmbedding
 from utils import Config, get_logger, msg_task, save_csv_logger_metrics_plot
 
 
@@ -115,6 +115,15 @@ def train():
     msg_task(msg=f"Experiment {model_name.replace("_", " ").title()}", logger=logger)
     logger.info(f"Experiment Configuration:\n\n{experiment_cfg.pretty_str()}\n\n")
 
+    # --- Callbacks ---
+    early_stopping = EarlyStopping(monitor="val_loss", mode="min", patience=5)
+    pocket_algorithm = PocketAlgorithm(
+        monitor="val_acc",
+        mode="max",
+        ckpt_filepath=Config.model_dir / experiment_cfg.model_relative_path.with_suffix(".ckpt"),
+        model_file_path=Config.model_dir / experiment_cfg.model_relative_path,
+    )
+
     # --- Trainer ---
     trainer = lightning.Trainer(
         default_root_dir=Config.root_dir,
@@ -127,7 +136,7 @@ def train():
             TensorBoardLogger(save_dir=run_path, name=dataset_name, version=run_version),
         ],
         log_every_n_steps=1,
-        callbacks=[ModelSummary(max_depth=-1)],
+        callbacks=[ModelSummary(max_depth=-1), early_stopping, pocket_algorithm],
         # TODO: remove profiler for systematic runs
         # measures all the key methods across Callbacks, DataModules and the LightningModule in the training loop.
         profiler=SimpleProfiler(filename="simple_profiler"),
@@ -145,10 +154,11 @@ def train():
     trainer.test(model, dataloaders=test_dataloader)
 
     # --- Save Model ---
-    model_path = Config.model_dir / experiment_cfg.model_relative_path
-    model_path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save(model.state_dict(), model_path)
-    logger.info(f"\nModel saved to {model_path}")
+    # No need to save here, PocketAlgorithm saves the model_relative_path
+    # model_path = Config.model_dir / experiment_cfg.model_path
+    # model_path.parent.mkdir(parents=True, exist_ok=True)
+    # torch.save(model.state_dict(), model_path)
+    # logger.info(f"\nModel saved to {model_path}")
 
     # --- Plot Metrics ---
     if experiment_cfg.num_epochs > 0:

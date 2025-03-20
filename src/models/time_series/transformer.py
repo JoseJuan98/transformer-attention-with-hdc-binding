@@ -105,7 +105,7 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
         self.d_model = d_model
         self.learning_rate = learning_rate
         self.num_heads = num_heads
-        self.scaling = scaling  # Store scaling method
+        self.scaling = scaling
         self.mask_input = mask_input
 
         # Others
