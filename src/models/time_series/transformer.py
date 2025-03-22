@@ -21,7 +21,7 @@ The following modifications were made:
 
 # Standard imports
 import math
-from typing import Literal, Optional
+from typing import Literal, Optional, Protocol
 
 # Third party imports
 import lightning
@@ -34,7 +34,35 @@ from models.time_series.scaler import TimeSeriesMeanScaler, TimeSeriesNOPScaler,
 from models.transformer.encoder import Encoder
 
 
-class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
+# TODO: move to a separate file
+class Model(Protocol):
+    """Model Protocol."""
+
+    def evaluate(self, batch: tuple[torch.Tensor, torch.Tensor], stage: str, progress_bar: bool = True) -> dict:
+        """Evaluates the model on a batch of data.
+
+        Args:
+            batch (tuple[torch.Tensor, torch.Tensor]): The batch of data (x,y) of shape (batch_size, seq_len, input_size)
+            and (batch_size,).
+            stage (str): The stage of the evaluation (train, val, test).
+            progress_bar (bool): Whether to display the progress bar.
+        """
+        ...
+
+    def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+        """Performs a forward pass through the model.
+
+        Args:
+            x (torch.Tensor): The input tensor of shape (batch_size, seq_len, input_size).
+            mask (torch.Tensor): The attention mask of shape (batch_size, seq_len).
+
+        Returns:
+            torch.Tensor: The output tensor of shape (batch_size, 2).
+        """
+        ...
+
+
+class EncoderOnlyTransformerTSClassifier(Model, lightning.LightningModule):
     """Implements the Encoder-only Transformer Time Series Classifier.
 
     This class implements an encoder-only Transformer model for time series classification. It consists of an embedding
@@ -153,6 +181,7 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
         Returns:
             torch.Tensor: The output tensor of shape (batch_size, 2).
         """
+        # TODO: reuse the docstring from the protocol or lightning module
         # Old one
         # x = self.embedding(x) * self.sqrt_d_model
         # x = self.positional_encoding(x)
@@ -197,6 +226,7 @@ class EncoderOnlyTransformerTSClassifier(lightning.LightningModule):
             stage (str): The stage of the evaluation (train, val, test).
             progress_bar (bool): Whether to display the progress bar.
         """
+        # TODO: reuse the docstring from the protocol or lightning module
         x, y = batch
         logits = self(x)  # No mask needed, handled in forward
         loss = self.loss_fn(logits, y)

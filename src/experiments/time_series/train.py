@@ -2,6 +2,7 @@
 """Training script for the Transformer model."""
 # Standard imports
 import multiprocessing
+import pathlib
 
 # Third party imports
 import lightning
@@ -12,19 +13,40 @@ from lightning.pytorch.profilers import SimpleProfiler
 from torch.utils.data import DataLoader
 
 # First party imports
-from experiments import ExperimentConfig
+from experiments import ModelConfig
 from experiments.time_series.dataset import get_ucr_datasets
 from models import EncoderOnlyTransformerTSClassifier, PocketAlgorithm, TimeSeriesSinusoidalPositionalEmbedding
 from utils import Config, get_logger, msg_task, save_csv_logger_metrics_plot
 
 
-def train():
+# TODO: put them in their own place
+class ExperimentConfig:
+    """Experiment Configuration."""
+
+    pass
+
+
+class ExperimentRunner:
+    """Experiment Runner."""
+
+    def __init__(self, config: ExperimentConfig):
+        self.config = config
+        self.trainer = ...  # put trainer down below and check a way to reuse the same trainer for different models.
+
+    def train_model_for_all_datasets(self):
+        """Trains the model for all datasets."""
+        raise NotImplementedError()
+
+    def train_model_for_dataset(self, dataset_name: str):
+        """Trains the model for a specific dataset."""
+        raise NotImplementedError()
+
+
+def train_model_for_dataset(
+    task: str, dataset_name: str, model_name: str, run_version: str  # TODO: , model: lightning.LightningModule
+) -> None:
     """Trains the model."""
-    task = "time_series_classification"
-    dataset_name = "ArticularyWordRecognition"
-    model_name = "transformer_encoder_only"
     run_path = Config.model_dir / "runs" / task / model_name
-    run_version = "version_0"
     test_only = False  # Set to True to only test the model
 
     log_file = Config.log_dir / f"{task}/{model_name}/{dataset_name}/{run_version}/main.log"
@@ -44,7 +66,7 @@ def train():
     )
 
     # --- Configuration ---
-    experiment_cfg = ExperimentConfig(
+    experiment_cfg = ModelConfig(
         num_epochs=30,
         input_size=num_channels,  # Number of variates (channels)
         context_length=max_len,  # Sequence length
@@ -120,7 +142,7 @@ def train():
     pocket_algorithm = PocketAlgorithm(
         monitor="val_acc",
         mode="max",
-        ckpt_filepath=Config.model_dir / experiment_cfg.model_relative_path.with_suffix(".ckpt"),
+        ckpt_filepath=Config.model_dir / pathlib.Path(experiment_cfg.model_relative_path).with_suffix(".ckpt"),
         model_file_path=Config.model_dir / experiment_cfg.model_relative_path,
     )
 
@@ -172,4 +194,8 @@ def train():
 
 
 if __name__ == "__main__":
-    train()
+    task = "time_series_classification"
+    dataset_name = "ArticularyWordRecognition"
+    model_name = "transformer_encoder_only"
+    run_version = "version_0"
+    train_model_for_dataset(task=task, dataset_name=dataset_name, model_name=model_name, run_version=run_version)

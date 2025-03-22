@@ -2,4 +2,4 @@
 """Import shortcuts for experiments module."""
 
 # Local imports
-from .experiment_config import ExperimentConfig
+from .experiment_config import ModelConfig

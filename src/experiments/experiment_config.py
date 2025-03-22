@@ -10,8 +10,8 @@ from lightning.pytorch.trainer.connectors.accelerator_connector import _PRECISIO
 
 
 @dataclass
-class ExperimentConfig:
-    """Configuration class for the training experiments in this project.
+class ModelConfig:
+    """Configuration class for training a model.
 
     It contains the hyperparameters, hardware settings, and experiment settings.
 
@@ -52,7 +52,7 @@ class ExperimentConfig:
     precision: _PRECISION_INPUT
 
     # Experiment settings
-    model_relative_path: pathlib.Path
+    model_relative_path: str
     experiment_name: str
     description: str
     dataset: str
