@@ -12,24 +12,25 @@ from matplotlib import pyplot
 from sklearn.preprocessing import StandardScaler
 from sktime.datasets import load_UCR_UEA_dataset
 from torch.utils.data import TensorDataset
+from tqdm import tqdm
 
 
 def __convert_to_numpy(data: pandas.DataFrame) -> numpy.ndarray:
     """Converts a sktime DataFrame to a numpy array.
 
-    sktime returns pandas DataFrames. The data needs to be coverted to numpy arrays and then to PyTorch tensors. Also,
+    sktime returns pandas DataFrames which needs to be coverted to numpy arrays and then to PyTorch tensors. Also,
     the multivariate case needs to be handled correctly. sktime stores each dimension/variable of the time series in a
     separate column of the DataFrame, and each cell contains a pandas Series representing the time series for that
     dimension.
     """
-    num_cases = len(data)
+    num_samples = len(data)
     num_dimensions = len(data.columns)
-    max_len = max(len(data.iloc[i, j]) for i in range(num_cases) for j in range(num_dimensions))
+    max_len = max(len(data.iloc[i, j]) for i in range(num_samples) for j in range(num_dimensions))
 
     # Initialize an array to hold the data.  Shape: (num_cases, max_len, num_dimensions)
-    arr = numpy.zeros((num_cases, max_len, num_dimensions))
+    arr = numpy.zeros((num_samples, max_len, num_dimensions))
 
-    for i in range(num_cases):
+    for i in tqdm(iterable=range(num_samples), desc="Converting to numpy", unit=" samples"):
         for j in range(num_dimensions):
             # Pad the series with zeros to the max_len
             series = data.iloc[i, j].to_numpy()
@@ -77,35 +78,7 @@ def get_ucr_datasets(
     num_cases_test, _, _ = X_test.shape
 
     if plot_first_row and num_dimensions >= 1:
-        pyplot.figure(figsize=(16, 9))
-
-        # plot all dimensions in a heatmap
-        data_row = X_train[0]
-        if data_row.shape[0] >= data_row.shape[1]:
-            data_row = data_row.T
-
-        pyplot.imshow(data_row)
-        pyplot.title(f"{dsid} Sample")
-        pyplot.show()
-
-        if plot_path is not None:
-            plot_path.parent.mkdir(parents=True, exist_ok=True)
-            pyplot.savefig(plot_path)
-        pyplot.close()
-
-        # plot dimensions separately in a line plot
-        fig, ax = pyplot.subplots(nrows=1, ncols=1, figsize=(16, 9))
-        for i in range(num_dimensions):
-            ax.plot(data_row[:, i], label=f"Dimension {i}")
-        pyplot.title(f"{dsid} Sample")
-        pyplot.legend()
-        pyplot.show()
-
-        if plot_path is not None:
-            plot_path.parent.mkdir(parents=True, exist_ok=True)
-            pyplot.savefig(plot_path.parent / plot_path.name.replace(".png", "_line_plot.png"))
-
-        pyplot.close()
+        _plot_time_series_sample(dsid=dsid, plot_path=plot_path, sample=X_train[0], num_dimensions=num_dimensions)
 
     scaler = StandardScaler()
     X_train = X_train.reshape(num_cases_train * max_len, num_dimensions)
@@ -137,3 +110,37 @@ def get_ucr_datasets(
         logger.info(f"  Number of dimensions: {num_dimensions}")
 
     return train_dataset, test_dataset, max_len, num_classes, num_dimensions
+
+
+def _plot_time_series_sample(
+    dsid: str, sample: numpy.ndarray, num_dimensions: int, plot_path: pathlib.Path | None = None
+):
+    pyplot.figure(figsize=(16, 9))
+
+    # plot all dimensions in a heatmap
+    data_row = sample
+    if data_row.shape[0] >= data_row.shape[1]:
+        data_row = data_row.T
+
+    pyplot.imshow(data_row)
+    pyplot.title(f"{dsid} Sample")
+    pyplot.show()
+
+    if plot_path is not None:
+        plot_path.parent.mkdir(parents=True, exist_ok=True)
+        pyplot.savefig(plot_path)
+    pyplot.close()
+
+    # plot dimensions separately in a line plot
+    fig, ax = pyplot.subplots(nrows=1, ncols=1, figsize=(16, 9))
+    for i in range(num_dimensions):
+        ax.plot(data_row[:, i], label=f"Dimension {i}")
+    pyplot.title(f"{dsid} Sample")
+    pyplot.legend()
+    pyplot.show()
+
+    if plot_path is not None:
+        plot_path.parent.mkdir(parents=True, exist_ok=True)
+        pyplot.savefig(plot_path.parent / plot_path.name.replace(".png", "_line_plot.png"))
+
+    pyplot.close()

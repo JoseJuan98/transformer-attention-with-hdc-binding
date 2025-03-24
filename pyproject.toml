@@ -20,6 +20,7 @@ dependencies = [
     "scikit-learn (>=1.6.1)",
     "sktime (>=0.36.0)",
     "torch-tb-profiler (>=0.4.3)",
+    "tqdm (>=4.67.1,<5.0.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]
