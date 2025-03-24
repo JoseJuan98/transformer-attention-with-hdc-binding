@@ -3,6 +3,7 @@
 # Standard imports
 import multiprocessing
 import pathlib
+from dataclasses import dataclass
 
 # Third party imports
 import lightning
@@ -10,40 +11,51 @@ import torch
 from lightning.pytorch.callbacks import EarlyStopping, ModelSummary
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from lightning.pytorch.profilers import SimpleProfiler
+from lightning.pytorch.trainer.connectors.accelerator_connector import _PRECISION_INPUT
 from torch.utils.data import DataLoader
 
 # First party imports
-from experiments import ModelConfig
+# from experiments import ModelConfig
 from experiments.time_series.dataset import get_ucr_datasets
 from models import EncoderOnlyTransformerTSClassifier, PocketAlgorithm, TimeSeriesSinusoidalPositionalEmbedding
 from utils import Config, get_logger, msg_task, save_csv_logger_metrics_plot
+from utils.base_config import BaseConfig
 
 
-# TODO: put them in their own place
-class ExperimentConfig:
-    """Experiment Configuration."""
+@dataclass
+class ModelConfig(BaseConfig):
+    """Configuration class for training a model."""
 
-    pass
+    # Model hyperparameters
+    batch_size: int
+    num_epochs: int
+    learning_rate: float
+    input_size: int
+    context_length: int
+    d_model: int
+    num_heads: int
+    d_ff: int
+    num_layers: int
+    dropout: float
 
+    # Hardware settings
+    device: str
+    precision: _PRECISION_INPUT
 
-class ExperimentRunner:
-    """Experiment Runner."""
-
-    def __init__(self, config: ExperimentConfig):
-        self.config = config
-        self.trainer = ...  # put trainer down below and check a way to reuse the same trainer for different models.
-
-    def train_model_for_all_datasets(self):
-        """Trains the model for all datasets."""
-        raise NotImplementedError()
-
-    def train_model_for_dataset(self, dataset_name: str):
-        """Trains the model for a specific dataset."""
-        raise NotImplementedError()
+    # Experiment settings
+    model_relative_path: str
+    experiment_name: str
+    description: str
+    dataset: str
+    num_classes: int
 
 
 def train_model_for_dataset(
-    task: str, dataset_name: str, model_name: str, run_version: str  # TODO: , model: lightning.LightningModule
+    task: str,
+    dataset_name: str,
+    model_name: str,
+    run_version: str,
+    profiler: bool = False,  # TODO: , model: lightning.LightningModule
 ) -> None:
     """Trains the model."""
     run_path = Config.model_dir / "runs" / task / model_name
@@ -70,9 +82,9 @@ def train_model_for_dataset(
         num_epochs=30,
         input_size=num_channels,  # Number of variates (channels)
         context_length=max_len,  # Sequence length
-        d_model=128,
+        d_model=64,
         num_heads=8,
-        d_ff=128,
+        d_ff=256,
         num_layers=4,
         dropout=0.1,
         batch_size=64,
@@ -126,11 +138,15 @@ def train_model_for_dataset(
         # TODO: remove profiler for systematic runs
         # TODO: move all configurations outside to make it composible
         # Torch Profiler: https://pytorch.org/tutorials/intermediate/tensorboard_profiler_tutorial.html
-        torch_profiling=torch.profiler.profile(
-            schedule=torch.profiler.schedule(wait=1, warmup=1, active=3, repeat=1),
-            on_trace_ready=torch.profiler.tensorboard_trace_handler(dir_name=(run_path / run_version).as_posix()),
-            record_shapes=True,
-            with_stack=True,
+        torch_profiling=(
+            torch.profiler.profile(
+                schedule=torch.profiler.schedule(wait=1, warmup=1, active=3, repeat=1),
+                on_trace_ready=torch.profiler.tensorboard_trace_handler(dir_name=(run_path / run_version).as_posix()),
+                record_shapes=True,
+                with_stack=True,
+            )
+            if profiler
+            else None
         ),
     )
 
@@ -196,6 +212,9 @@ def train_model_for_dataset(
 if __name__ == "__main__":
     task = "time_series_classification"
     dataset_name = "ArticularyWordRecognition"
+    # dataset_name = ""
     model_name = "transformer_encoder_only"
     run_version = "version_0"
-    train_model_for_dataset(task=task, dataset_name=dataset_name, model_name=model_name, run_version=run_version)
+    train_model_for_dataset(
+        task=task, dataset_name=dataset_name, model_name=model_name, run_version=run_version, profiler=False
+    )
