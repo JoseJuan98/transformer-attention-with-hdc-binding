@@ -141,6 +141,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
                 "dropout",
                 "scaler",
                 "profiler",
+                "loss_fn",
             ]
         )
 
@@ -251,7 +252,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
 
     def configure_optimizers(self):
         """Configures the optimizer."""
-        return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        return torch.optim.AdamW(self.parameters(), lr=self.learning_rate)
 
     def on_train_epoch_start(self) -> None:
         """Called when the train epoch begins."""

@@ -23,7 +23,7 @@ from utils.base_config import BaseConfig
 
 
 @dataclass
-class ModelConfig(BaseConfig):
+class TsModelConfig(BaseConfig):
     """Configuration class for training a model."""
 
     # Model hyperparameters
@@ -56,6 +56,7 @@ def train_model_for_dataset(
     model_name: str,
     run_version: str,
     profiler: bool = False,  # TODO: , model: lightning.LightningModule
+    plot_first_sample: bool = False,
 ) -> None:
     """Trains the model."""
     run_path = Config.model_dir / "runs" / task / model_name
@@ -72,13 +73,12 @@ def train_model_for_dataset(
         dsid=dataset_name,
         extract_path=Config.data_dir / task,
         logger=logger,
-        # TODO:
-        plot_first_row=False,
+        plot_first_sample=plot_first_sample,
         plot_path=Config.plot_dir / task / f"{dataset_name}_sample.png",
     )
 
     # --- Configuration ---
-    experiment_cfg = ModelConfig(
+    experiment_cfg = TsModelConfig(
         num_epochs=30,
         input_size=num_channels,  # Number of variates (channels)
         context_length=max_len,  # Sequence length
@@ -187,6 +187,8 @@ def train_model_for_dataset(
     msg_task(msg="Train and Test", logger=logger)
     logger.info(f"Training {model_name} for {dataset_name} in {run_version} for {experiment_cfg.num_epochs} epochs...")
     if experiment_cfg.num_epochs > 0 and not test_only:
+        # TODO: torch._dynamo.exc.BackendCompilerFailed: backend='inductor' raised: AttributeError: 'float' object has no attribute 'meta'
+        # model = torch.compile(model)
         trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=test_dataloader)
     logger.info(f"{model_name.title()} training finished!")
     trainer.test(model, dataloaders=test_dataloader)
@@ -212,9 +214,14 @@ def train_model_for_dataset(
 if __name__ == "__main__":
     task = "time_series_classification"
     dataset_name = "ArticularyWordRecognition"
-    # dataset_name = ""
+    # dataset_name = "InsectWingbeat"
     model_name = "transformer_encoder_only"
     run_version = "version_0"
     train_model_for_dataset(
-        task=task, dataset_name=dataset_name, model_name=model_name, run_version=run_version, profiler=False
+        task=task,
+        dataset_name=dataset_name,
+        model_name=model_name,
+        run_version=run_version,
+        profiler=False,
+        plot_first_sample=False,
     )

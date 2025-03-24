@@ -43,7 +43,7 @@ def get_ucr_datasets(
     dsid: str,
     extract_path: pathlib.Path,
     logger: logging.Logger | None = None,
-    plot_first_row: bool = False,
+    plot_first_sample: bool = False,
     plot_path: pathlib.Path | None = None,
 ) -> tuple[TensorDataset, TensorDataset, int, int, int]:
     """Loads and standardizes a UCR dataset using sktime.
@@ -52,7 +52,7 @@ def get_ucr_datasets(
         dsid (str): The name of the UCR dataset.
         extract_path (`pathlib.Path`): The path to extract the dataset to.
         logger (`logging.Logger`, optional): The logger to use. Defaults to None.
-        plot_first_row (bool, optional): Whether to plot the first row of the dataset. Defaults to False.
+        plot_first_sample (bool, optional): Whether to plot the first row of the dataset. Defaults to False.
         plot_path (`pathlib.Path`, optional): The path to save the plot. Defaults to None.
 
     Returns:
@@ -77,7 +77,7 @@ def get_ucr_datasets(
     # max_len and num_dimensions should be the same
     num_cases_test, _, _ = X_test.shape
 
-    if plot_first_row and num_dimensions >= 1:
+    if plot_first_sample and num_dimensions >= 1:
         _plot_time_series_sample(dsid=dsid, plot_path=plot_path, sample=X_train[0], num_dimensions=num_dimensions)
 
     scaler = StandardScaler()
