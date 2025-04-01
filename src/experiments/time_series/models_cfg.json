@@ -1,0 +1,40 @@
+{
+  "Transformer_Absolute_Sinusoidal_PE": {
+    "model_name": "transformer_absolute_sinusoidal_pe",
+    "desc": "Encoder Only Transformer with Absolute Sinusoidal Positional Encoding for Time Series Classification",
+    "num_epochs": 30,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 4,
+    "dropout": 0.1
+  },
+
+  "Transformer_ElementWise_PE": {
+    "model_name": "transformer_elementwise_pe",
+    "desc": "Encoder Only Transformer with Element-Wise Positional Encoding for Time Series Classification",
+    "num_epochs": 30,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 4,
+    "dropout": 0.1
+  },
+
+  "Transformer_CiruclarConvolution_PE": {
+    "model_name": "transformer_ciruclarconvolution_pe",
+    "desc": "Encoder Only Transformer with Circular Convolutional Positional Encoding for Time Series Classification",
+    "num_epochs": 30,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 4,
+    "dropout": 0.1
+  }
+}

@@ -14,6 +14,8 @@ class ModelConfig(BaseConfig):
     It contains the hyperparameters for the model.
 
     Attributes:
+        model_name (str): The name of the model.
+        desc (str): A description of the model.
         num_epochs (int): The number of training epochs.
         batch_size (int): The batch size.
         input_size (int): The size of the input features or vocabulary in case of text.
@@ -27,6 +29,9 @@ class ModelConfig(BaseConfig):
         learning_rate (float): The learning rate.
 
     """
+
+    model_name: str
+    desc: str
 
     # Model hyperparameters
     num_epochs: int

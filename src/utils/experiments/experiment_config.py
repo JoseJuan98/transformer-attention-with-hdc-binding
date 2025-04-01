@@ -7,9 +7,8 @@ from dataclasses import dataclass
 from lightning.pytorch.trainer.connectors.accelerator_connector import _PRECISION_INPUT
 
 # First party imports
-from experiments.model_config import ModelConfig
-from models import BaseModel
 from utils.base_config import BaseConfig
+from utils.experiments.model_config import ModelConfig
 
 
 @dataclass
@@ -19,10 +18,9 @@ class ExperimentConfig(BaseConfig):
     It contains hardware settings, and experiment settings.
 
     Attributes:
-        model_relative_path (str, pathlib.Path): The relative path to ~`Config.model_dir` to save the model to.
         experiment_name (str): The name of the experiment.
         description (str): A description of the experiment.
-        dataset (str): The dataset used for training.
+        dataset_names (list[str]): A list of dataset names to use for the experiment.
         device (str): The device to use for training ('cpu' or 'cuda').
         precision (str): The precision to use for training ('16', '32', '16-mixed', 'bf16-mixed', ...).
     """
@@ -32,7 +30,6 @@ class ExperimentConfig(BaseConfig):
     run_version: str
     model_configs: dict[str, ModelConfig]
     dataset_names: list[str]
-    models: dict[str, type[BaseModel]]
 
     # Hardware settings
     device: str

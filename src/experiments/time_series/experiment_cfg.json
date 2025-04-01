@@ -1,0 +1,10 @@
+{
+    "experiment_name": "ts_classification_pe",
+    "description": "Time Series Classification Positional Encodings Experiment",
+    "run_version": "version_0",
+    "dataset_names": [
+        "ArticularyWordRecognition"
+    ],
+    "device": "cuda",
+    "precision": "16-mixed"
+}

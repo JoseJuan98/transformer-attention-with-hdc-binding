@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """This module is responsible for running the experiments."""
-#
+
 # # Standard imports
 # import multiprocessing
 # import pathlib
+# from dataclasses import dataclass
 #
 # # Third party imports
 # import lightning
@@ -11,16 +12,47 @@
 # from lightning.pytorch.callbacks import EarlyStopping, ModelSummary
 # from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 # from lightning.pytorch.profilers import SimpleProfiler
+# from lightning.pytorch.trainer.connectors.accelerator_connector import _PRECISION_INPUT
 # from torch.utils.data import DataLoader
 #
 # # First party imports
-# from experiments import ModelConfig
 # from experiments.time_series.dataset import get_ucr_datasets
 # from models import EncoderOnlyTransformerTSClassifier, PocketAlgorithm, TimeSeriesSinusoidalPositionalEmbedding
 # from utils import Config, get_logger, msg_task, save_csv_logger_metrics_plot
+# from utils.base_config import BaseConfig
+# from utils.experiments.model_config import ModelConfig
 #
 # # Local imports
+# ####################################
 # from .experiment_config import ExperimentConfig
+#
+#
+# @dataclass
+# class TsModelConfig(BaseConfig):
+#     """Configuration class for training a model."""
+#
+#     # Model hyperparameters
+#     batch_size: int
+#     num_epochs: int
+#     learning_rate: float
+#     input_size: int
+#     context_length: int
+#     d_model: int
+#     num_heads: int
+#     d_ff: int
+#     num_layers: int
+#     dropout: float
+#
+#     # Hardware settings
+#     device: str
+#     precision: _PRECISION_INPUT
+#
+#     # Experiment settings
+#     model_relative_path: str
+#     experiment_name: str
+#     description: str
+#     dataset: str
+#     num_classes: int
 #
 #
 # class ExperimentRunner:
@@ -36,7 +68,12 @@
 #
 #     @staticmethod
 #     def _train_model_for_dataset(
-#         task: str, dataset_name: str, model_name: str, run_version: str  # TODO: , model: lightning.LightningModule
+#         task: str,
+#         dataset_name: str,
+#         model_name: str,
+#         run_version: str,  # TODO: , model: lightning.LightningModule
+#         profiler: bool = False,
+#         plot_first_sample: bool = False,
 #     ) -> None:
 #         """Trains a model for a dataset."""
 #         run_path = Config.model_dir / "runs" / task / model_name
@@ -53,8 +90,7 @@
 #             dsid=dataset_name,
 #             extract_path=Config.data_dir / task,
 #             logger=logger,
-#             # TODO:
-#             plot_first_row=False,
+#             plot_first_sample=plot_first_sample,
 #             plot_path=Config.plot_dir / task / f"{dataset_name}_sample.png",
 #         )
 #
@@ -63,9 +99,9 @@
 #             num_epochs=30,
 #             input_size=num_channels,  # Number of variates (channels)
 #             context_length=max_len,  # Sequence length
-#             d_model=128,
+#             d_model=64,
 #             num_heads=8,
-#             d_ff=128,
+#             d_ff=256,
 #             num_layers=4,
 #             dropout=0.1,
 #             batch_size=64,
@@ -119,11 +155,17 @@
 #             # TODO: remove profiler for systematic runs
 #             # TODO: move all configurations outside to make it composible
 #             # Torch Profiler: https://pytorch.org/tutorials/intermediate/tensorboard_profiler_tutorial.html
-#             torch_profiling=torch.profiler.profile(
-#                 schedule=torch.profiler.schedule(wait=1, warmup=1, active=3, repeat=1),
-#                 on_trace_ready=torch.profiler.tensorboard_trace_handler(dir_name=(run_path / run_version).as_posix()),
-#                 record_shapes=True,
-#                 with_stack=True,
+#             torch_profiling=(
+#                 torch.profiler.profile(
+#                     schedule=torch.profiler.schedule(wait=1, warmup=1, active=3, repeat=1),
+#                     on_trace_ready=torch.profiler.tensorboard_trace_handler(
+#                         dir_name=(run_path / run_version).as_posix()
+#                     ),
+#                     record_shapes=True,
+#                     with_stack=True,
+#                 )
+#                 if profiler
+#                 else None
 #             ),
 #         )
 #
@@ -166,16 +208,11 @@
 #             f"Training {model_name} for {dataset_name} in {run_version} for {experiment_cfg.num_epochs} epochs..."
 #         )
 #         if experiment_cfg.num_epochs > 0 and not test_only:
+#             # TODO: torch._dynamo.exc.BackendCompilerFailed: backend='inductor' raised: AttributeError: 'float' object has no attribute 'meta'
+#             # model = torch.compile(model)
 #             trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=test_dataloader)
 #         logger.info(f"{model_name.title()} training finished!")
 #         trainer.test(model, dataloaders=test_dataloader)
-#
-#         # --- Save Model ---
-#         # No need to save here, PocketAlgorithm saves the model_relative_path
-#         # model_path = Config.model_dir / experiment_cfg.model_path
-#         # model_path.parent.mkdir(parents=True, exist_ok=True)
-#         # torch.save(model.state_dict(), model_path)
-#         # logger.info(f"\nModel saved to {model_path}")
 #
 #         # --- Plot Metrics ---
 #         if experiment_cfg.num_epochs > 0:
@@ -186,3 +223,19 @@
 #                 logger=logger,
 #                 plots_path=Config.plot_dir / task / model_name / f"epoch_metrics_{dataset_name}_{run_version}.png",
 #             )
+#
+#
+# if __name__ == "__main__":
+#     task = "time_series_classification"
+#     dataset_name = "ArticularyWordRecognition"
+#     # dataset_name = "InsectWingbeat"
+#     model_name = "transformer_encoder_only"
+#     run_version = "version_0"
+#     train_model_for_dataset(
+#         task=task,
+#         dataset_name=dataset_name,
+#         model_name=model_name,
+#         run_version=run_version,
+#         profiler=False,
+#         plot_first_sample=False,
+#     )
