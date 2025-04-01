@@ -121,15 +121,18 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
 
         self._example_input_array = torch.zeros(size=(1, self.context_length, self.input_size))
 
-        # Scaler (added)
-        if scaling == "mean":
-            self.scaler = TimeSeriesMeanScaler()
-        elif scaling == "std":
-            self.scaler = TimeSeriesStdScaler()
-        elif scaling is None or scaling.lower() == "none":
-            self.scaler = TimeSeriesNOPScaler()
-        else:
+        # Scaler catalog
+        scaler_catalog = {
+            "mean": TimeSeriesMeanScaler,
+            "std": TimeSeriesStdScaler,
+            "none": TimeSeriesNOPScaler,
+            None: TimeSeriesNOPScaler,
+        }
+
+        if scaling not in scaler_catalog.keys():
             raise ValueError(f"Invalid scaling method: {scaling}.  Must be 'mean', 'std', or None.")
+
+        self.scaler = scaler_catalog[scaling]()
 
         self.save_hyperparameters(
             ignore=[
@@ -155,13 +158,6 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         Returns:
             torch.Tensor: The output tensor of shape (batch_size, 2).
         """
-        # TODO: reuse the docstring from the protocol or lightning module
-        # Old one
-        # x = self.embedding(x) * self.sqrt_d_model
-        # x = self.positional_encoding(x)
-        # x = self.dropout(x)
-
-        # TODO: check this mask
         # Create observed mask if not provided and mask_input is True
         if mask is None and self.mask_input:
             mask = ~torch.isnan(x)  # True for observed, False for NaN
@@ -174,8 +170,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         if observed_mask.ndim == 3:
             observed_mask = observed_mask.all(dim=2)
 
-        # TODO: scale in the forward in the whole dataset?
-        # Scaling (added)
+        # Scaling
         x_scaled, _, _ = self.scaler(x, observed_mask.unsqueeze(-1).expand_as(x))
 
         # Embedding
@@ -185,7 +180,9 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         x_pos_enc = self.positional_encoding(x_scaled)
         x = self.dropout(x_embed + x_pos_enc)
 
+        # Encoder
         x = self.encoder(x, mask)
+
         # Global average pooling over the sequence length
         x = x.mean(dim=1)
         x = self.fc(x)
@@ -200,7 +197,6 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
             stage (str): The stage of the evaluation (train, val, test).
             progress_bar (bool): Whether to display the progress bar.
         """
-        # TODO: reuse the docstring from the protocol or lightning module
         x, y = batch
         logits = self(x)  # No mask needed, handled in forward
         loss = self.loss_fn(logits, y)

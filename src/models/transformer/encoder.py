@@ -28,7 +28,7 @@ class EncoderLayer(torch.nn.Module):
 
     """
 
-    def __init__(self, d_model, num_heads, d_ff, dropout=0.1):
+    def __init__(self, d_model: int, num_heads: int, d_ff: int, dropout: float = 0.1):
         """Initializes the EncoderLayer module.
 
         Args:
@@ -38,11 +38,13 @@ class EncoderLayer(torch.nn.Module):
             dropout (float, optional): The dropout probability. Defaults to 0.1.
         """
         super(EncoderLayer, self).__init__()
-        self.self_attn = MultiHeadAttention(d_model, num_heads)
-        self.feed_forward = FeedForward(d_model, d_ff)
+        self.self_attention = MultiHeadAttention(embed_dim=d_model, num_heads=num_heads)
         self.norm1 = torch.nn.LayerNorm(d_model)
+        self.dropout1 = torch.nn.Dropout(dropout)
+
+        self.feed_forward = FeedForward(d_model=d_model, d_ff=d_ff)
         self.norm2 = torch.nn.LayerNorm(d_model)
-        self.dropout = torch.nn.Dropout(dropout)
+        self.dropout2 = torch.nn.Dropout(dropout)
 
     def forward(self, x: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
         """Applies the encoder layer to the input tensor.
@@ -55,12 +57,12 @@ class EncoderLayer(torch.nn.Module):
             torch.Tensor: The output tensor of shape (batch_size, seq_len, d_model).
         """
         # Multi-head attention and residual connection.
-        attn_output = self.self_attn(q=x, k=x, v=x, mask=mask)
-        x = self.norm1(x + self.dropout(attn_output))
+        attn_output = self.self_attention(q=x, k=x, v=x, mask=mask)
+        x = self.norm1(x + self.dropout1(attn_output))
 
         # Feed-forward and residual connection.
         ff_output = self.feed_forward(x)
-        x = self.norm2(x + self.dropout(ff_output))
+        x = self.norm2(x + self.dropout2(ff_output))
         return x
 
 
