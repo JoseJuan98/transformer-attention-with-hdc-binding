@@ -111,7 +111,7 @@ class ModelFactory:
         return lightning.Trainer(
             default_root_dir=default_root_dir,
             max_epochs=num_epochs,
-            accelerator="auto",
+            accelerator="gpu" if experiment_cfg.device == "cuda" else "auto",
             devices="auto",
             precision=experiment_cfg.precision,
             logger=[
