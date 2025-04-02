@@ -5,8 +5,8 @@ import json
 import pathlib
 
 # Local imports
-from .experiments.experiment_config import ExperimentConfig
-from .experiments.model_config import ModelConfig
+from .experiment_config import ExperimentConfig
+from .model_config import ModelConfig
 
 
 class ExperimentConfigFactory:
