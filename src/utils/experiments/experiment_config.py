@@ -82,7 +82,7 @@ class ExperimentConfig(BaseConfig):
         # Create the directories if it does not exist
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        obj = self.to_dict()
+        obj = self.to_dict().copy()
 
         obj["model_configs"] = {k: v.to_dict() for k, v in self.model_configs.items()}
 
