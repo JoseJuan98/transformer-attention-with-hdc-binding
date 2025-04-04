@@ -39,6 +39,12 @@ test:
 run-ts:
 	@poetry run python src/experiments/time_series/train.py
 
+## Clean logs
+clean-logs:
+	@echo "Cleaning logs..."
+	@rm -rf $(ROOT_DIR)/artifacts/model/
+	@rm -rf $(ROOT_DIR)/artifacts/log/
+
 DEFAULT_GOAL := help
 .PHONY: help
 help:
