@@ -25,7 +25,7 @@ def save_plot(filename: str) -> None:
     pyplot.savefig(plot_path, bbox_inches="tight")
 
 
-def save_csv_logger_metrics_plot(
+def get_train_metrics_and_plot(
     plots_path: pathlib.Path,
     csv_dir: str,
     experiment: str,
@@ -46,8 +46,8 @@ def save_csv_logger_metrics_plot(
     metrics.drop(columns=["step", "n_samples"], axis=1, inplace=True, errors="ignore")
     metrics.set_index("epoch", inplace=True)
 
-    test_loss = metrics["test_loss"].dropna(how="all").mean()
-    test_acc = metrics["test_acc"].dropna(how="all").mean()
+    test_loss = metrics["test_loss"].dropna(how="all").mean().round(4)
+    test_acc = metrics["test_acc"].dropna(how="all").mean().round(4)
 
     if logger is None:
         print(f"\nExperiment {experiment}\n\tTest loss: {test_loss}.\n\tTest accuracy: {test_acc}.\n\n")

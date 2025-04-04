@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """This module is responsible for running the experiments."""
 # Standard imports
+import json
 import multiprocessing
+import traceback
 
 # Third party imports
 import lightning
@@ -13,7 +15,7 @@ from experiments.time_series.dataset import get_ucr_datasets
 from models import (
     ModelFactory,
 )
-from utils import Config, get_logger, msg_task, save_csv_logger_metrics_plot
+from utils import Config, get_logger, get_train_metrics_and_plot, msg_task
 from utils.experiments.dataset_config import DatasetConfig
 from utils.experiments.model_config import ModelConfig
 
@@ -32,10 +34,24 @@ class ExperimentRunner:
         """
         self.experiment_cfg = experiment_cfg
         self.results: dict[str, dict] = {}
-        log_file = Config.log_dir / f"{self.experiment_cfg.task}/{self.experiment_cfg.run_version}/main.log"
-        self.logger = get_logger(name="lightning.pytorch.core", log_filename=log_file, propagate=False)
+        self.errors: dict[str, list] = {}
 
-        self.logger.info(self.experiment_cfg.pretty_str())
+        # Binding the logger to the lightning module logger to avoid conflicts
+        _task_exp_path = f"{self.experiment_cfg.task.replace(' ', '_')}/{self.experiment_cfg.run_version}/"
+
+        # Create the directories for the experiment
+        self.experiment_logs_path = Config.log_dir / _task_exp_path
+        self.results_path = Config.model_dir / _task_exp_path
+
+        # Create the results directory if it doesn't exist
+        self.results_path.mkdir(parents=True, exist_ok=True)
+        self.experiment_logs_path.mkdir(parents=True, exist_ok=True)
+
+        self.logger = get_logger(
+            name="lightning.pytorch.core", log_filename=self.experiment_logs_path / "main.log", propagate=False
+        )
+
+        self.logger.info(f"\n{self.experiment_cfg.pretty_str()}")
         self.logger.info("Starting experiment ...\n")
 
     def set_random_seed(self, seed: int = 42) -> None:
@@ -47,26 +63,82 @@ class ExperimentRunner:
         )
 
     def run(self):
-        """Run the experiment."""
+        """Run the experiment.
+
+        This method runs the experiment for the specified number of runs and datasets.
+        """
+        for run in range(1, self.experiment_cfg.runs_per_experiment):
+            self.logger.info(f"\n\n{'*'*40} Run {run} {'*'*40}\n")
+            self.single_run(run=run)
+
+    def single_run(self, run: int):
+        """Run the experiment.
+
+        Args:
+            run (int): The current run number index. In total there are `ExperimentConfig.runs_per_experiment` runs.
+        """
+
         for dataset in self.experiment_cfg.dataset_names:
             msg_task(msg=f" Dataset {dataset}", logger=self.logger)
 
+            # TODO: create dataloaders here
+
             for model_name, model_cfg in self.experiment_cfg.model_configs.items():
 
-                self.logger.info(f"\t{f'{"="*25}'f'{model_name:^40}'f'{"="*25}': ^100}\n")
-
-                # Train the model for the dataset
-                self._train_model_for_dataset(
-                    task=self.experiment_cfg.task,
-                    dataset_name=dataset,
-                    model_name=model_cfg.model_name,
-                    run_version=self.experiment_cfg.run_version,
-                    model_cfg=model_cfg,
-                    profiler=False,
-                    plot_first_sample=False,
+                self.logger.info(f"\n\n\t{f'{"="*24}'f'{model_name:^40}'f'{"="*24}': ^100}\n")
+                # Add component-specific handler
+                component_name = f"{model_name}_{dataset}"
+                self.logger.add_component_handler(
+                    component_name=component_name,
+                    log_filename=self.experiment_logs_path / model_name / f"{dataset}.log",
                 )
 
+                try:
+                    raise Exception(f"Experiment {dataset} failed.")
+
+                    # Train the model for the dataset
+                    self._train_model_for_dataset(
+                        task=self.experiment_cfg.task,
+                        dataset_name=dataset,
+                        model_name=model_cfg.model_name,
+                        run_version=self.experiment_cfg.run_version,
+                        model_cfg=model_cfg,
+                        profiler=False,
+                        plot_first_sample=False,
+                    )
+
+                    self.logger.info(f"Model {model_name} trained successfully")
+                except Exception as e:
+                    err_msg = f"\n\n\t{f'{"x" * 24}'f' {dataset} | {model_name} | Run {run} 'f'{"x" * 24}': ^100}\n\n"
+                    err_msg += f"Error for {dataset} training {model_name}:\n\n{str(e)}\n\n"
+                    tb_msg = f"Traceback:\n{traceback.format_exc()}"
+                    self.logger.error(err_msg)
+                    self.logger.error(tb_msg)
+                    # Update errors for model
+                    model_errors = self.errors.get(model_name, [])
+                    model_errors.append(
+                        {
+                            "dataset": dataset,
+                            "model": model_name,
+                            "run": run,
+                            "error": str(e),
+                            "traceback": traceback.format_exc(),
+                        }
+                    )
+                    self.errors[model_name] = model_errors
+                    with open(self.experiment_logs_path / "errors.log", "a") as f:
+                        f.write(err_msg)
+                        f.write(tb_msg)
+                finally:
+                    # Remove component handler when done
+                    self.logger.remove_component_handler(component_name=component_name)
+
         self.logger.info("Experiment completed.")
+
+        if self.errors:
+            self.logger.error(f"Errors occurred during the experiment:\n{json.dumps(self.errors, indent=4)}")
+        # TODO:
+        # with open(results_path / "results.csv", "w") as f:
 
     def _train_model_for_dataset(
         self,
@@ -85,10 +157,7 @@ class ExperimentRunner:
         if not torch.cuda.is_available():
             raise Exception("CUDA not available. No GPU found.")
 
-        # TODO: create a new log per dataset and model
-        # log_file = Config.log_dir / f"{self.experiment_cfg.task}/{self.experiment_cfg.run_version}/main.log"
-        # logger2 = get_logger(name="lightning.pytorch.core", log_filename=log_file, propagate=False)
-
+        # TODO: move it to method above for reusing it for several models
         msg_task(msg="Loading data", logger=self.logger)
         train_dataset, test_dataset, max_len, num_classes, num_channels = get_ucr_datasets(
             dsid=dataset_name,
@@ -156,7 +225,7 @@ class ExperimentRunner:
         # --- Plot Metrics ---
         if model_cfg.num_epochs > 0:
             print(f"Log dir: {trainer.log_dir}")
-            save_csv_logger_metrics_plot(
+            get_train_metrics_and_plot(
                 csv_dir=trainer.log_dir,
                 experiment=f"{model_name.replace("_", " ").title()} for {dataset_name.replace('_', ' ').title()} in {run_version}",
                 logger=self.logger,
