@@ -16,15 +16,15 @@ from torch.utils.data import DataLoader
 from experiments.data_factory import DataFactory
 from models import ModelFactory
 from utils import Config, get_logger, get_train_metrics_and_plot, msg_task
-from utils.experiments.dataset_config import DatasetConfig
-from utils.experiments.model_config import ModelConfig
+from utils.experiment.dataset_config import DatasetConfig
+from utils.experiment.model_config import ModelConfig
 
 # Local imports
 from .experiment_config import ExperimentConfig
 
 
 class ExperimentRunner:
-    """This class is responsible for running the experiments."""
+    """This class is responsible for running the experiment."""
 
     def __init__(self, experiment_cfg: ExperimentConfig, seed: int = 42):
         """Initializes the ExperimentRunner class.

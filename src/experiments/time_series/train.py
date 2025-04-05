@@ -4,7 +4,7 @@
 import pathlib
 
 # First party imports
-from utils.experiments import ExperimentConfigFactory, ExperimentRunner
+from utils.experiment import ExperimentConfigFactory, ExperimentRunner
 
 
 def run_time_series_experiments() -> None:

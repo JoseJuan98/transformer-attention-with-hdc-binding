@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader, Dataset, random_split
 
 # First party imports
 from experiments.time_series.dataset import get_ucr_datasets
-from utils.experiments.dataset_config import DatasetConfig
+from utils.experiment.dataset_config import DatasetConfig
 
 
 class DataFactory:

@@ -11,7 +11,7 @@ from lightning.pytorch.trainer.connectors.accelerator_connector import _PRECISIO
 
 # First party imports
 from utils.base_config import BaseConfig
-from utils.experiments.model_config import ModelConfig
+from utils.experiment.model_config import ModelConfig
 
 
 @dataclass

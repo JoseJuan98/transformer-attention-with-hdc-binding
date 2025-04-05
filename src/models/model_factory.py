@@ -15,9 +15,9 @@ from models import EncoderOnlyTransformerTSClassifier
 from models.pocket_algorithm import PocketAlgorithm
 from models.positional_encoding.ts_sinusoidal_positional_embedding import TimeSeriesSinusoidalPositionalEmbedding
 from utils import Config
-from utils.experiments.dataset_config import DatasetConfig
-from utils.experiments.experiment_config import ExperimentConfig
-from utils.experiments.model_config import ModelConfig
+from utils.experiment.dataset_config import DatasetConfig
+from utils.experiment.experiment_config import ExperimentConfig
+from utils.experiment.model_config import ModelConfig
 
 
 class ModelFactory:

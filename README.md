@@ -57,7 +57,7 @@ task (e.g., sentiment analysis, language modeling).
 │     ├── utils                # Utility functions (e.g., logging, helper functions)
 │     ├── data_understanding   # Scripts for exploratory data analysis
 │     ├── data_preparation     # Data loading and preprocessing modules
-│     ├── experiments          # Training and evaluation scripts
+│     ├── experiment          # Training and evaluation scripts
 │     │     └── time_series          # Time series specific experiments
 │     └── models               # Model definitions
 │           ├── positional_encoding  # Implementations of different positional encoding methods (including HDC binding)
