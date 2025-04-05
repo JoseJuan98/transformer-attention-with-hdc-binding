@@ -18,7 +18,7 @@ def run_time_series_experiments() -> None:
     )
 
     # FIXME: when implemented use all models, for now only the base one
-    experiment_config.model_configs.pop("Transformer Absolute Sinusoidal PE")
+    # experiment_config.model_configs.pop("Transformer Absolute Sinusoidal PE")
     experiment_config.model_configs.pop("Transformer Ciruclar Convolution PE")
     # experiment_config.model_configs.pop("Transformer Element-Wise PE")
 

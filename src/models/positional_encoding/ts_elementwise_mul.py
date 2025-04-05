@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """Time series HDC positional embedding module.
 
-This module implements element-wise multiplication binding method for hyperdimensional computing (HDC) positional encodings for time series classification.
+This module implements element-wise multiplication binding method for hyperdimensional computing (HDC) positional
+encodings for time series classification.
 """
 # Third party imports
 import torch
 
 
 class TimeSeriesElementwiseMultiplicationPositionalEncoding(torch.nn.Module):
-    """This module produces HDC positional embeddings of any length."""
+    """This module produces HDC positional embeddings of any length with element-wise multiplication (binding) method."""
 
     def __init__(self, num_positions: int, embedding_dim: int) -> None:
         """Initializes the HDC positional encoding.
@@ -27,7 +28,8 @@ class TimeSeriesElementwiseMultiplicationPositionalEncoding(torch.nn.Module):
 
         self.position_vectors = self._init_position_vectors(num_positions, embedding_dim)
 
-    def _init_position_vectors(self, num_positions: int, embedding_dim: int) -> torch.nn.Parameter:
+    @staticmethod
+    def _init_position_vectors(num_positions: int, embedding_dim: int) -> torch.nn.Parameter:
         """Initialize the HDC position vectors.
 
         Each position is represented by a unique, randomly initialized bipolar vector (+1 or -1).
@@ -59,8 +61,8 @@ class TimeSeriesElementwiseMultiplicationPositionalEncoding(torch.nn.Module):
         position_encodings = position_encodings.unsqueeze(0).expand(bsz, seq_len, self.embedding_dim)
 
         # Element-wise multiplication (binding)
-        # We need to project the input_tensor to the embedding_dim before binding
-        # Here, we assume that the input_size is smaller than embedding_dim, and we pad the input_tensor with zeros
+        # The input_tensor needs to be projected to the embedding_dim before binding
+        # It's assumed that the input_size is smaller than embedding_dim, and the input_tensor is padded with zeros
         input_size = input_tensor.shape[-1]
         if input_size < self.embedding_dim:
             padding_size = self.embedding_dim - input_size
