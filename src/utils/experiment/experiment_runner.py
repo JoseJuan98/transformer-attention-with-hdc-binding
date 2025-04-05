@@ -315,6 +315,15 @@ class ExperimentRunner:
                 logger=self.logger,
                 plots_path=Config.plot_dir / task / dataset_name / f"epoch_metrics_{model_name}_{run_version}.png",
             )
+
+            # Add other information to metrics
+            metrics["num_dimensions"] = dataset_cfg.input_size
+            metrics["num_classes"] = dataset_cfg.num_classes
+            metrics["sequence_length"] = dataset_cfg.context_length
+            metrics["train_samples"] = len(train_dataloader.dataset)
+            metrics["test_samples"] = len(test_dataloader.dataset)
+            metrics["validation_samples"] = len(validation_dataloader.dataset)
+
             self.update_global_metrics(
                 metrics=metrics,
                 run=run,

@@ -76,5 +76,6 @@ def get_train_metrics_and_plot(
     metrics = metrics[metrics.index == metrics.index[-1]].mean(axis=0).round(4)
     metrics["test_loss"] = test_loss
     metrics["test_acc"] = test_acc
+    metrics["size_MB"] = round(pathlib.Path(f"{csv_dir}/model.pth").stat().st_size / (1024**2), 4)
 
     return metrics.to_frame().T
