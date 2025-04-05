@@ -291,6 +291,7 @@ class ExperimentRunner:
             save_dir=model_run_path.parent,
             save_dir_name=model_name,
             save_version=f"run_{run}",
+            logger=self.logger,
         )
 
         # --- Train and Test ---

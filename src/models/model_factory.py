@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Model factory for creating models based on configuration."""
 # Standard imports
+import logging
 import pathlib
 
 # Third party imports
@@ -84,6 +85,7 @@ class ModelFactory:
         save_dir: str | pathlib.Path,
         save_dir_name: str,
         save_version: str,
+        logger: logging.Logger | None = None,
     ) -> lightning.Trainer:
         """Get the trainer based on the configuration.
 
@@ -95,6 +97,7 @@ class ModelFactory:
             save_dir (str | pathlib.Path): The directory to save the model.
             save_dir_name (str): The name of the directory to save the model.
             save_version (str): The version of the model to save.
+            logger (logging.Logger | None, optional): Logger object. Defaults to None.
 
         Returns:
             lightning.Trainer: The trainer instance.
@@ -106,6 +109,7 @@ class ModelFactory:
             mode="max",
             ckpt_filepath=Config.model_dir / pathlib.Path(model_relative_path).with_suffix(".ckpt"),
             model_file_path=Config.model_dir / model_relative_path,
+            logger=logger,
         )
 
         callbacks = [early_stopping, pocket_algorithm]
