@@ -31,7 +31,7 @@ def get_train_metrics_and_plot(
     experiment: str,
     logger: logging.Logger | None = None,
     plotting: bool = False,
-) -> pandas.Series:
+) -> pandas.DataFrame:
     """Save the metrics plot.
 
     Args:
