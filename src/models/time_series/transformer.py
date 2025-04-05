@@ -30,7 +30,7 @@ import torchmetrics
 
 # First party imports
 from models.base_model import BaseModel
-from models.positional_encoding import SinusoidalPositionalEncoding, TimeSeriesSinusoidalPositionalEmbedding
+from models.positional_encoding import TSPositionalEncodingType
 from models.time_series.scaler import TimeSeriesMeanScaler, TimeSeriesNOPScaler, TimeSeriesStdScaler
 from models.transformer.encoder import Encoder
 
@@ -69,7 +69,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         d_ff: int,
         input_size: int,
         context_length: int,
-        positional_encoding: TimeSeriesSinusoidalPositionalEmbedding | SinusoidalPositionalEncoding,
+        positional_encoding: TSPositionalEncodingType,
         loss_fn: torch.nn.Module | torch.nn.CrossEntropyLoss | torch.nn.BCELoss,
         num_classes: int,
         dropout: float = 0.1,

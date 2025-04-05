@@ -14,7 +14,12 @@ from lightning.pytorch.profilers import SimpleProfiler
 # First party imports
 from models import EncoderOnlyTransformerTSClassifier
 from models.pocket_algorithm import PocketAlgorithm
-from models.positional_encoding.ts_sinusoidal_positional_embedding import TimeSeriesSinusoidalPositionalEmbedding
+from models.positional_encoding import (
+    TimeSeriesCircularConvolutionPositionalEncoding,
+    TimeSeriesElementwiseMultiplicationPositionalEncoding,
+    TimeSeriesSinusoidalPositionalEncoding,
+    TSPositionalEncodingType,
+)
 from utils import Config
 from utils.experiment.dataset_config import DatasetConfig
 from utils.experiment.experiment_config import ExperimentConfig
@@ -38,14 +43,16 @@ class ModelFactory:
         Returns:
             EncoderOnlyTransformerTSClassifier: The model instance.
         """
-        positional_encoding_catalog = {
-            "transformer_absolute_sinusoidal_pe": TimeSeriesSinusoidalPositionalEmbedding,
-            # "transformer_elementwise_pe": NotImplementedError,
-            # "transformer_ciruclarconvolution_pe": NotImplementedError,
+        positional_encoding_catalog: dict[str, type[TSPositionalEncodingType]] = {
+            "transformer_absolute_sinusoidal_pe": TimeSeriesSinusoidalPositionalEncoding,
+            "transformer_elementwise_pe": TimeSeriesElementwiseMultiplicationPositionalEncoding,
+            "transformer_ciruclarconvolution_pe": TimeSeriesCircularConvolutionPositionalEncoding,
         }
 
-        # Get the positional encoding class based on the configuration
-        positional_encoding = positional_encoding_catalog[model_config.model_name]
+        # Get the positional encoding class based on the configuration and instantiate it
+        positional_encoding = positional_encoding_catalog[model_config.model_name](
+            embedding_dim=model_config.d_model, num_positions=dataset_cfg.context_length
+        )
 
         return EncoderOnlyTransformerTSClassifier(
             num_layers=model_config.num_layers,
@@ -54,9 +61,7 @@ class ModelFactory:
             d_ff=model_config.d_ff,
             input_size=dataset_cfg.input_size,
             context_length=dataset_cfg.context_length,
-            positional_encoding=positional_encoding(
-                embedding_dim=model_config.d_model, num_positions=dataset_cfg.context_length
-            ),
+            positional_encoding=positional_encoding,
             num_classes=dataset_cfg.num_classes,
             dropout=model_config.dropout,
             learning_rate=model_config.learning_rate,

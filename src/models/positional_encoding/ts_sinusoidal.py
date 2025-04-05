@@ -15,7 +15,7 @@ import numpy
 import torch
 
 
-class TimeSeriesSinusoidalPositionalEmbedding(torch.nn.Module):
+class TimeSeriesSinusoidalPositionalEncoding(torch.nn.Module):
     """This module produces sinusoidal positional embeddings of any length."""
 
     def __init__(self, num_positions: int, embedding_dim: int, padding_idx: int | None = None) -> None:

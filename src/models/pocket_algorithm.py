@@ -55,8 +55,9 @@ class PocketAlgorithm(Callback):
         logs = trainer.callback_metrics
         current_score = logs.get(self.monitor)
 
+        # Metric not found
         if current_score is None:
-            return  # Metric not found
+            return
 
         if (self.mode == "max" and current_score > self.best_score) or (
             self.mode == "min" and current_score < self.best_score
