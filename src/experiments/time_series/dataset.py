@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Dataset module for time series classification experiments."""
 # Standard imports
-import logging
 import pathlib
 
 # Third party imports
@@ -42,7 +41,6 @@ def __convert_to_numpy(data: pandas.DataFrame) -> numpy.ndarray:
 def get_ucr_datasets(
     dsid: str,
     extract_path: pathlib.Path,
-    logger: logging.Logger | None = None,
     plot_path: pathlib.Path | None = None,
 ) -> tuple[TensorDataset, TensorDataset, int, int, int]:
     """Loads and standardizes a UCR dataset using sktime.
@@ -50,7 +48,6 @@ def get_ucr_datasets(
     Args:
         dsid (str): The name of the UCR dataset.
         extract_path (`pathlib.Path`): The path to extract the dataset to.
-        logger (`logging.Logger`, optional): The logger to use. Defaults to None.
         plot_path (`pathlib.Path`, optional): The path to save the plot. Defaults to None.
 
     Returns:
@@ -99,14 +96,6 @@ def get_ucr_datasets(
     test_dataset = TensorDataset(X_test, y_test)
 
     num_classes = len(torch.unique(y_train))
-
-    if logger is not None:
-        logger.info(f"Loaded {dsid} dataset to path: {extract_path}")
-        logger.info(f"  Number of classes: {num_classes}")
-        logger.info(f"  Number of training samples: {len(train_dataset)}")
-        logger.info(f"  Number of testing samples: {len(test_dataset)}")
-        logger.info(f"  Maximum sequence length: {max_len}")
-        logger.info(f"  Number of dimensions: {num_dimensions}")
 
     return train_dataset, test_dataset, max_len, num_classes, num_dimensions
 
