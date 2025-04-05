@@ -19,7 +19,6 @@ class ModelConfig(BaseConfig):
             "transformer_elementwise_pe", "transformer_ciruclarconvolution_pe".
         desc (str): A description of the model.
         num_epochs (int): The number of training epochs.
-        batch_size (int): The batch size.
         d_model (int): The dimensionality of the embeddings.
         num_heads (int): The number of attention heads.
         d_ff (int): The dimensionality of the inner layer of the feed-forward network.
@@ -37,7 +36,6 @@ class ModelConfig(BaseConfig):
 
     # Model hyperparameters
     num_epochs: int
-    batch_size: int
     learning_rate: float
     d_model: int
     num_heads: int

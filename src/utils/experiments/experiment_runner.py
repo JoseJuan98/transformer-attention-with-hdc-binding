@@ -122,15 +122,10 @@ class ExperimentRunner:
             self.logger.info(f"Dataset {dataset_name} already loaded, reusing existing dataloaders")
             return
 
-        # TODO: redefine how the batch size is defined based in experiment config or a relative % of memory
-        # with mini-batching gradient accumulation
-        # Determine batch size from experiment config or use default
-        batch_size = getattr(self.experiment_cfg, "batch_size", 64)
-
         # Load dataset and create dataloaders
         dataset_cfg, train_dataloader, test_dataloader, val_dataloader = self.data_factory.get_data_loaders_and_config(
             dataset_name=dataset_name,
-            batch_size=batch_size,
+            batch_size=self.experiment_cfg.batch_size,
             seed=self.seed,
             extract_path=self.data_dir,
             logger=self.logger,

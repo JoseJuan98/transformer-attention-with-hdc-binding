@@ -29,6 +29,9 @@ class ExperimentConfig(BaseConfig):
         dataset_names (list[str]): A list of dataset names to use for the experiment.
         run_version (str): The version of the experiment.
         runs_per_experiment (int): The number of runs per experiment to reduce variance.
+        batch_size (int): The batch size to use for training.
+        model_configs (dict[str, ModelConfig]): A dictionary of model configurations. The key is the model name and
+            the value is the model configuration.
         accelerator (str): The device to use for training ('cpu', 'gpu', 'tpu', 'hpu', 'mps', 'auto').
         precision (str): The precision to use for training ('16', '32', '16-mixed', 'bf16-mixed', ...).
         profiler (bool): Whether to use the profiler.
@@ -54,6 +57,7 @@ class ExperimentConfig(BaseConfig):
     description: str
     run_version: str
     runs_per_experiment: int
+    batch_size: int
 
     # Hardware settings
     accelerator: Literal["cpu", "gpu", "tpu", "hpu", "mps", "auto"]

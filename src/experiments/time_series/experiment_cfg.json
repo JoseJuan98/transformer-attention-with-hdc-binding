@@ -4,13 +4,11 @@
     "description": "Time Series Classification Positional Encodings Experiment",
     "run_version": "version_0",
     "dataset_names": [
-        "FaceDetection",
-        "InsectWingbeat",
-        "PenDigits",
-        "SpokenArabicDigits",
-        "ArticularyWordRecognition"
+        "ArticularyWordRecognition",
+        "PenDigits"
     ],
-    "runs_per_experiment": 10,
+    "runs_per_experiment": 3,
+    "batch_size": 64,
     "accelerator": "gpu",
     "precision": "16-mixed",
     "profiler": false,
