@@ -1,53 +1,79 @@
 # -*- coding: utf-8 -*-
-"""HDC positional embedding modules for time series data.
+"""Time series HDC positional embedding module.
 
-Implements circular convolution and element-wise multiplication binding methods
-for hyperdimensional computing (HDC) positional encodings.
+This module implements element-wise multiplication binding method for hyperdimensional computing (HDC) positional encodings for time series classification.
 """
 # Third party imports
 import torch
 
 
 class TimeSeriesElementwiseMultiplicationPositionalEncoding(torch.nn.Module):
-    """This module produces positional embeddings using element-wise multiplication binding."""
+    """This module produces HDC positional embeddings of any length."""
 
-    def __init__(self, num_positions: int, embedding_dim: int, padding_idx: int | None = None) -> None:
-        super().__init__()
-        self.embedding_dim = embedding_dim
-        self.num_positions = num_positions
-        self.padding_idx = padding_idx
-        self.position_vectors = self._init_position_vectors(num_positions, embedding_dim)
-
-    @staticmethod
-    def _init_position_vectors(num_positions: int, embedding_dim: int) -> torch.nn.Parameter:
-        """Initialize random position vectors for element-wise multiplication binding."""
-        # Create random position vectors centered around 1.0 with small variance
-        # This helps ensure the original signal is preserved while adding positional information
-        position_vectors = torch.ones(num_positions, embedding_dim) + 0.1 * torch.randn(num_positions, embedding_dim)
-        return torch.nn.Parameter(position_vectors, requires_grad=False)
-
-    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:
-        """Apply element-wise multiplication binding to input tensor.
+    def __init__(self, num_positions: int, embedding_dim: int) -> None:
+        """Initializes the HDC positional encoding.
 
         Args:
-            input_tensor: Input tensor of shape [bsz, seq_len, input_size]
+            num_positions (int): The maximum sequence length.
+            embedding_dim (int): The dimensionality of the HDC vectors.  Must be even.
+        """
+        super().__init__()
+        self.embedding_dim = embedding_dim
+        self.num_positions = num_positions  # max_len
+
+        # Ensure embedding_dim is even
+        if embedding_dim % 2 != 0:
+            raise ValueError("embedding_dim must be an even number for HDC.")
+
+        self.position_vectors = self._init_position_vectors(num_positions, embedding_dim)
+
+    def _init_position_vectors(self, num_positions: int, embedding_dim: int) -> torch.nn.Parameter:
+        """Initialize the HDC position vectors.
+
+        Each position is represented by a unique, randomly initialized bipolar vector (+1 or -1).
+        """
+        # Initialize position vectors with random bipolar values (+1 or -1)
+        position_vectors = torch.randint(0, 2, (num_positions, embedding_dim), dtype=torch.float) * 2 - 1
+        return torch.nn.Parameter(position_vectors, requires_grad=False)
+
+    @torch.no_grad()
+    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:
+        """Applies positional encoding to the input tensor using element-wise multiplication (binding).
+
+        Args:
+            input_tensor (torch.Tensor): Input tensor of shape [bsz x seqlen x input_size].
 
         Returns:
-            Position-encoded tensor of shape [bsz, seq_len, input_size]
+            torch.Tensor: Tensor with positional encoding applied, of shape [bsz x seqlen x embedding_dim].
         """
-        bsz, seq_len, input_size = input_tensor.shape
+        bsz, seq_len, _ = input_tensor.shape
 
-        # Ensure we have enough position vectors
-        if seq_len > self.num_positions:
-            raise ValueError(f"Input sequence length {seq_len} exceeds maximum positions {self.num_positions}")
+        # Get position vectors for the sequence length
+        positions = torch.arange(0, seq_len, dtype=torch.long, device=self.position_vectors.device)
 
-        # Get position vectors for the sequence
-        pos_vectors = self.position_vectors[:seq_len].to(input_tensor.device)
+        # Shape: [seq_len x embedding_dim]
+        position_encodings = self.position_vectors[positions]
 
-        # Expand position vectors for batch size
-        pos_vectors = pos_vectors.unsqueeze(0).expand(bsz, seq_len, input_size)
+        # Expand position encodings to match the batch size
+        # Shape: [bsz x seq_len x embedding_dim]
+        position_encodings = position_encodings.unsqueeze(0).expand(bsz, seq_len, self.embedding_dim)
 
-        # Apply element-wise multiplication
-        output = input_tensor * pos_vectors
+        # Element-wise multiplication (binding)
+        # We need to project the input_tensor to the embedding_dim before binding
+        # Here, we assume that the input_size is smaller than embedding_dim, and we pad the input_tensor with zeros
+        input_size = input_tensor.shape[-1]
+        if input_size < self.embedding_dim:
+            padding_size = self.embedding_dim - input_size
+            padding = torch.zeros(bsz, seq_len, padding_size, device=input_tensor.device)
+            projected_input_tensor = torch.cat([input_tensor, padding], dim=-1)
 
-        return output
+        # If input_size is larger than embedding_dim, the input_tensor is truncated
+        elif input_size > self.embedding_dim:
+            projected_input_tensor = input_tensor[:, :, : self.embedding_dim]
+
+        else:
+            projected_input_tensor = input_tensor
+
+        encoded_tensor = projected_input_tensor * position_encodings
+
+        return encoded_tensor

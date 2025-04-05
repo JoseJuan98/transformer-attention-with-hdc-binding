@@ -52,10 +52,6 @@ class TimeSeriesCircularConvolutionPositionalEncoding(torch.nn.Module):
         """
         bsz, seq_len, input_size = input_tensor.shape
 
-        # Ensure we have enough position vectors
-        if seq_len > self.num_positions:
-            raise ValueError(f"Input sequence length {seq_len} exceeds maximum positions {self.num_positions}")
-
         # Get position vectors for the sequence
         pos_vectors = self.position_vectors[:seq_len].to(input_tensor.device)
 

@@ -48,11 +48,8 @@ class TimeSeriesSinusoidalPositionalEncoding(torch.nn.Module):
     @torch.no_grad()
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:
         """`input_ids_shape` is expected to be [bsz x seqlen x input_size]."""
-        bsz, seq_len, input_size = input_tensor.shape
+        bsz, seq_len, _ = input_tensor.shape
         # Use the maximum sequence length from input tensor
         positions = torch.arange(0, seq_len, dtype=torch.long, device=self.weight.device)
-        # Expand for batch size and input size
-        # positions = positions.unsqueeze(0).expand(bsz, -1)
-        # return super().forward(positions)
-        positions = positions.unsqueeze(0).expand(bsz, seq_len)  # Corrected line
+        positions = positions.unsqueeze(0).expand(bsz, seq_len)
         return self.weight[positions]
