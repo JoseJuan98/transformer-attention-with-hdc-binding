@@ -29,8 +29,10 @@ class ExperimentConfig(BaseConfig):
         dataset_names (list[str]): A list of dataset names to use for the experiment.
         run_version (str): The version of the experiment.
         runs_per_experiment (int): The number of runs per experiment to reduce variance.
-        device (str): The device to use for training ('cpu' or 'cuda').
+        accelerator (str): The device to use for training ('cpu', 'gpu', 'tpu', 'hpu', 'mps', 'auto').
         precision (str): The precision to use for training ('16', '32', '16-mixed', 'bf16-mixed', ...).
+        profiler (bool): Whether to use the profiler.
+        summary (bool): Whether to use the summary writer.
     """
 
     experiment_name: str
@@ -54,8 +56,12 @@ class ExperimentConfig(BaseConfig):
     runs_per_experiment: int
 
     # Hardware settings
-    device: str
+    accelerator: Literal["cpu", "gpu", "tpu", "hpu", "mps", "auto"]
     precision: _PRECISION_INPUT
+
+    # Training settings
+    profiler: bool
+    summary: bool
 
     def pretty_str(self):
         """List the attributes of the class."""

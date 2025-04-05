@@ -83,7 +83,6 @@ class ModelFactory:
         model_relative_path: str,
         csv_logger_args: dict,
         tensorboard_args: dict,
-        profiler: bool = False,
     ) -> lightning.Trainer:
         """Get the trainer based on the configuration.
 
@@ -94,7 +93,6 @@ class ModelFactory:
             model_relative_path (str): The relative path to save the model.
             csv_logger_args (dict): Arguments for the CSV logger.
             tensorboard_args (dict): Arguments for the TensorBoard logger.
-            profiler (bool): Whether to enable the profiler.
 
         Returns:
             lightning.Trainer: The trainer instance.
@@ -108,10 +106,14 @@ class ModelFactory:
             model_file_path=Config.model_dir / model_relative_path,
         )
 
+        callbacks = [early_stopping, pocket_algorithm]
+        if experiment_cfg.summary:
+            callbacks.append(ModelSummary(max_depth=-1))
+
         return lightning.Trainer(
             default_root_dir=default_root_dir,
             max_epochs=num_epochs,
-            accelerator="gpu" if experiment_cfg.device == "cuda" else "auto",
+            accelerator=experiment_cfg.accelerator,
             devices="auto",
             precision=experiment_cfg.precision,
             logger=[
@@ -119,9 +121,9 @@ class ModelFactory:
                 TensorBoardLogger(**tensorboard_args),
             ],
             log_every_n_steps=1,
-            callbacks=[ModelSummary(max_depth=-1), early_stopping, pocket_algorithm],
+            callbacks=callbacks,
             # measures all the key methods across Callbacks, DataModules and the LightningModule in the training loop.
-            profiler=SimpleProfiler(filename="simple_profiler") if profiler else None,
+            profiler=SimpleProfiler(filename="simple_profiler") if experiment_cfg.profiler else None,
             # If True, runs 1 batch of train, test and val to find any bugs. Also, it can be specified the number of
             # batches to run as an integer
             fast_dev_run=False if num_epochs > 0 else True,

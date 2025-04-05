@@ -40,8 +40,8 @@ run-ts:
 	@poetry run python src/experiments/time_series/train.py
 
 ## Clean logs
-clean-logs:
-	@echo "Cleaning logs..."
+clean-artifacts:
+	@echo "Cleaning artifacts..."
 	@rm -rf $(ROOT_DIR)/artifacts/model/
 	@rm -rf $(ROOT_DIR)/artifacts/log/
 

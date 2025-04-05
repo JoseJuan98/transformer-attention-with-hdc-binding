@@ -6,7 +6,9 @@
     "dataset_names": [
         "ArticularyWordRecognition"
     ],
-    "runs_per_experiment": 1,
-    "device": "cuda",
-    "precision": "16-mixed"
+    "runs_per_experiment": 10,
+    "accelerator": "gpu",
+    "precision": "16-mixed",
+    "profiler": false,
+    "summary": false
 }

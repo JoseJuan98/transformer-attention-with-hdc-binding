@@ -3,10 +3,12 @@
 # Standard imports
 import json
 import multiprocessing
+import pathlib
 import traceback
 
 # Third party imports
 import lightning
+import pandas
 import torch
 from torch.utils.data import DataLoader
 
@@ -33,23 +35,25 @@ class ExperimentRunner:
             experiment_cfg (ExperimentConfig): The experiment configuration.
         """
         self.experiment_cfg = experiment_cfg
-        self.results: dict[str, dict] = {}
+        self.results = pandas.Series()
         self.errors: dict[str, list] = {}
 
         # Binding the logger to the lightning module logger to avoid conflicts
-        _task_exp_path = f"{self.experiment_cfg.task.replace(' ', '_')}/{self.experiment_cfg.run_version}/"
+        self._task_exp_path = f"{self.experiment_cfg.task.replace(' ', '_')}/{self.experiment_cfg.run_version}/"
 
         # Create the directories for the experiment
-        self.experiment_logs_path = Config.log_dir / _task_exp_path
-        self.results_path = Config.model_dir / _task_exp_path
+        self.experiment_logs_path = Config.log_dir / self._task_exp_path
+        self.results_path: pathlib.Path = pathlib.Path()
 
-        # Create the results directory if it doesn't exist
-        self.results_path.mkdir(parents=True, exist_ok=True)
         self.experiment_logs_path.mkdir(parents=True, exist_ok=True)
 
         self.logger = get_logger(
             name="lightning.pytorch.core", log_filename=self.experiment_logs_path / "main.log", propagate=False
         )
+        # Bind other loggers to the main logger
+        # get_logger(
+        #     name="lightning.pytorch.callbacks.model_summary", log_filename=self.experiment_logs_path / "main.log", propagate=False
+        # )
 
         self.logger.info(f"\n{self.experiment_cfg.pretty_str()}")
         self.logger.info("Starting experiment ...\n")
@@ -67,47 +71,62 @@ class ExperimentRunner:
 
         This method runs the experiment for the specified number of runs and datasets.
         """
-        for run in range(1, self.experiment_cfg.runs_per_experiment):
-            self.logger.info(f"\n\n{'*'*40} Run {run} {'*'*40}\n")
-            self.single_run(run=run)
+        for dataset in self.experiment_cfg.dataset_names:
+            msg_task(msg=f" Dataset {dataset}", logger=self.logger)
 
-    def single_run(self, run: int):
+            self.single_run(dataset=dataset)
+
+            self.logger.info(f"\n\nAll models for {dataset} trained successfully!\n{'':_^100}\n\n")
+
+        self.logger.info("Experiment completed!")
+
+    def single_run(self, dataset: str):
         """Run the experiment.
 
         Args:
-            run (int): The current run number index. In total there are `ExperimentConfig.runs_per_experiment` runs.
+            dataset (str): The name of the dataset.
         """
 
-        for dataset in self.experiment_cfg.dataset_names:
-            msg_task(msg=f" Dataset {dataset}", logger=self.logger)
+        for run in range(1, self.experiment_cfg.runs_per_experiment + 1):
+            self.results_path = Config.model_dir / self._task_exp_path / dataset
+            # Create the results directory if it doesn't exist
+            self.results_path.mkdir(parents=True, exist_ok=True)
+
+            self.logger.add_component_handler(
+                component_name=f"run_{run}",
+                log_filename=self.experiment_logs_path / dataset / f"run_{run}.log",
+            )
+            self.logger.info(f"\n\n{'*'*40} Run {run} {'*'*40}\n")
 
             # TODO: create dataloaders here
 
             for model_name, model_cfg in self.experiment_cfg.model_configs.items():
 
-                self.logger.info(f"\n\n\t{f'{"="*24}'f'{model_name:^40}'f'{"="*24}': ^100}\n")
+                self.logger.info(f"\n\n\t{f'{"="*24}'f'{f" {model_name} (Run {run:<2})":^40} 'f'{"="*24}': ^100}\n")
                 # Add component-specific handler
                 component_name = f"{model_name}_{dataset}"
                 self.logger.add_component_handler(
                     component_name=component_name,
-                    log_filename=self.experiment_logs_path / model_name / f"{dataset}.log",
+                    log_filename=self.experiment_logs_path / dataset / f"{model_name}.log",
+                    log_file_mode="a",
                 )
 
                 try:
-                    raise Exception(f"Experiment {dataset} failed.")
-
                     # Train the model for the dataset
+                    self.logger.info(
+                        f"Training {model_name} for {dataset} for {self.experiment_cfg.run_version} in run {run}"
+                    )
                     self._train_model_for_dataset(
                         task=self.experiment_cfg.task,
                         dataset_name=dataset,
                         model_name=model_cfg.model_name,
+                        run=run,
                         run_version=self.experiment_cfg.run_version,
                         model_cfg=model_cfg,
-                        profiler=False,
                         plot_first_sample=False,
                     )
 
-                    self.logger.info(f"Model {model_name} trained successfully")
+                    self.logger.info(f"Model {model_name} for {dataset} trained successfully")
                 except Exception as e:
                     err_msg = f"\n\n\t{f'{"x" * 24}'f' {dataset} | {model_name} | Run {run} 'f'{"x" * 24}': ^100}\n\n"
                     err_msg += f"Error for {dataset} training {model_name}:\n\n{str(e)}\n\n"
@@ -133,8 +152,6 @@ class ExperimentRunner:
                     # Remove component handler when done
                     self.logger.remove_component_handler(component_name=component_name)
 
-        self.logger.info("Experiment completed.")
-
         if self.errors:
             self.logger.error(f"Errors occurred during the experiment:\n{json.dumps(self.errors, indent=4)}")
         # TODO:
@@ -146,16 +163,12 @@ class ExperimentRunner:
         dataset_name: str,
         model_name: str,
         run_version: str,
+        run: int,
         model_cfg: ModelConfig,
-        profiler: bool = False,
         plot_first_sample: bool = False,
     ) -> None:
         """Trains a model for a dataset."""
-        run_path = Config.model_dir / "runs" / task / model_name
-        test_only = False  # Set to True to only test the model
-
-        if not torch.cuda.is_available():
-            raise Exception("CUDA not available. No GPU found.")
+        model_run_path = self.results_path / model_name
 
         # TODO: move it to method above for reusing it for several models
         msg_task(msg="Loading data", logger=self.logger)
@@ -172,8 +185,8 @@ class ExperimentRunner:
             dataset_name=dataset_name, num_classes=num_classes, input_size=num_channels, context_length=max_len
         )
 
-        self.logger.info(f"Saving experiment configuration to {run_path}/{run_version}")
-        self.experiment_cfg.dump(path=run_path / dataset_name / run_version / "experiment_config.json")
+        self.logger.info(f"Saving experiment configuration to {model_run_path}/experiment_config.json")
+        self.experiment_cfg.dump(path=model_run_path / "experiment_config.json")
 
         # --- Data Loaders ---
         cpu_count = multiprocessing.cpu_count()
@@ -195,27 +208,24 @@ class ExperimentRunner:
         model = ModelFactory.get_model(
             model_config=model_cfg,
             dataset_cfg=dataset_cfg,
-            profiler_path=(run_path / run_version).as_posix() if profiler else "",
+            profiler_path=(model_run_path / f"run_{run}").as_posix() if self.experiment_cfg.profiler else "",
         )
 
-        csv_logger_args = {"save_dir": Config.log_dir / task / model_name, "name": dataset_name, "version": run_version}
-        tensorboard_args = {"save_dir": run_path, "name": dataset_name, "version": run_version}
+        csv_logger_args = {"save_dir": model_run_path.parent, "name": model_name, "version": f"run_{run}"}
+        tensorboard_args = {"save_dir": model_run_path.parent, "name": model_name, "version": f"run_{run}"}
         trainer = ModelFactory().get_trainer(
             default_root_dir=Config.root_dir,
             experiment_cfg=self.experiment_cfg,
             num_epochs=model_cfg.num_epochs,
-            model_relative_path=f"runs/{task}/{model_name.lower()}/{dataset_name}/{run_version}/model.pth",
+            model_relative_path=(model_run_path / f"run_{run}" / "model.pth").as_posix(),
             csv_logger_args=csv_logger_args,
             tensorboard_args=tensorboard_args,
-            profiler=profiler,
         )
 
         # --- Train and Test ---
         msg_task(msg="Train and Test", logger=self.logger)
-        self.logger.info(
-            f"Training {model_name} for {dataset_name} in {run_version} for {model_cfg.num_epochs} epochs..."
-        )
-        if model_cfg.num_epochs > 0 and not test_only:
+        self.logger.info(f"Training {model_name} for {model_cfg.num_epochs} epochs...")
+        if model_cfg.num_epochs > 0:
             # TODO: torch._dynamo.exc.BackendCompilerFailed: backend='inductor' raised: AttributeError: 'float' object has no attribute 'meta'
             # model = torch.compile(model)
             trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=test_dataloader)
@@ -224,10 +234,45 @@ class ExperimentRunner:
 
         # --- Plot Metrics ---
         if model_cfg.num_epochs > 0:
-            print(f"Log dir: {trainer.log_dir}")
-            get_train_metrics_and_plot(
+            metrics = get_train_metrics_and_plot(
                 csv_dir=trainer.log_dir,
                 experiment=f"{model_name.replace("_", " ").title()} for {dataset_name.replace('_', ' ').title()} in {run_version}",
                 logger=self.logger,
-                plots_path=Config.plot_dir / task / model_name / f"epoch_metrics_{dataset_name}_{run_version}.png",
+                plots_path=Config.plot_dir / task / dataset_name / f"epoch_metrics_{model_name}_{run_version}.png",
             )
+            self.update_global_metrics(
+                metrics=metrics,
+                run=run,
+                dataset=dataset_name,
+                model=model_name,
+                version=run_version,
+            )
+
+    def update_global_metrics(self, metrics: pandas.Series, run: int, dataset: str, model: str, version: str) -> None:
+        """Update the global metrics with the new metrics.
+
+        This method updates the global metrics with the new metrics and saves them to a CSV file.
+
+        Args:
+            metrics (pandas.Series): The new metrics to update.
+            run (int): The run number.
+            dataset (str): The name of the dataset.
+            model (str): The name of the model.
+            version (str): The version of the experiment.
+        """
+        metric_cols = metrics.columns.tolist()
+        metrics["run"] = run
+        metrics["dataset"] = dataset
+        metrics["model"] = model
+
+        # Reordering the columns
+        metrics = metrics[["dataset", "model", "run"] + metric_cols]
+
+        if self.results.empty:
+            self.results = metrics
+        else:
+            self.results = pandas.concat([self.results, metrics], axis=0)
+
+        self.results.to_csv(
+            path_or_buf=self.results_path.parent / f"global_metrics_{version}.csv", index=False, header=True
+        )

@@ -31,7 +31,7 @@ def get_train_metrics_and_plot(
     experiment: str,
     logger: logging.Logger | None = None,
     plotting: bool = False,
-) -> None:
+) -> pandas.Series:
     """Save the metrics plot.
 
     Args:
@@ -40,6 +40,9 @@ def get_train_metrics_and_plot(
         experiment (str): Name of the experiment.
         logger (logging.Logger, optional): Logger object. Defaults to None.
         plotting (bool, optional): Whether to display the plot. Defaults to False.
+
+    Returns:
+        pandas.DataFrame: Pandas DataFrame containing the final metrics of the plot.
     """
     metrics = pandas.read_csv(filepath_or_buffer=os.path.join(csv_dir, "metrics.csv"))
 
@@ -54,8 +57,7 @@ def get_train_metrics_and_plot(
     else:
         logger.info(f"\nExperiment {experiment}\n\tTest loss: {test_loss}.\n\tTest accuracy: {test_acc}.\n\n")
 
-    metrics.drop(columns=["test_loss", "test_acc"], axis=1, inplace=True, errors="ignore")
-    seaborn.relplot(data=metrics, kind="line")
+    seaborn.relplot(data=metrics.drop(columns=["test_loss", "test_acc"], axis=1, errors="ignore"), kind="line")
 
     plots_path.parent.mkdir(parents=True, exist_ok=True)
     pyplot.savefig(fname=plots_path)
@@ -64,3 +66,15 @@ def get_train_metrics_and_plot(
         pyplot.show()
 
     pyplot.close()
+
+    metrics = (
+        metrics.drop(["test_acc", "test_loss"], axis=1)
+        # Drop if the row is full of NaN values
+        .dropna(how="all")
+    )
+    # Get the last row of the metrics
+    metrics = metrics[metrics.index == metrics.index[-1]].mean(axis=0).round(4)
+    metrics["test_loss"] = test_loss
+    metrics["test_acc"] = test_acc
+
+    return metrics.to_frame().T
