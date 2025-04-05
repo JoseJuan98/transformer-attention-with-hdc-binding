@@ -4,6 +4,10 @@
     "description": "Time Series Classification Positional Encodings Experiment",
     "run_version": "version_0",
     "dataset_names": [
+        "FaceDetection",
+        "InsectWingbeat",
+        "PenDigits",
+        "SpokenArabicDigits",
         "ArticularyWordRecognition"
     ],
     "runs_per_experiment": 10,
