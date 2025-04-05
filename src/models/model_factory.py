@@ -81,8 +81,9 @@ class ModelFactory:
         experiment_cfg: ExperimentConfig,
         num_epochs: int,
         model_relative_path: str,
-        csv_logger_args: dict,
-        tensorboard_args: dict,
+        save_dir: str | pathlib.Path,
+        save_dir_name: str,
+        save_version: str,
     ) -> lightning.Trainer:
         """Get the trainer based on the configuration.
 
@@ -91,8 +92,9 @@ class ModelFactory:
             experiment_cfg (ExperimentConfig): The experiment configuration.
             num_epochs (int): The number of epochs to train.
             model_relative_path (str): The relative path to save the model.
-            csv_logger_args (dict): Arguments for the CSV logger.
-            tensorboard_args (dict): Arguments for the TensorBoard logger.
+            save_dir (str | pathlib.Path): The directory to save the model.
+            save_dir_name (str): The name of the directory to save the model.
+            save_version (str): The version of the model to save.
 
         Returns:
             lightning.Trainer: The trainer instance.
@@ -117,8 +119,8 @@ class ModelFactory:
             devices="auto",
             precision=experiment_cfg.precision,
             logger=[
-                CSVLogger(**csv_logger_args),
-                TensorBoardLogger(**tensorboard_args),
+                CSVLogger(save_dir=save_dir, name=save_dir_name, version=save_version),
+                TensorBoardLogger(save_dir=save_dir, name=save_dir_name, version=save_version),
             ],
             log_every_n_steps=1,
             callbacks=callbacks,

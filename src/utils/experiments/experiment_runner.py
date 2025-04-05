@@ -2,7 +2,6 @@
 """This module is responsible for running the experiments."""
 # Standard imports
 import json
-import multiprocessing
 import pathlib
 import traceback
 
@@ -13,7 +12,7 @@ import torch
 from torch.utils.data import DataLoader
 
 # First party imports
-from experiments.time_series.dataset import get_ucr_datasets
+from experiments.data_factory import DataFactory
 from models import (
     ModelFactory,
 )
@@ -37,25 +36,31 @@ class ExperimentRunner:
         self.experiment_cfg = experiment_cfg
         self.results = pandas.Series()
         self.errors: dict[str, list] = {}
+        self.model_factory = ModelFactory()
+        self.data_factory = DataFactory()
 
         # Binding the logger to the lightning module logger to avoid conflicts
-        self._task_exp_path = f"{self.experiment_cfg.task.replace(' ', '_')}/{self.experiment_cfg.run_version}/"
+        self.task_fmt = self.experiment_cfg.task.replace(" ", "_")
+        self._task_exp_path = f"{self.task_fmt}/{self.experiment_cfg.run_version}/"
 
         # Create the directories for the experiment
         self.experiment_logs_path = Config.log_dir / self._task_exp_path
         self.results_path: pathlib.Path = pathlib.Path()
+        self.data_dir = Config.data_dir / self.task_fmt
 
         self.experiment_logs_path.mkdir(parents=True, exist_ok=True)
 
         self.logger = get_logger(
             name="lightning.pytorch.core", log_filename=self.experiment_logs_path / "main.log", propagate=False
         )
-        # Bind other loggers to the main logger
-        # get_logger(
-        #     name="lightning.pytorch.callbacks.model_summary", log_filename=self.experiment_logs_path / "main.log", propagate=False
-        # )
 
         self.logger.info(f"\n{self.experiment_cfg.pretty_str()}")
+
+        self.logger.info(
+            f"Saving experiment configuration to {Config.model_dir / self._task_exp_path}/experiment_config.json"
+        )
+        self.experiment_cfg.dump(path=Config.model_dir / self._task_exp_path / "experiment_config.json")
+
         self.logger.info("Starting experiment ...\n")
 
     def set_random_seed(self, seed: int = 42) -> None:
@@ -72,23 +77,62 @@ class ExperimentRunner:
         This method runs the experiment for the specified number of runs and datasets.
         """
         for dataset in self.experiment_cfg.dataset_names:
-            msg_task(msg=f" Dataset {dataset}", logger=self.logger)
+            # TODO: create dataloaders here
+            self.results_path = Config.model_dir / self._task_exp_path / dataset
 
-            self.single_run(dataset=dataset)
+            msg_task(msg=f" Dataset {dataset} ", logger=self.logger)
+
+            self.logger.info(f"\n\n\t{f'{"=" * 24}{" Loading Data ":^40}{"=" * 24}': ^100}\n")
+
+            # --- Data Loaders and Dataset Configuration ---
+            dataset_cfg, train_dataloader, test_dataloader, val_dataloader = (
+                self.data_factory.get_data_loaders_and_config(
+                    dataset_name=dataset,
+                    # TODO: redefine how the batch size is defined based in experiment config or a relative % of memory
+                    # with mini-batching gradient accumulation
+                    batch_size=64,
+                    extract_path=self.data_dir,
+                    logger=self.logger,
+                    # If defined, it will plot the first sample of the dataset
+                    plot_path=None,  # Config.plot_dir / self.task_fmt / f"{dataset}_sample.png"
+                )
+            )
+
+            self.logger.info(f"Saving dataset configuration to {self.results_path}/dataset_config.json")
+            dataset_cfg.dump(path=self.results_path / "dataset_config.json")
+
+            self.single_run(
+                dataset=dataset,
+                dataset_cfg=dataset_cfg,
+                train_dataloader=train_dataloader,
+                test_dataloader=test_dataloader,
+                validation_dataloader=val_dataloader,
+            )
 
             self.logger.info(f"\n\nAll models for {dataset} trained successfully!\n{'':_^100}\n\n")
 
         self.logger.info("Experiment completed!")
 
-    def single_run(self, dataset: str):
+    def single_run(
+        self,
+        dataset: str,
+        train_dataloader: DataLoader,
+        test_dataloader: DataLoader,
+        validation_dataloader: DataLoader,
+        dataset_cfg: DatasetConfig,
+    ):
         """Run the experiment.
 
         Args:
             dataset (str): The name of the dataset.
+            train_dataloader (DataLoader): The training dataloader.
+            test_dataloader (DataLoader): The testing dataloader.
+            validation_dataloader (DataLoader): The validation dataloader.
+            dataset_cfg (DatasetConfig): The dataset configuration.
         """
 
         for run in range(1, self.experiment_cfg.runs_per_experiment + 1):
-            self.results_path = Config.model_dir / self._task_exp_path / dataset
+
             # Create the results directory if it doesn't exist
             self.results_path.mkdir(parents=True, exist_ok=True)
 
@@ -98,11 +142,9 @@ class ExperimentRunner:
             )
             self.logger.info(f"\n\n{'*'*40} Run {run} {'*'*40}\n")
 
-            # TODO: create dataloaders here
-
             for model_name, model_cfg in self.experiment_cfg.model_configs.items():
 
-                self.logger.info(f"\n\n\t{f'{"="*24}'f'{f" {model_name} (Run {run:<2})":^40} 'f'{"="*24}': ^100}\n")
+                self.logger.info(f"\n\n\t{f'{"="*24}{f" {model_name} (Run {run:<2})":^40}{"="*24}': ^100}\n")
                 # Add component-specific handler
                 component_name = f"{model_name}_{dataset}"
                 self.logger.add_component_handler(
@@ -123,10 +165,14 @@ class ExperimentRunner:
                         run=run,
                         run_version=self.experiment_cfg.run_version,
                         model_cfg=model_cfg,
-                        plot_first_sample=False,
+                        dataset_cfg=dataset_cfg,
+                        train_dataloader=train_dataloader,
+                        test_dataloader=test_dataloader,
+                        validation_dataloader=validation_dataloader,
                     )
 
                     self.logger.info(f"Model {model_name} for {dataset} trained successfully")
+
                 except Exception as e:
                     err_msg = f"\n\n\t{f'{"x" * 24}'f' {dataset} | {model_name} | Run {run} 'f'{"x" * 24}': ^100}\n\n"
                     err_msg += f"Error for {dataset} training {model_name}:\n\n{str(e)}\n\n"
@@ -154,8 +200,6 @@ class ExperimentRunner:
 
         if self.errors:
             self.logger.error(f"Errors occurred during the experiment:\n{json.dumps(self.errors, indent=4)}")
-        # TODO:
-        # with open(results_path / "results.csv", "w") as f:
 
     def _train_model_for_dataset(
         self,
@@ -165,61 +209,28 @@ class ExperimentRunner:
         run_version: str,
         run: int,
         model_cfg: ModelConfig,
-        plot_first_sample: bool = False,
+        dataset_cfg: DatasetConfig,
+        train_dataloader: DataLoader,
+        test_dataloader: DataLoader,
+        validation_dataloader: DataLoader,
     ) -> None:
         """Trains a model for a dataset."""
         model_run_path = self.results_path / model_name
 
-        # TODO: move it to method above for reusing it for several models
-        msg_task(msg="Loading data", logger=self.logger)
-        train_dataset, test_dataset, max_len, num_classes, num_channels = get_ucr_datasets(
-            dsid=dataset_name,
-            extract_path=Config.data_dir / task,
-            logger=self.logger,
-            plot_first_sample=plot_first_sample,
-            plot_path=Config.plot_dir / task / f"{dataset_name}_sample.png",
-        )
-
-        # --- Dataset Configuration ---
-        dataset_cfg = DatasetConfig(
-            dataset_name=dataset_name, num_classes=num_classes, input_size=num_channels, context_length=max_len
-        )
-
-        self.logger.info(f"Saving experiment configuration to {model_run_path}/experiment_config.json")
-        self.experiment_cfg.dump(path=model_run_path / "experiment_config.json")
-
-        # --- Data Loaders ---
-        cpu_count = multiprocessing.cpu_count()
-        num_workers = cpu_count - 2 if cpu_count > 4 else 1
-
-        train_dataloader = DataLoader(
-            dataset=train_dataset,
-            batch_size=model_cfg.batch_size,
-            shuffle=True,
-            num_workers=num_workers,
-        )
-        test_dataloader = DataLoader(
-            dataset=test_dataset,
-            batch_size=model_cfg.batch_size,
-            shuffle=False,
-            num_workers=num_workers,
-        )
-
-        model = ModelFactory.get_model(
+        model = self.model_factory.get_model(
             model_config=model_cfg,
             dataset_cfg=dataset_cfg,
             profiler_path=(model_run_path / f"run_{run}").as_posix() if self.experiment_cfg.profiler else "",
         )
 
-        csv_logger_args = {"save_dir": model_run_path.parent, "name": model_name, "version": f"run_{run}"}
-        tensorboard_args = {"save_dir": model_run_path.parent, "name": model_name, "version": f"run_{run}"}
-        trainer = ModelFactory().get_trainer(
+        trainer = self.model_factory.get_trainer(
             default_root_dir=Config.root_dir,
             experiment_cfg=self.experiment_cfg,
             num_epochs=model_cfg.num_epochs,
             model_relative_path=(model_run_path / f"run_{run}" / "model.pth").as_posix(),
-            csv_logger_args=csv_logger_args,
-            tensorboard_args=tensorboard_args,
+            save_dir=model_run_path.parent,
+            save_dir_name=model_name,
+            save_version=f"run_{run}",
         )
 
         # --- Train and Test ---
@@ -228,7 +239,8 @@ class ExperimentRunner:
         if model_cfg.num_epochs > 0:
             # TODO: torch._dynamo.exc.BackendCompilerFailed: backend='inductor' raised: AttributeError: 'float' object has no attribute 'meta'
             # model = torch.compile(model)
-            trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=test_dataloader)
+            trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=validation_dataloader)
+
         self.logger.info(f"{model_name.title()} training finished!")
         trainer.test(model, dataloaders=test_dataloader)
 
