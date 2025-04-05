@@ -3,6 +3,7 @@
 # Standard imports
 import json
 import pathlib
+import time
 import traceback
 from typing import Dict
 
@@ -300,9 +301,11 @@ class ExperimentRunner:
 
         if model_cfg.num_epochs > 0:
             # Train the model
+            start_time = time.perf_counter()
             trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=validation_dataloader)
+            training_time = time.perf_counter() - start_time
 
-        self.logger.info(f"{model_name.title()} training finished!")
+            self.logger.info(f"{model_name.title()} training finished in {training_time:.2f} seconds!")
 
         # Test the model
         trainer.test(model, dataloaders=test_dataloader)
@@ -316,24 +319,35 @@ class ExperimentRunner:
                 plots_path=Config.plot_dir / task / dataset_name / f"epoch_metrics_{model_name}_{run_version}.png",
             )
 
-            # Add other information to metrics
-            metrics["num_dimensions"] = dataset_cfg.input_size
-            metrics["num_classes"] = dataset_cfg.num_classes
-            metrics["sequence_length"] = dataset_cfg.context_length
-            metrics["train_samples"] = len(train_dataloader.dataset)
-            metrics["test_samples"] = len(test_dataloader.dataset)
-            metrics["validation_samples"] = len(validation_dataloader.dataset)
-
             self.update_global_metrics(
                 metrics=metrics,
                 run=run,
                 dataset=dataset_name,
                 model=model_name,
                 version=run_version,
+                num_dimensions=dataset_cfg.input_size,
+                num_classes=dataset_cfg.num_classes,
+                sequence_length=dataset_cfg.context_length,
+                train_samples=len(train_dataloader.dataset),
+                test_samples=len(test_dataloader.dataset),
+                validation_samples=len(validation_dataloader.dataset),
+                training_time=training_time,
             )
 
     def update_global_metrics(
-        self, metrics: pandas.DataFrame, run: int, dataset: str, model: str, version: str
+        self,
+        metrics: pandas.DataFrame,
+        run: int,
+        dataset: str,
+        model: str,
+        version: str,
+        num_dimensions: int,
+        num_classes: int,
+        sequence_length: int,
+        train_samples: int,
+        test_samples: int,
+        validation_samples: int,
+        training_time: float = 0.0,
     ) -> None:
         """Update the global metrics with the new metrics.
 
@@ -343,8 +357,25 @@ class ExperimentRunner:
             dataset (str): The name of the dataset.
             model (str): The name of the model.
             version (str): The version of the experiment.
+            num_dimensions (int): The number of dimensions in the dataset.
+            num_classes (int): The number of classes in the dataset.
+            sequence_length (int): The length of the sequences in the dataset.
+            train_samples (int): The number of training samples.
+            test_samples (int): The number of testing samples.
+            validation_samples (int): The number of validation samples.
+            training_time (float): The training time in seconds.
         """
+        # Add other information to metrics
+        metrics["num_dimensions"] = num_dimensions
+        metrics["num_classes"] = num_classes
+        metrics["sequence_length"] = sequence_length
+        metrics["train_samples"] = train_samples
+        metrics["test_samples"] = test_samples
+        metrics["validation_samples"] = validation_samples
+        metrics["training_time_seconds"] = round(training_time, 2)
+
         metric_cols = metrics.columns.tolist()
+
         metrics["run"] = run
         metrics["dataset"] = dataset
         metrics["model"] = model
