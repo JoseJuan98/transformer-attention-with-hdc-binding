@@ -25,8 +25,12 @@ def run_time_series_experiments() -> None:
     # This class is responsible for running the experiments
     experiment_runner = ExperimentRunner(experiment_cfg=experiment_config)
 
-    # Set the random seed for reproducibility
-    experiment_runner.set_random_seed(seed=42)
+    # Define the experiment runner, responsible for running the experiments
+    experiment_runner = ExperimentRunner(
+        experiment_cfg=experiment_config,
+        # Set the random seed for reproducibility
+        seed=42,
+    )
 
     # Run the experiments
     experiment_runner.run()

@@ -27,13 +27,15 @@ from .experiment_config import ExperimentConfig
 class ExperimentRunner:
     """This class is responsible for running the experiments."""
 
-    def __init__(self, experiment_cfg: ExperimentConfig):
+    def __init__(self, experiment_cfg: ExperimentConfig, seed: int = 42):
         """Initializes the ExperimentRunner class.
 
         Args:
             experiment_cfg (ExperimentConfig): The experiment configuration.
         """
         self.experiment_cfg = experiment_cfg
+        self.seed = seed
+
         self.results = pandas.Series()
         self.errors: dict[str, list] = {}
         self.model_factory = ModelFactory()
@@ -55,20 +57,19 @@ class ExperimentRunner:
         )
 
         self.logger.info(f"\n{self.experiment_cfg.pretty_str()}")
+        self._set_random_seed()
 
-        self.logger.info(
-            f"Saving experiment configuration to {Config.model_dir / self._task_exp_path}/experiment_config.json"
-        )
+        self.logger.info(f"Saving experiment configuration to model/{self._task_exp_path}/experiment_config.json")
         self.experiment_cfg.dump(path=Config.model_dir / self._task_exp_path / "experiment_config.json")
 
         self.logger.info("Starting experiment ...\n")
 
-    def set_random_seed(self, seed: int = 42) -> None:
+    def _set_random_seed(self) -> None:
         """Sets the random seed for reproducibility."""
-        lightning.seed_everything(seed, workers=True, verbose=False)
-        torch.cuda.manual_seed(seed)
+        lightning.seed_everything(self.seed, workers=True, verbose=False)
+        torch.cuda.manual_seed(self.seed)
         self.logger.info(
-            f"Seeds from Python's random module, NumPy, PyTorch, and CuDNN set to {seed} for reproducibility."
+            f"Seeds from Python's random module, NumPy, PyTorch, and CuDNN set to {self.seed} for reproducibility."
         )
 
     def run(self):
@@ -91,14 +92,18 @@ class ExperimentRunner:
                     # TODO: redefine how the batch size is defined based in experiment config or a relative % of memory
                     # with mini-batching gradient accumulation
                     batch_size=64,
+                    seed=self.seed,
                     extract_path=self.data_dir,
                     logger=self.logger,
                     # If defined, it will plot the first sample of the dataset
                     plot_path=None,  # Config.plot_dir / self.task_fmt / f"{dataset}_sample.png"
+                    pin_memory=True,
+                    prefetch_factor=2,
+                    persistent_workers=True,
                 )
             )
 
-            self.logger.info(f"Saving dataset configuration to {self.results_path}/dataset_config.json")
+            self.logger.info(f"Saving dataset configuration to {self._task_exp_path}/{dataset}/dataset_config.json")
             dataset_cfg.dump(path=self.results_path / "dataset_config.json")
 
             self.single_run(
