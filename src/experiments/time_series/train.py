@@ -21,10 +21,6 @@ def run_time_series_experiments() -> None:
     experiment_config.model_configs.pop("Transformer Ciruclar Convolution PE")
     experiment_config.model_configs.pop("Transformer Element-Wise PE")
 
-    # Define the experiment runner
-    # This class is responsible for running the experiments
-    experiment_runner = ExperimentRunner(experiment_cfg=experiment_config)
-
     # Define the experiment runner, responsible for running the experiments
     experiment_runner = ExperimentRunner(
         experiment_cfg=experiment_config,
