@@ -24,16 +24,28 @@ def __convert_to_numpy(data: pandas.DataFrame) -> numpy.ndarray:
     """
     num_samples = len(data)
     num_dimensions = len(data.columns)
-    max_len = max(len(data.iloc[i, j]) for i in range(num_samples) for j in range(num_dimensions))
 
-    # Initialize an array to hold the data.  Shape: (num_cases, max_len, num_dimensions)
-    arr = numpy.zeros((num_samples, max_len, num_dimensions))
+    # Handle univariate case: if only one column, the DataFrame contains the time series directly
+    if num_dimensions == 1:
+        max_len = max(len(data.iloc[i, 0]) for i in range(num_samples))
 
-    for i in tqdm(iterable=range(num_samples), desc="Converting to numpy", unit=" samples"):
-        for j in range(num_dimensions):
-            # Pad the series with zeros to the max_len
-            series = data.iloc[i, j].to_numpy()
-            arr[i, : len(series), j] = series
+        # Still keep the dimension axis
+        arr = numpy.zeros((num_samples, max_len, 1))
+
+        for i in tqdm(iterable=range(num_samples), desc="Converting to numpy", unit=" samples"):
+            series = data.iloc[i, 0].to_numpy()
+            arr[i, : len(series), 0] = series
+    else:
+        max_len = max(len(data.iloc[i, j]) for i in range(num_samples) for j in range(num_dimensions))
+
+        # Initialize an array to hold the data.  Shape: (num_cases, max_len, num_dimensions)
+        arr = numpy.zeros((num_samples, max_len, num_dimensions))
+
+        for i in tqdm(iterable=range(num_samples), desc="Converting to numpy", unit=" samples"):
+            for j in range(num_dimensions):
+                # Pad the series with zeros to the max_len
+                series = data.iloc[i, j].to_numpy()
+                arr[i, : len(series), j] = series
 
     return arr
 
@@ -68,22 +80,22 @@ def get_ucr_datasets(
     # Standardize data using sklearn.preprocessing.StandardScaler
     # Each feature needs to be standarized independently. This means the data needs to be reshaped to
     # (num_cases * max_len, num_dimensions), standardize, and then reshape back.
-    num_cases_train, max_len, num_dimensions = X_train.shape
+    num_cases_train, max_len_train, num_dimensions = X_train.shape
 
     # max_len and num_dimensions should be the same
-    num_cases_test, _, _ = X_test.shape
+    num_cases_test, max_len_test, _ = X_test.shape
 
     if plot_path is not None and num_dimensions >= 1:
         _plot_time_series_sample(dsid=dsid, plot_path=plot_path, sample=X_train[0], num_dimensions=num_dimensions)
 
     scaler = StandardScaler()
-    X_train = X_train.reshape(num_cases_train * max_len, num_dimensions)
+    X_train = X_train.reshape(num_cases_train * max_len_train, num_dimensions)
     X_train = scaler.fit_transform(X_train)
-    X_train = torch.from_numpy(X_train.reshape(num_cases_train, max_len, num_dimensions)).float()
+    X_train = torch.from_numpy(X_train.reshape(num_cases_train, max_len_train, num_dimensions)).float()
 
-    X_test = X_test.reshape(num_cases_test * max_len, num_dimensions)
+    X_test = X_test.reshape(num_cases_test * max_len_test, num_dimensions)
     X_test = scaler.transform(X_test)  # Use the same scaler fitted on training data
-    X_test = torch.from_numpy(X_test.reshape(num_cases_test, max_len, num_dimensions)).float()
+    X_test = torch.from_numpy(X_test.reshape(num_cases_test, max_len_test, num_dimensions)).float()
 
     # Convert y to numerical labels and tensors
     unique_labels = numpy.unique(numpy.concatenate((y_train, y_test)))
@@ -97,7 +109,7 @@ def get_ucr_datasets(
 
     num_classes = len(torch.unique(y_train))
 
-    return train_dataset, test_dataset, max_len, num_classes, num_dimensions
+    return train_dataset, test_dataset, max_len_train, num_classes, num_dimensions
 
 
 def _plot_time_series_sample(
