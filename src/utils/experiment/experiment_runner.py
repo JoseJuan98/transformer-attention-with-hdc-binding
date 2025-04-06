@@ -5,7 +5,7 @@ import json
 import pathlib
 import time
 import traceback
-from typing import Dict
+from typing import Any, Dict, Optional
 
 # Third party imports
 import lightning
@@ -97,16 +97,20 @@ class ExperimentRunner:
             msg_task(msg=f" Dataset {dataset} ", logger=self.logger)
             self.logger.info(f"\n\n\t{f'{"=" * 24}{" Loading Data ":^40}{"=" * 24}': ^100}\n")
 
-            # Load dataset and create dataloaders only once per dataset
-            self._load_dataset(dataset_name=dataset)
+            try:
+                # Load dataset and create dataloaders only once per dataset
+                self._load_dataset(dataset_name=dataset)
+                # Run the experiment for this dataset
+                self.single_run(dataset=dataset)
 
-            # Run the experiment for this dataset
-            self.single_run(dataset=dataset)
+            except Exception as e:
+                self._handle_training_error(dataset=dataset, exception=e)
 
-            # Free memory after processing each dataset
-            if dataset in self.dataset_cache:
-                del self.dataset_cache[dataset]
-                torch.cuda.empty_cache()
+            finally:
+                # Free memory after processing each dataset
+                if dataset in self.dataset_cache:
+                    del self.dataset_cache[dataset]
+                    torch.cuda.empty_cache()
 
             self.logger.info(f"\n\nAll models for {dataset} trained successfully!\n{'':_^100}\n\n")
 
@@ -203,7 +207,7 @@ class ExperimentRunner:
                     torch.cuda.empty_cache()
 
                 except Exception as e:
-                    self._handle_training_error(dataset, model_name, run, e)
+                    self._handle_training_error(dataset=dataset, model_name=model_name, run=run, exception=e)
                 finally:
                     # Remove component handler when done
                     self.logger.remove_component_handler(component_name=component_name)
@@ -214,7 +218,9 @@ class ExperimentRunner:
         if self.errors:
             self.logger.error(f"Errors occurred during the experiment:\n{json.dumps(self.errors, indent=4)}")
 
-    def _handle_training_error(self, dataset: str, model_name: str, run: int, exception: Exception) -> None:
+    def _handle_training_error(
+        self, dataset: str, exception: Exception, model_name: Optional[str] = None, run: Optional[int] = None
+    ) -> None:
         """Handle errors during model training.
 
         Args:
@@ -223,24 +229,36 @@ class ExperimentRunner:
             run (int): The run number.
             exception (Exception): The exception that occurred.
         """
-        err_msg = f"\n\n\t{f'{"x" * 24}'f' {dataset} | {model_name} | Run {run} 'f'{"x" * 24}': ^100}\n\n"
-        err_msg += f"Error for {dataset} training {model_name}:\n\n{str(exception)}\n\n"
+        # TODO: error messages can be parametrized
+        if model_name:
+            err_msg = f"\n\n\t{f'{"x" * 24}'f' {dataset} | {model_name} | Run {run} 'f'{"x" * 24}': ^100}\n\n"
+            err_msg += f"Error for {dataset} training {model_name}"
+
+        else:
+            err_msg = f"\n\n\t{f'{"x" * 24}'f' {dataset} 'f'{"x" * 24}': ^100}\n\n"
+            err_msg += f"Error loading or preparing {dataset}"
+
+        err_msg += f":\n\n{str(exception)}\n\n"
+
         tb_msg = f"Traceback:\n{traceback.format_exc()}"
         self.logger.error(err_msg)
         self.logger.error(tb_msg)
 
         # Update errors for model
-        model_errors = self.errors.get(model_name, [])
-        model_errors.append(
-            {
-                "dataset": dataset,
-                "model": model_name,
-                "run": run,
-                "error": str(exception),
-                "traceback": traceback.format_exc(),
-            }
-        )
-        self.errors[model_name] = model_errors
+        err_key = model_name if model_name else dataset
+
+        errors = self.errors.get(err_key, [])
+        error_dict: dict[str, Any] = {
+            "dataset": dataset,
+            "error": str(exception),
+            "traceback": traceback.format_exc(),
+        }
+        if model_name:
+            error_dict["model_name"] = model_name
+            error_dict["run"] = run
+
+        errors.append(error_dict)
+        self.errors[err_key] = errors
 
         # Write to error log file
         with open(self.experiment_logs_path / "errors.log", "a") as f:
@@ -296,7 +314,7 @@ class ExperimentRunner:
         )
 
         # --- Train and Test ---
-        msg_task(msg="Train and Test", logger=self.logger)
+        msg_task(msg=f"Train and Test (Run {run})", logger=self.logger)
         self.logger.info(f"Training {model_name} for {model_cfg.num_epochs} epochs...")
 
         if model_cfg.num_epochs > 0:
