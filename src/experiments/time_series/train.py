@@ -17,13 +17,10 @@ def run_time_series_experiments() -> None:
         model_cfg_path=current_dir / "models_cfg.json", experiment_cfg_path=current_dir / "experiment_cfg.json"
     )
 
-    # FIXME: when implemented use all models, for now only the base one
+    # FIXME: use for development purposes only
     # experiment_config.model_configs.pop("Transformer Absolute Sinusoidal PE")
     experiment_config.model_configs.pop("Transformer Ciruclar Convolution PE")
     # experiment_config.model_configs.pop("Transformer Element-Wise PE")
-
-    # TODO: add more datasets
-    #  "FaceDetection", "InsectWingbeat", "SpokenArabicDigits",
 
     # Define the experiment runner, responsible for running the experiments
     experiment_runner = ExperimentRunner(
