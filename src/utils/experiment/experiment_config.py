@@ -36,6 +36,7 @@ class ExperimentConfig(BaseConfig):
         precision (str): The precision to use for training ('16', '32', '16-mixed', 'bf16-mixed', ...).
         profiler (bool): Whether to use the profiler.
         summary (bool): Whether to use the summary writer.
+        plots (bool): Whether to generate the plots.
     """
 
     experiment_name: str
@@ -63,9 +64,10 @@ class ExperimentConfig(BaseConfig):
     accelerator: Literal["cpu", "gpu", "tpu", "hpu", "mps", "auto"]
     precision: _PRECISION_INPUT
 
-    # Training settings
+    # Other settings
     profiler: bool
     summary: bool
+    plots: bool
 
     def pretty_str(self):
         """List the attributes of the class."""

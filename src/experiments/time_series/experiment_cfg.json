@@ -16,5 +16,6 @@
     "accelerator": "gpu",
     "precision": "16-mixed",
     "profiler": false,
-    "summary": false
+    "summary": false,
+    "plots": false
 }

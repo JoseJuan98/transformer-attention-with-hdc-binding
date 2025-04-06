@@ -26,11 +26,11 @@ def save_plot(filename: str) -> None:
 
 
 def get_train_metrics_and_plot(
-    plots_path: pathlib.Path,
     csv_dir: str,
     experiment: str,
     logger: logging.Logger | None = None,
-    plotting: bool = False,
+    plots_path: pathlib.Path | None = None,
+    show_plot: bool = False,
 ) -> pandas.DataFrame:
     """Save the metrics plot.
 
@@ -39,7 +39,7 @@ def get_train_metrics_and_plot(
         csv_dir (str): Path to the directory containing the metrics.csv file.
         experiment (str): Name of the experiment.
         logger (logging.Logger, optional): Logger object. Defaults to None.
-        plotting (bool, optional): Whether to display the plot. Defaults to False.
+        show_plot (bool, optional): Whether to display the plot. Defaults to False.
 
     Returns:
         pandas.DataFrame: Pandas DataFrame containing the final metrics of the plot.
@@ -57,15 +57,16 @@ def get_train_metrics_and_plot(
     else:
         logger.info(f"\nExperiment {experiment}\n\tTest loss: {test_loss}.\n\tTest accuracy: {test_acc}.\n\n")
 
-    seaborn.relplot(data=metrics.drop(columns=["test_loss", "test_acc"], axis=1, errors="ignore"), kind="line")
+    if plots_path is not None:
+        seaborn.relplot(data=metrics.drop(columns=["test_loss", "test_acc"], axis=1, errors="ignore"), kind="line")
 
-    plots_path.parent.mkdir(parents=True, exist_ok=True)
-    pyplot.savefig(fname=plots_path)
+        plots_path.parent.mkdir(parents=True, exist_ok=True)
+        pyplot.savefig(fname=plots_path)
 
-    if plotting:
-        pyplot.show()
+        if show_plot:
+            pyplot.show()
 
-    pyplot.close()
+        pyplot.close()
 
     metrics = (
         metrics.drop(["test_acc", "test_loss"], axis=1)

@@ -135,7 +135,9 @@ class ExperimentRunner:
             extract_path=self.data_dir,
             logger=self.logger,
             # If defined, it will plot the first sample of the dataset
-            plot_path=None,  # Config.plot_dir / self.task_fmt / f"{dataset_name}_sample.png"
+            plot_path=(
+                Config.plot_dir / self.task_fmt / f"{dataset_name}_sample.png" if self.experiment_cfg.plots else None
+            ),
             pin_memory=True,
             prefetch_factor=2,
             persistent_workers=True,
@@ -334,7 +336,11 @@ class ExperimentRunner:
                 csv_dir=trainer.log_dir,
                 experiment=f"{model_name.replace('_', ' ').title()} for {dataset_name.replace('_', ' ').title()} in {run_version}",
                 logger=self.logger,
-                plots_path=Config.plot_dir / task / dataset_name / f"epoch_metrics_{model_name}_{run_version}.png",
+                plots_path=(
+                    Config.plot_dir / task / dataset_name / f"epoch_metrics_{model_name}_{run_version}.png"
+                    if self.experiment_cfg.plots
+                    else None
+                ),
             )
 
             self.update_global_metrics(
