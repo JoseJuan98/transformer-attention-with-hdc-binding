@@ -5,7 +5,11 @@
     "run_version": "version_0",
     "dataset_names": [
         "ArticularyWordRecognition",
-        "PenDigits"
+        "PenDigits",
+        "SpokenArabicDigits",
+        "LSST",
+        "FingerMovements",
+        "MotorImagery"
     ],
     "runs_per_experiment": 3,
     "batch_size": 64,
