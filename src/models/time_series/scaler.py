@@ -11,7 +11,7 @@ Copyright 2022 The HuggingFace Inc. team. All rights reserved.
 Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 """
 # Standard imports
-from typing import Tuple
+from typing import Literal, Tuple, Union
 
 # Third party imports
 import torch
@@ -132,3 +132,34 @@ class TimeSeriesNOPScaler(torch.nn.Module):
         scale = torch.ones_like(data, requires_grad=False).mean(dim=self.dim, keepdim=self.keepdim)
         loc = torch.zeros_like(data, requires_grad=False).mean(dim=self.dim, keepdim=self.keepdim)
         return data, loc, scale
+
+
+TimeSeriesScalerType = Union[TimeSeriesMeanScaler, TimeSeriesStdScaler, TimeSeriesNOPScaler]
+TimeSeriesScalerTypeStr = Literal["mean", "std", "none"]
+
+
+class TimeSeriesScalerFactory:
+    """Factory class to create time series scalers."""
+
+    @staticmethod
+    def get_ts_scaler(scaling_method: TimeSeriesScalerTypeStr | None) -> TimeSeriesScalerType:
+        """Get the scaler for time series data.
+
+        Args:
+            scaling_method (str): The scaling method to use. Options are "mean", "std", or None.
+
+        Returns:
+            dict: Dictionary containing the scaler classes.
+        """
+        # Scaler catalog
+        scaler_catalog = {
+            "mean": TimeSeriesMeanScaler,
+            "std": TimeSeriesStdScaler,
+            "none": TimeSeriesNOPScaler,
+            None: TimeSeriesNOPScaler,
+        }
+
+        if scaling_method not in scaler_catalog.keys():
+            raise ValueError(f"Invalid scaling method: {scaling_method}.  Must be 'mean', 'std', or None.")
+
+        return scaler_catalog[scaling_method]()

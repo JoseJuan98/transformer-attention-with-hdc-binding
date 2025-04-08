@@ -11,6 +11,7 @@ Copyright 2022 The HuggingFace Inc. team. All rights reserved.
 Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 The following modifications were made:
+- Use PyTorch Lightning for training and evaluation.
 - Adapted for time series classification.
 - Added TimeSeriesSinusoidalPositionalEmbedding for continuous time series data.
 - Integrated scaling (mean, std, or none) before the embedding layer.
@@ -30,8 +31,9 @@ import torchmetrics
 
 # First party imports
 from models.base_model import BaseModel
+from models.binding_method.binding_method_factory import BindingMethodFactory, BindingMethodType, BindingMethodTypeStr
 from models.positional_encoding import TSPositionalEncodingType
-from models.time_series.scaler import TimeSeriesMeanScaler, TimeSeriesNOPScaler, TimeSeriesStdScaler
+from models.time_series.scaler import TimeSeriesScalerFactory, TimeSeriesScalerType, TimeSeriesScalerTypeStr
 from models.transformer.encoder import Encoder
 
 
@@ -74,7 +76,8 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         num_classes: int,
         dropout: float = 0.1,
         learning_rate: float = 1e-3,
-        scaling: Literal["mean", "std", "none"] | None = "mean",
+        embedding_binding: BindingMethodTypeStr = "additive",
+        scaling: TimeSeriesScalerTypeStr | None = "mean",
         mask_input: bool = False,
         torch_profiling: torch.profiler.profile | None = None,
     ):
@@ -121,18 +124,12 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
 
         self._example_input_array = torch.zeros(size=(1, self.context_length, self.input_size))
 
-        # Scaler catalog
-        scaler_catalog = {
-            "mean": TimeSeriesMeanScaler,
-            "std": TimeSeriesStdScaler,
-            "none": TimeSeriesNOPScaler,
-            None: TimeSeriesNOPScaler,
-        }
+        self.scaler: TimeSeriesScalerType = TimeSeriesScalerFactory().get_ts_scaler(scaling_method=scaling)
 
-        if scaling not in scaler_catalog.keys():
-            raise ValueError(f"Invalid scaling method: {scaling}.  Must be 'mean', 'std', or None.")
-
-        self.scaler = scaler_catalog[scaling]()
+        self.embedding_binding_name = embedding_binding
+        self.embedding_binding: BindingMethodType = BindingMethodFactory().get_binding_method(
+            binding_method_name=embedding_binding
+        )
 
         self.save_hyperparameters(
             ignore=[
@@ -145,6 +142,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
                 "scaler",
                 "profiler",
                 "loss_fn",
+                "embedding_binding",
             ]
         )
 
@@ -178,7 +176,10 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
 
         # Positional Encoding
         x_pos_enc = self.positional_encoding(x_scaled)
-        x = self.dropout(x_embed + x_pos_enc)
+
+        # Binding embeddings and positional encodings
+        x = self.embedding_binding(x_embed, x_pos_enc)
+        x = self.dropout(x)
 
         # Encoder
         x = self.encoder(x, mask)

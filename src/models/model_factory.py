@@ -79,6 +79,7 @@ class ModelFactory:
                 if profiler_path
                 else None
             ),
+            embedding_binding=model_config.embedding_binding,
         )
 
     @staticmethod

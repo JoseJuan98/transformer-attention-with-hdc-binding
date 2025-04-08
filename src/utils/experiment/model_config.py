@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 # First party imports
+from models.binding_method.binding_method_factory import BindingMethodTypeStr
 from utils.base_config import BaseConfig
 
 
@@ -24,9 +25,9 @@ class ModelConfig(BaseConfig):
         d_ff (int): The dimensionality of the inner layer of the feed-forward network.
         num_layers (int): The number of encoder layers.
         dropout (float): The dropout probability.
-
         learning_rate (float): The learning rate.
-
+        embedding_binding (str): The binding method for the embeddings. Values can be: "additive", "multiplicative",
+            "circular_convolution".
     """
 
     model_name: Literal[
@@ -42,3 +43,4 @@ class ModelConfig(BaseConfig):
     d_ff: int
     num_layers: int
     dropout: float
+    embedding_binding: BindingMethodTypeStr
