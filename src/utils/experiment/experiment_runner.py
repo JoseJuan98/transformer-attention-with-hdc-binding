@@ -15,14 +15,12 @@ from scipy import stats
 from torch.utils.data import DataLoader
 
 # First party imports
-from experiments.data_factory import DataFactory
-from models import ModelFactory
+from models.model_factory import ModelFactory
 from utils import Config, get_logger, get_train_metrics_and_plot, msg_task
+from utils.experiment.data_factory import DataFactory
 from utils.experiment.dataset_config import DatasetConfig
+from utils.experiment.experiment_config import ExperimentConfig
 from utils.experiment.model_config import ModelConfig
-
-# Local imports
-from .experiment_config import ExperimentConfig
 
 
 class ExperimentRunner:
@@ -59,7 +57,9 @@ class ExperimentRunner:
         self.logger.info(f"\n{self.experiment_cfg.pretty_str()}")
         self.logger.info(f"Saving experiment configuration to model/{self._task_exp_path}/experiment_config.json")
         self.experiment_cfg.dump(path=Config.model_dir / self._task_exp_path / "experiment_config.json")
-        self.logger.info("Starting experiment ...\n")
+        self.exp_name_title = self.experiment_cfg.experiment_name.replace("_", " ").title()
+        self.logger.info(f"Starting experiment {self.exp_name_title} ...\n")
+        self.exp_start_time = time.perf_counter()
 
     def _setup_paths_and_logging(self) -> None:
         """Set up paths and logging for the experiment."""
@@ -115,7 +115,12 @@ class ExperimentRunner:
 
             self.logger.info(f"\n\nAll models for {dataset} trained successfully!\n{'':_^100}\n\n")
 
-        self.logger.info("Experiment completed!")
+        total_time = time.perf_counter() - self.exp_start_time
+
+        self.logger.info(
+            f"Experiment {self.exp_name_title} completed in {total_time // 60:.2f} minutes {total_time % 60:.2f} "
+            "seconds!"
+        )
 
     def _load_dataset(self, dataset_name: str) -> None:
         """Load dataset and create dataloaders.
@@ -335,7 +340,8 @@ class ExperimentRunner:
         if model_cfg.num_epochs > 0:
             metrics = get_train_metrics_and_plot(
                 csv_dir=trainer.log_dir,
-                experiment=f"{model_name.replace('_', ' ').title()} for {dataset_name.replace('_', ' ').title()} in {run_version}",
+                experiment=f"{model_name.replace('_', ' ').title()} for "
+                + f"{dataset_name.replace('_', ' ').title()} in {run_version}",
                 logger=self.logger,
                 plots_path=(
                     Config.plot_dir / task / dataset_name / f"epoch_metrics_{model_name}_{run_version}.png"

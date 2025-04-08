@@ -1,5 +1,5 @@
 {
-    "experiment_name": "ts_classification_pe",
+    "experiment_name": "time_series_classification_poistional_encoding",
     "task": "time series classification",
     "description": "Time Series Classification Positional Encodings Experiment",
     "run_version": "version_0",

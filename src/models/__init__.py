@@ -6,4 +6,3 @@ from models.time_series.transformer import EncoderOnlyTransformerTSClassifier
 
 # Local imports
 from .base_model import BaseModel
-from .model_factory import ModelFactory
