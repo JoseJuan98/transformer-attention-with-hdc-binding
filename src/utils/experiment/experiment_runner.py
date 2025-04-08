@@ -11,6 +11,7 @@ from typing import Any, Dict, Optional
 import lightning
 import pandas
 import torch
+from scipy import stats
 from torch.utils.data import DataLoader
 
 # First party imports
@@ -416,3 +417,58 @@ class ExperimentRunner:
         self.results.to_csv(
             path_or_buf=self.results_path.parent / f"global_metrics_{version}.csv", index=False, header=True
         )
+
+
+if __name__ == "__main__":
+    # Third party imports
+    import numpy
+    import pandas
+
+    pandas.set_option("display.max_columns", None)
+    pandas.set_option("display.max_rows", None)
+
+    gloabl_metrics = pandas.read_csv(
+        filepath_or_buffer=pathlib.Path(__file__).parents[3]
+        / "artifacts/model/time_series_classification/version_0/global_metrics_version_0.csv",
+        header=0,
+    )
+
+    # TODO: include it as a method of the Experiment Runner or create a metrics aggregator
+    def aggregate_test_accuracy(metrics: pandas.DataFrame):
+        """Aggregates test accuracy per model and dataset with 95% confidence interval.
+
+        Args:
+            metrics (pandas.DataFrame): DataFrame containing at least 'dataset', 'model', and 'test_acc' columns
+
+        Returns:
+            pandas.DataFrame: Aggregated results with mean, std, and margin of error
+        """
+        # Group by dataset and model
+        grouped = metrics.groupby(["dataset", "model"])
+
+        # Calculate statistics
+        result = grouped["test_acc"].agg(["mean", "std", "count"]).reset_index()
+
+        # Calculate margin of error for 95% confidence interval
+        # Using t-distribution since we have small sample sizes
+        result["margin_of_error"] = result.apply(
+            lambda row: stats.t.ppf(0.95, row["count"] - 1) * row["std"] / numpy.sqrt(row["count"]), axis=1
+        )
+
+        # Format the results for better readability
+        result["mean_test_acc"] = result["mean"].round(4)
+        result["std_test_acc"] = result["std"].round(4)
+        result["confidence_interval"] = result.apply(
+            lambda row: f"{row['mean']:.4f} ± {row['margin_of_error']:.4f}", axis=1
+        )
+
+        # Select and reorder columns
+        final_result = result[
+            ["dataset", "model", "mean_test_acc", "std_test_acc", "margin_of_error", "confidence_interval"]
+        ]
+
+        return final_result
+
+    aggregated_results = aggregate_test_accuracy(gloabl_metrics)
+
+    print(aggregated_results)
