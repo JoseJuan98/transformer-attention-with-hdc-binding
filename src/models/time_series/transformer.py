@@ -177,7 +177,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         # Positional Encoding
         x_pos_enc = self.positional_encoding(x_scaled)
 
-        # Binding embeddings and positional encodings
+        # Binding
         x = self.embedding_binding(x_embed, x_pos_enc)
         x = self.dropout(x)
 

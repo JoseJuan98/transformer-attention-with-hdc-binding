@@ -55,7 +55,7 @@ class ExperimentRunner:
         self._set_random_seed()
 
         self.logger.info(f"\n{self.experiment_cfg.pretty_str()}")
-        self.logger.info(f"Saving experiment configuration to model/{self._task_exp_path}/experiment_config.json")
+        self.logger.info(f"Saving experiment configuration to model/{self._task_exp_path}experiment_config.json")
         self.experiment_cfg.dump(path=Config.model_dir / self._task_exp_path / "experiment_config.json")
         self.exp_name_title = self.experiment_cfg.experiment_name.replace("_", " ").title()
         self.logger.info(f"Starting experiment {self.exp_name_title} ...\n")
