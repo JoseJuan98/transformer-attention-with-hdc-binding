@@ -439,7 +439,7 @@ if __name__ == "__main__":
         header=0,
     )
 
-    # TODO: include it as a method of the Experiment Runner or create a metrics aggregator
+    # TODO: Create a metrics aggregator for experiments with update global metrics and this function below
     def aggregate_test_accuracy(metrics: pandas.DataFrame):
         """Aggregates test accuracy per model and dataset with 95% confidence interval.
 
@@ -454,6 +454,9 @@ if __name__ == "__main__":
 
         # Calculate statistics
         result = grouped["test_acc"].agg(["mean", "std", "count"]).reset_index()
+
+        # FIXME: aggreage per dataset and model, and calculate the confidence interval per runs of the same model and
+        # dataset
 
         # Calculate margin of error for 95% confidence interval
         # Using t-distribution since we have small sample sizes
