@@ -13,7 +13,7 @@
     ],
     "runs_per_experiment": 3,
     "batch_size": 64,
-    "accelerator": "gpu",
+    "accelerator": "auto",
     "precision": "16-mixed",
     "profiler": false,
     "summary": false,
