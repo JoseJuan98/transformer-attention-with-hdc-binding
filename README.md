@@ -4,6 +4,11 @@ This repository contains the code and resources for my Master's thesis, which ex
 binding methods to improve positional encoding in Transformer models. The project focuses primarily on time series classification,
 with a potential extension to natural language processing (NLP) tasks.
 
+
+## Setup
+
+For the setup of the project follow the instructions in the [SETUP.md](docs/SETUP.md) file.
+
 ## Project Overview
 
 The standard approach to incorporating positional information in Transformers involves adding positional embeddings to token
@@ -71,7 +76,3 @@ task (e.g., sentiment analysis, language modeling).
 ├── README.md                # This file
 └── requirements.txt         # Core dependencies (for pip installation)
 ```
-
-## Setup
-
-For the setup of the project follow the instructions in the [SETUP.md](docs/SETUP.md) file.
