@@ -69,34 +69,34 @@ class ExperimentConfig(BaseConfig):
     summary: bool
     plots: bool
 
-    def pretty_str(self):
-        """List the attributes of the class."""
+    def pretty_str(self) -> str:
+        """List the attributes of the class in a pretty format."""
         cfg_str = f"{' Experiment Configuration ':_^100}\n\n"
         cfg_str += "\n".join(
             [f"\t{k}: {v}" for k, v in self.to_dict().items() if k not in ["model_configs", "dataset_names"]]
         )
 
         cfg_str += "\n\n\tdataset_names:\n\n"
-        for k in self.dataset_names:
-            cfg_str += f"\t\t{k}\n"
+        for dataset_name in self.dataset_names:
+            cfg_str += f"\t\t{dataset_name}\n"
 
         cfg_str += "\n\tmodel_configs:\n\n"
-        for k, v in self.model_configs.items():
-            cfg_str += f"\t\t{k}:\n\n{"\n".join([f"\t\t\t{k}: {v}" for k, v in v.to_dict().items()])}\n\n"
+        for model_name, model_config in self.model_configs.items():
+            cfg_str += f"\t\t{model_name}:\n\n"
+            cfg_str += "\n".join([f"\t\t\t{sub_k}: {sub_v}" for sub_k, sub_v in model_config.to_dict().items()])
+            cfg_str += "\n\n"
         cfg_str += "_" * 100 + "\n\n"
         return cfg_str
 
-    def dump(self, path: str | pathlib.Path):
+    def dump(self, path: str | pathlib.Path) -> None:
         """Dumps the configuration to a JSON file."""
-        if isinstance(path, str):
-            path = pathlib.Path(path)
+        path = pathlib.Path(path) if isinstance(path, str) else path
 
         # Create the directories if it does not exist
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        obj = self.to_dict().copy()
-
-        obj["model_configs"] = {k: v.to_dict() for k, v in self.model_configs.items()}
+        # Convert ModelConfig objects to dictionaries for JSON serialization
+        model_configs_serializable = {k: v.to_dict() for k, v in self.model_configs.items()}
 
         with open(path, "w") as file:
-            json.dump(obj=obj, fp=file, indent=4)
+            json.dump(obj={**self.to_dict(), "model_configs": model_configs_serializable}, fp=file, indent=4)
