@@ -118,8 +118,8 @@ If you need to manually specify a backend:
 
 This project supports multiple hardware acceleration backends:
 
-* **NVIDIA CUDA:** For NVIDIA GPUs
-* **AMD ROCm:** For AMD GPUs
+* **NVIDIA CUDA:** For NVIDIA GPUs. This project uses CUDA 12.4, if you need another version, please specify it in the `pyproject.toml` file in the `pytorch-cuda` poetry source link.
+* **AMD ROCm:** For AMD GPUs. This project uses ROCM 6.2.4, as with CUDA, if you need another version, please specify it in the `pyproject.toml` file in the `pytorch-rocm` poetry source link.
 * **Apple Silicon (MPS):** For Apple M1/M2/M3 chips
 * **Intel GPU:** For Intel integrated and discrete GPUs
 * **CPU-only:** Fallback for systems without supported GPUs

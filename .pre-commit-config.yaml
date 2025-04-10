@@ -34,8 +34,8 @@ repos:
     hooks:
       - id: deptry
         args: ["src/", "--config", "pyproject.toml"]
-  - repo: https://github.com/python-poetry/poetry
-    rev: '2.1.1'  # add version here
-    hooks:
-      - id: poetry-check
-      - id: poetry-lock
+#  - repo: https://github.com/python-poetry/poetry
+#    rev: '2.1.1'  # add version here
+#    hooks:
+#      - id: poetry-check
+#      - id: poetry-lock

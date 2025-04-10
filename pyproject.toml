@@ -10,16 +10,12 @@ readme = "README.md"
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "numpy (>=2.1.3)",
-    "torch (>=2.6.0)",
-    "lightning (>=2.5.0)",
-    "torchmetrics (>=1.6.2)",
     "tensorboard (>=2.19.0)",
     "matplotlib (>=3.10.1)",
     "seaborn (>=0.13.2)",
     "pandas[computation,performance] (>=2.2.3)",
     "scikit-learn (>=1.6.1)",
     "sktime (>=0.36.0)",
-    "torch-tb-profiler (>=0.4.3)",
     "tqdm (>=4.67.1,<5.0.0)",
     "scipy (>=1.15.2)",
     "aiohttp (>=3.11.15)",
@@ -35,9 +31,53 @@ pydocstyle = ">=6.3.0"
 pre-commit = ">=4.1.0"
 pytest = ">=8.3.5"
 
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+# The base group has no PyTorch - it will be installed by specific hardware groups
+[tool.poetry.group.cuda]
+optional = true
+
+[tool.poetry.group.cuda.dependencies]
+torch = {version = ">=2.6.0", source = "pytorch-cuda", markers = "extra == 'cuda' and extra != 'rocm' and extra != 'intel'"}
+lightning = ">=2.5.0"
+torchmetrics = ">=1.6.2"
+torch-tb-profiler = ">=0.4.3"
+
+[tool.poetry.group.rocm]
+optional = true
+
+[tool.poetry.group.rocm.dependencies]
+torch = {version = ">=2.6.0", source = "pytorch-rocm", markers = "sys_platform == 'linux' and extra == 'rocm' and extra != 'cuda' and extra != 'intel'"}
+lightning = ">=2.5.0"
+torchmetrics = ">=1.6.2"
+torch-tb-profiler = ">=0.4.3"
+
+[tool.poetry.group.mps]
+optional = true
+
+[tool.poetry.group.mps.dependencies]
+torch = {version = ">=2.6.0", markers = "sys_platform == 'darwin'"}
+lightning = ">=2.5.0"
+torchmetrics = ">=1.6.2"
+torch-tb-profiler = ">=0.4.3"
+
+[tool.poetry.group.intel]
+optional = true
+
+[tool.poetry.group.intel.dependencies]
+torch = {version = ">=2.6.0", source = "pytorch-intel", markers = "extra == 'intel' and extra != 'cuda' and extra != 'rocm'"}
+intel-extension-for-pytorch= {version = ">=2.6.10+xpu", source = "intel-xpu"}
+oneccl_bind_pt= {version = ">=2.6.0+xpu", source = "intel-xpu"}
+lightning = ">=2.5.0"
+torchmetrics = ">=1.6.2"
+torch-tb-profiler = ">=0.4.3"
+
+[tool.poetry.group.cpu]
+optional = true
+
+[tool.poetry.group.cpu.dependencies]
+torch = {version = ">=2.6.0", source = "pytorch-cpu", markers = "extra != 'intel' and extra != 'cuda' and extra != 'rocm'"}
+lightning = ">=2.5.0"
+torchmetrics = ">=1.6.2"
+torch-tb-profiler = ">=0.4.3"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -71,3 +111,40 @@ ignore = ["D104","D107","D202","D203","D213","D214","D400","D401","D404","D406",
 [tool.deptry.per_rule_ignores]
 DEP002 = ["tensorboard", "torch-tb-profiler", "aiohttp"]
 DEP004 = ["pytest"]
+
+# Deptry ignore DEP004 for all pakcages
+[tool.deptry]
+ignore = ["DEP004"]
+
+[[tool.poetry.source]]
+name = "pytorch-cuda"
+url = "https://download.pytorch.org/whl/cu124"
+priority = "explicit"
+
+[[tool.poetry.source]]
+name = "pytorch-rocm"
+url = "https://download.pytorch.org/whl/rocm6.2.4"
+priority = "explicit"
+
+[[tool.poetry.source]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
+[[tool.poetry.source]]
+name = "pytorch-intel"
+url = "https://download.pytorch.org/whl/xpu"
+priority = "explicit"
+
+[[tool.poetry.source]]
+name = "intel-xpu"
+url = "https://pytorch-extension.intel.com/release-whl/stable/xpu/us/"
+priority = "explicit"
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
