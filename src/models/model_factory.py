@@ -139,4 +139,7 @@ class ModelFactory:
             # If True, runs 1 batch of train, test and val to find any bugs. Also, it can be specified the number of
             # batches to run as an integer
             fast_dev_run=False if num_epochs > 0 else True,
+            # PyTorch operations are non-deterministic by default. This means that the results of the operations may
+            #  vary from run to run.
+            deterministic=True,
         )
