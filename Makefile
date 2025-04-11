@@ -2,6 +2,9 @@
 
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
+# Define a variable for the backend, allowing it to be passed from the command line
+#BACKEND ?= cpu
+
 install-poetry:
 	pip install --no-cache-dir -U "poetry>=2.1.1" && \
 	poetry config virtualenvs.in-project true

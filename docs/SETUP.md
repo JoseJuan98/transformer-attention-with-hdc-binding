@@ -16,36 +16,26 @@ This project provides comprehensive support for multiple hardware acceleration b
 
 ### Supported Platforms
 
-* **NVIDIA CUDA** - Full support for NVIDIA GPUs
-  * Default: CUDA 12.4
-  * Custom versions can be specified in the `pyproject.toml` file by modifying the `pytorch-cuda` poetry source link
+*   **NVIDIA CUDA** - Full support for NVIDIA GPUs
+    *   Default: CUDA 12.4
+    *   Custom versions can be specified in the `[install.sh](../scripts/install.sh)` by modifying the `CUDA_VERSION` variable.
 
-* **AMD ROCm** - Optimized for AMD GPUs
-  * Default: ROCm 6.2.4
-  * Custom versions can be specified in the `pyproject.toml` file by modifying the `pytorch-rocm` poetry source link
+*   **AMD ROCm** - Optimized for AMD GPUs
+    *   Default: ROCm 6.2.4
+    *   Custom versions can be specified in the `[install.sh](../scripts/install.sh)` by modifying the `ROCM_VERSION` variable.
 
-* **Apple Silicon (MPS)** - Native acceleration for Apple M1/M2/M3 chips
-  * Leverages Metal Performance Shaders for optimal performance
+*   **Apple Silicon (MPS)** - Native acceleration for Apple M1/M2/M3 chips
+    *   Leverages Metal Performance Shaders for optimal performance
 
-* **CPU-only** - Reliable fallback option
-  * Ensures compatibility on systems without supported GPUs or when troubleshooting hardware-specific issues
+*   **Intel GPU** - Support for Intel GPUs with SYCL
+    *   Custom versions can be specified in the `[install.sh](../scripts/install.sh)` by modifying the `INTEL_EXTENSION_VERSION` variable.
+
+*   **CPU-only** - Reliable fallback option
+    *   Ensures compatibility on systems without supported GPUs or when troubleshooting hardware-specific issues
 
 ### Automatic Configuration
 
-The `make install` command intelligently detects your hardware configuration and installs the appropriate acceleration backend without requiring manual intervention.
-
-### Platform Limitations
-
-**Note on Intel GPU Support:**
-> Intel discrete GPU support has been temporarily removed due to unresolved dependency conflicts between Intel's libraries and PyTorch 2.6.0. Specifically, there's an incompatibility between the `dpcpp-cpp-rt` package and `torch==2.6.0` that prevents Poetry from resolving dependencies.
-> For more details, see Intel's [Troubleshooting Documentation](https://intel.github.io/intel-extension-for-pytorch/xpu/2.6.10+xpu/tutorials/known_issues.html).
-
-**Workaround for Intel GPU users:**
-> 1. Install the CPU dependencies using this project's standard installation
-> 2. Follow Intel's [official installation guide](https://pytorch-extension.intel.com/installation?platform=gpu&version=v2.3.110%2Bxpu) to manually add Intel GPU support
->
-> Intel GPU support will be reintegrated once these dependency conflicts are resolved in future PyTorch versions.
-
+The `make install` command intelligently detects your hardware configuration and installs the appropriate acceleration backend without requiring manual intervention.  The `Makefile` handles the backend selection automatically.
 
 ## Installing Make (Recommended)
 
@@ -66,36 +56,36 @@ The `make install` command intelligently detects your hardware configuration and
 
 The project provides simple make commands that handle the entire installation process, including hardware detection and appropriate PyTorch backend installation:
 
-1. **For standard installation:**
+1.  **For standard installation:**
 
-   ```bash
-   make install
-   ```
+    ```bash
+    make install
+    ```
 
-   This command will:
-   - Install Poetry if not already installed
-   - Detect your hardware (NVIDIA CUDA, AMD ROCm, Apple Silicon, Intel GPU, or CPU-only)
-   - Install the appropriate PyTorch backend for your hardware
-   - Set up the project environment
+    This command will:
+    *   Install Poetry if not already installed
+    *   Detect your hardware (NVIDIA CUDA, AMD ROCm, Apple Silicon, Intel GPU, or CPU-only)
+    *   Install the appropriate PyTorch backend for your hardware
+    *   Set up the project environment
 
-2. **For development setup:**
+2.  **For development setup:**
 
-   ```bash
-   make install-dev
-   ```
+    ```bash
+    make install-dev
+    ```
 
-   This command does everything the standard installation does, plus:
-   - Installs development dependencies
-   - Sets up pre-commit hooks
-   - Installs testing tools
+    This command does everything the standard installation does, plus:
+    *   Installs development dependencies
+    *   Sets up pre-commit hooks
+    *   Installs testing tools
 
-3. **Run experiments:**
+3.  **Run experiments:**
 
-   After installation, you can run experiments using the provided scripts. For example, to run a time series experiment:
+    After installation, you can run experiments using the provided scripts. For example, to run a time series experiment:
 
-   ```bash
-   make run-ts
-   ```
+    ```bash
+    make run-ts
+    ```
 
 ### Alternative Methods
 
@@ -114,42 +104,36 @@ or for development setup:
 ./scripts/install.sh --dev   # Install with development dependencies
 ```
 
-#### Using Poetry Manually
+#### Using Poetry Manually (Less Recommended)
 
-If you need to manually specify a backend:
+While the Makefile automates backend selection, you can still use Poetry directly, but it's less convenient. The Makefile is the preferred method.
 
 1. **Install Poetry:**
 
-   ```bash
-   pip install --no-cache-dir -U "poetry>=2.1.1"
-   poetry config virtualenvs.in-project true --local
-   ```
+    ```bash
+    pip install --no-cache-dir -U "poetry>=2.1.1"
+    poetry config virtualenvs.in-project true --local
+    ```
 
-2. **Install dependencies with a specific backend:**
+2. **Install project dependencies**:
 
-   ```bash
-   # For CUDA support
-   poetry install --no-cache --with=cuda
+    ```bash
+    poetry install --no-cache
+    ```
 
-   # For ROCm support
-   poetry install --no-cache --with=rocm
+3. **For development dependencies**:
 
-   # For Apple Silicon (MPS) support
-   poetry install --no-cache --with=mps
+    ```bash
+    poetry install --no-cache --with=dev
+    poetry run pre-commit install
+    ```
 
-   # For Intel GPU support
-   poetry install --no-cache --with=intel
-
-   # For CPU-only
-   poetry install --no-cache --with=cpu
-   ```
-
-3. **For development dependencies:**
+4. **Install hardware especific dependencies** (The Makefile handles this automatically):
 
    ```bash
-   poetry install --no-cache --with=dev,cuda  # Replace 'cuda' with your backend
-   poetry run pre-commit install
-   ```
+    # The Makefile handles this automatically. Do not use these unless you have a specific reason.
+    poetry run pip install -U --force-reinstall --no-cache-dir "torch>=2.6.0" --index-url https://download.pytorch.org/whl/cu126
+    ```
 
 ## Verifying Your Installation
 
