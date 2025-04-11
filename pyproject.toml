@@ -10,19 +10,19 @@ readme = "README.md"
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "numpy (>=2.1.3)",
+    "torch (>=2.6.0)",
+    "lightning (>=2.5.0)",
+    "torchmetrics (>=1.6.2)",
     "tensorboard (>=2.19.0)",
     "matplotlib (>=3.10.1)",
     "seaborn (>=0.13.2)",
     "pandas[computation,performance] (>=2.2.3)",
     "scikit-learn (>=1.6.1)",
     "sktime (>=0.36.0)",
+    "torch-tb-profiler (>=0.4.3)",
     "tqdm (>=4.67.1,<5.0.0)",
     "scipy (>=1.15.2)",
     "aiohttp (>=3.11.15)",
-    "torch (>=2.6.0)",
-    "lightning (>=2.5.0)",
-    "torchmetrics (>=1.6.2)",
-    "torch-tb-profiler (>=0.4.3)",
 ]
 
 [tool.poetry.group.dev.dependencies]
@@ -34,6 +34,10 @@ mypy = ">=1.15.0"
 pydocstyle = ">=6.3.0"
 pre-commit = ">=4.1.0"
 pytest = ">=8.3.5"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -67,11 +71,3 @@ ignore = ["D104","D107","D202","D203","D213","D214","D400","D401","D404","D406",
 [tool.deptry.per_rule_ignores]
 DEP002 = ["tensorboard", "torch-tb-profiler", "aiohttp"]
 DEP004 = ["pytest"]
-
-# Deptry ignore DEP004 for all pakcages
-[tool.deptry]
-ignore = ["DEP004"]
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
