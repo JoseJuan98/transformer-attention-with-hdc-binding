@@ -4,7 +4,7 @@ ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 install-poetry:
 	pip install --no-cache-dir -U "poetry>=2.1.1" && \
-	poetry config virtualenvs.in-project true --local
+	poetry config virtualenvs.in-project true
 
 ## Install dependencies
 install:
@@ -15,10 +15,13 @@ install-dev:
 	./scripts/install.sh --dev
 
 poetry-install: install-poetry
-	poetry install --no-cache --with=$(or $(backend), "cpu") -E $(or $(backend), "cpu")
+	poetry install --no-cache --with=$(or $(backend), "cpu")
+
+install-precommit:
+	poetry run pre-commit install
 
 poetry-install-dev: install-poetry
-	poetry install --no-cache --with=dev,$(or $(backend), "cpu") -E $(or $(backend), "cpu") && \
+	poetry install --no-cache --with=dev,$(or $(backend), "cpu") && \
 	poetry run pre-commit install
 
 ## Start the tensorboard server

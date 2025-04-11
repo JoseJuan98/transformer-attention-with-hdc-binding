@@ -85,34 +85,56 @@ elif lspci 2>/dev/null | grep -i intel | grep -i vga &> /dev/null; then
     BACKEND="intel"
 fi
 
+DEV=""
+if [ "$INSTALL_DEV" = true ]; then
+    DEV="--with=dev"
+    echo -e "${BLUE}Installing dev dependencies${NC}"
+fi
+
+PYTORCH_VERSION=2.6.0
+TRITON_VERSION=3.2.0
+ROCM_VERSION=6.2.4
+INTEL_EXTENSION_VERSION=2.6.10+xpu
+CUDA_VERSION=124
+
 # Priority: CUDA > ROCm > MPS > Intel > CPU
 if [ "$HAS_CUDA" = true ]; then
     echo -e "${GREEN}Installing PyTorch with CUDA support${NC}"
     BACKEND="cuda"
+    make install-poetry &&
+    # TODO: remove CUDA_VERSION dot to get cu124
+    poetry install --no-cache $DEV &&
+#    poetry run pip install -U --force --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/cu${CUDA_VERSION} &&
+    make install-precommit
 elif [ "$HAS_ROCM" = true ]; then
     echo -e "${GREEN}Installing PyTorch with ROCm support${NC}"
     BACKEND="rocm"
+    make install-poetry &&
+    poetry run pip install -U --force --no-cache-dir "torch>=${PYTORCH_VERSION}" "pytorch-triton-rocm>=${TRITON_VERSION}" --index-url https://download.pytorch.org/whl/rocm${ROCM_VERSION} &&
+    poetry install --no-cache $DEV &&
+    make install-precommit
 elif [ "$HAS_MPS" = true ]; then
     echo -e "${GREEN}Installing PyTorch with MPS support${NC}"
     BACKEND="mps"
+    make install-poetry &&
+    poetry run pip install -U --force --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/nightly/cpu &&
+    poetry install --no-cache $DEV &&
+    make install-precommit
 elif [ "$HAS_INTEL" = true ]; then
     echo -e "${GREEN}Installing PyTorch with Intel GPU support${NC}"
     BACKEND="intel"
+    make install-poetry &&
+    poetry run pip install -U --force --no-cache-dir "torch>=${PYTORCH_VERSION}" "pytorch-triton-xpu>=${TRITON_VERSION}" --index-url https://download.pytorch.org/whl/xpu &&
+    poetry run pip install -U --force --no-cache-dir "intel-extension-for-pytorch==${INTEL_EXTENSION_VERSION}" "oneccl_bind_pt==${PYTORCH_VERSION}+xpu" --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/xpu/us/ &&
+    poetry install --no-cache $DEV &&
+    make install-precommit
 else
     echo -e "${YELLOW}No GPU detected. Installing PyTorch with CPU support${NC}"
     BACKEND="cpu"
-fi
-
-# Create virtual environment and install dependencies
-echo -e "${BLUE}Installing project dependencies with Poetry...${NC}"
-
-if [ "$INSTALL_DEV" = true ]; then
-    echo -e "${BLUE}Including development dependencies${NC}"
-    echo -e "${BLUE}Running: make install-dev backend=$BACKEND${NC}"
-    make install-dev backend=$BACKEND
-else
-    echo -e "${BLUE}Running: make install backend=$BACKEND${NC}"
-    make install backend=$BACKEND
+    make install-poetry &&
+    poetry run pip install -U --force --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/cpu &&
+    poetry install --no-cache $DEV &&
+    make install-precommit
 fi
 
 # Verify installation
