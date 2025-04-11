@@ -15,10 +15,10 @@ install-dev:
 	./scripts/install.sh --dev
 
 poetry-install: install-poetry
-	poetry install --no-cache --with=$(or $(backend), "cpu")
+	poetry install --no-cache --with=$(or $(backend), "cpu") -E $(or $(backend), "cpu")
 
 poetry-install-dev: install-poetry
-	poetry install --no-cache --with=dev,$(or $(backend), "cpu") && \
+	poetry install --no-cache --with=dev,$(or $(backend), "cpu") -E $(or $(backend), "cpu") && \
 	poetry run pre-commit install
 
 ## Start the tensorboard server
