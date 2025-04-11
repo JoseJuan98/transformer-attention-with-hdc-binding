@@ -46,7 +46,7 @@ optional = true
 
 [tool.poetry.group.rocm.dependencies]
 torch = {version = ">=2.6.0+rocm6.2.4", source = "pytorch-rocm", markers = "sys_platform == 'linux' and extra == 'rocm' and extra != 'cuda' and extra != 'intel'"}
-pytorch-triton-rocm  = {version = "3.2.0", source = "pytorch-rocm", markers = "sys_platform == 'linux' and extra == 'rocm' and extra != 'cuda' and extra != 'intel'"}
+pytorch-triton-rocm  = {version = ">=3.2.0", source = "pytorch-rocm", markers = "sys_platform == 'linux' and extra == 'rocm' and extra != 'cuda' and extra != 'intel'"}
 lightning = "^2.5.0"
 torchmetrics = "^1.6.2"
 torch-tb-profiler = "^0.4.3"
@@ -60,17 +60,18 @@ lightning = ">=2.5.0"
 torchmetrics = ">=1.6.2"
 torch-tb-profiler = ">=0.4.3"
 
-[tool.poetry.group.intel]
-optional = true
-
-[tool.poetry.group.intel.dependencies]
-torch = {version = ">=2.6.0+xpu", source = "pytorch-intel", markers = "extra == 'intel' and extra != 'cuda' and extra != 'rocm'"}
-pytorch-triton-xpu = {version = ">=3.2.0", source = "pytorch-intel", markers = "extra == 'intel' and extra != 'cuda' and extra != 'rocm'"}
-intel-extension-for-pytorch= {version = ">=2.6.10+xpu", source = "intel-xpu"}
-oneccl-bind-pt= {version = ">=2.6.0+xpu", source = "intel-xpu"}
-lightning = ">=2.5.0"
-torchmetrics = ">=1.6.2"
-torch-tb-profiler = ">=0.4.3"
+## Support can be added back when the conflicts between dpcpp-cpp-rt and torch==2.6.0 are resolved.
+#[tool.poetry.group.intel]
+#optional = true
+#
+#[tool.poetry.group.intel.dependencies]
+#torch = {version = ">=2.6.0", source = "pytorch-intel", markers = "extra == 'intel' and extra != 'cuda' and extra != 'rocm'"}
+#pytorch-triton-xpu = {version = ">=3.2.0", source = "pytorch-intel", markers = "extra == 'intel' and extra != 'cuda' and extra != 'rocm'"}
+#intel-extension-for-pytorch = {version = ">=2.6.10+xpu", source = "intel-xpu", markers = "extra == 'intel' and extra != 'cuda' and extra != 'rocm'"}
+#oneccl_bind_pt= {version = ">=2.6.0+xpu", source = "intel-xpu", markers = "extra == 'intel' and extra != 'cuda' and extra != 'rocm'"}
+#lightning = ">=2.5.0"
+#torchmetrics = ">=1.6.2"
+#torch-tb-profiler = ">=0.4.3"
 
 [tool.poetry.group.cpu]
 optional = true

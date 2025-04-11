@@ -10,7 +10,44 @@ Before you begin, ensure you have the following:
 *   **A Python Environment Manager:**  You'll need a tool to manage your Python environment and dependencies.  We recommend **Poetry** or **pip** with `virtualenv`, but other tools like `conda`, `uv`, `pipx` are also compatible.
 *   **Make (Optional, but Recommended):**  The project includes a `Makefile` to automate common tasks like dependency installation and testing.  While optional, using `make` simplifies the setup process.
 
-## Installing Make (Optional)
+## Hardware Acceleration Support
+
+This project provides comprehensive support for multiple hardware acceleration backends to optimize performance across different systems:
+
+### Supported Platforms
+
+* **NVIDIA CUDA** - Full support for NVIDIA GPUs
+  * Default: CUDA 12.4
+  * Custom versions can be specified in the `pyproject.toml` file by modifying the `pytorch-cuda` poetry source link
+
+* **AMD ROCm** - Optimized for AMD GPUs
+  * Default: ROCm 6.2.4
+  * Custom versions can be specified in the `pyproject.toml` file by modifying the `pytorch-rocm` poetry source link
+
+* **Apple Silicon (MPS)** - Native acceleration for Apple M1/M2/M3 chips
+  * Leverages Metal Performance Shaders for optimal performance
+
+* **CPU-only** - Reliable fallback option
+  * Ensures compatibility on systems without supported GPUs or when troubleshooting hardware-specific issues
+
+### Automatic Configuration
+
+The `make install` command intelligently detects your hardware configuration and installs the appropriate acceleration backend without requiring manual intervention.
+
+### Platform Limitations
+
+**Note on Intel GPU Support:**
+> Intel discrete GPU support has been temporarily removed due to unresolved dependency conflicts between Intel's libraries and PyTorch 2.6.0. Specifically, there's an incompatibility between the `dpcpp-cpp-rt` package and `torch==2.6.0` that prevents Poetry from resolving dependencies.
+> For more details, see Intel's [Troubleshooting Documentation](https://intel.github.io/intel-extension-for-pytorch/xpu/2.6.10+xpu/tutorials/known_issues.html).
+
+**Workaround for Intel GPU users:**
+> 1. Install the CPU dependencies using this project's standard installation
+> 2. Follow Intel's [official installation guide](https://pytorch-extension.intel.com/installation?platform=gpu&version=v2.3.110%2Bxpu) to manually add Intel GPU support
+>
+> Intel GPU support will be reintegrated once these dependency conflicts are resolved in future PyTorch versions.
+
+
+## Installing Make (Recommended)
 
 `make` is a build automation tool. If you choose to use it, follow the instructions below for your operating system:
 
@@ -113,18 +150,6 @@ If you need to manually specify a backend:
    poetry install --no-cache --with=dev,cuda  # Replace 'cuda' with your backend
    poetry run pre-commit install
    ```
-
-## Hardware Acceleration Support
-
-This project supports multiple hardware acceleration backends:
-
-* **NVIDIA CUDA:** For NVIDIA GPUs. This project uses CUDA 12.4, if you need another version, please specify it in the `pyproject.toml` file in the `pytorch-cuda` poetry source link.
-* **AMD ROCm:** For AMD GPUs. This project uses ROCM 6.2.4, as with CUDA, if you need another version, please specify it in the `pyproject.toml` file in the `pytorch-rocm` poetry source link.
-* **Apple Silicon (MPS):** For Apple M1/M2/M3 chips
-* **Intel GPU:** For Intel integrated and discrete GPUs
-* **CPU-only:** Fallback for systems without supported GPUs
-
-The `make install` command will automatically detect your hardware and install the appropriate backend.
 
 ## Verifying Your Installation
 
