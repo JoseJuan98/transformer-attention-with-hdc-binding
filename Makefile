@@ -1,4 +1,4 @@
-.PHONY: init tensorboard kill-tensorboard clean-files help install install-dev install-poetry
+.PHONY: init tensorboard kill-tensorboard clean-files help install install-dev install-poetry poetry-install poetry-install-dev lint test run-ts clean-artifacts
 
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
@@ -15,13 +15,13 @@ install-dev:
 	./scripts/install.sh --dev
 
 poetry-install: install-poetry
-	poetry install --no-cache --with=$(or $(backend), "cpu")
+	poetry install --no-cache
 
 install-precommit:
 	poetry run pre-commit install
 
 poetry-install-dev: install-poetry
-	poetry install --no-cache --with=dev,$(or $(backend), "cpu") && \
+	poetry install --no-cache --with=dev && \
 	poetry run pre-commit install
 
 ## Start the tensorboard server
@@ -30,11 +30,19 @@ tensorboard:
 
 ## Kill tensorboard server
 kill-tensorboard:
-	kill $(ps -e | grep 'tensorboard' | awk '{print $1}')
+	kill $(ps -e | grep 'tensorboard' | awk '{print $$1}')
 
 ## Delete compiled Python files
 clean-files:
 	find . | grep -E "build$|\/__pycache__$|\.pyc$|\.pyo$|\.egg-info$|\.ipynb_checkpoints" | xargs rm -rf || echo "Already clean"
+
+### Delete compiled Python files
+#clean-files:
+#	find . -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete
+#	find . -type d -name "__pycache__" -delete
+#	find . -type d -name "build" -delete
+#	find . -type d -name "*.egg-info" -delete
+#	find . -type d -name ".ipynb_checkpoints" -delete
 
 ## Lint
 lint:

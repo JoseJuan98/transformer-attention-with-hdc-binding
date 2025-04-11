@@ -1,144 +1,154 @@
 #!/bin/bash
-set -e
+set -euo pipefail
+
+# ------------------- Configuration -------------------
+readonly PYTORCH_VERSION=2.6.0
+readonly TRITON_VERSION=3.2.0
+readonly ROCM_VERSION=6.2.4
+readonly INTEL_EXTENSION_VERSION=2.6.10+xpu
+# Remove the dot from the CUDA version, e.g., 12.4 -> 124
+readonly CUDA_VERSION=124
+
+# ------------------- End Configuration -------------------
 
 # ANSI color codes
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly RED='\033[0;31m'
+readonly BLUE='\033[0;34m'
+readonly NC='\033[0m' # No Color
 
-echo -e "${BLUE}PyTorch Project Installation Script${NC}"
-echo -e "${BLUE}====================================${NC}\n"
+# Helper function for printing messages
+function print_message() {
+  local color="$1"
+  local message="$2"
+  echo -e "${color}${message}${NC}"
+}
+
+print_message "$BLUE" "PyTorch Project Installation Script"
+print_message "$BLUE" "====================================\n"
 
 # Parse command line arguments
 INSTALL_DEV=false
-for arg in "$@"; do
-    case $arg in
-        --dev)
-            INSTALL_DEV=true
-            shift
-            ;;
-        *)
-            # Unknown option
-            ;;
-    esac
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dev)
+      INSTALL_DEV=true
+      shift
+      ;;
+    *)
+      print_message "$YELLOW" "Unknown option: $1"
+      shift
+      ;;
+  esac
 done
 
 # Check if make is installed
 if ! command -v make &> /dev/null; then
-    echo -e "${RED}Error: 'make' command not found. Please install make.${NC}"
-    exit 1
+  print_message "$RED" "Error: 'make' command not found. Please install make."
+  exit 1
 fi
 
-echo -e "${BLUE}Detecting hardware and OS...${NC}"
+print_message "$BLUE" "Detecting hardware and OS..."
 
 # Detect OS
-OS="$(uname -s)"
-echo -e "Operating System: ${GREEN}$OS${NC}"
+OS=$(uname -s)
+print_message "$GREEN" "Operating System: $OS"
 
 # Initialize variables
-HAS_CUDA=false
-HAS_ROCM=false
-HAS_MPS=false
-HAS_INTEL=false
 BACKEND="cpu"  # Default backend
 
-# Check for CUDA
-if command -v nvidia-smi &> /dev/null; then
-    echo -e "NVIDIA GPU detected: ${GREEN}$(nvidia-smi -L | head -n 1)${NC}"
-    nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader
-    HAS_CUDA=true
-    BACKEND="cuda"
-elif [ -d "/proc/driver/nvidia" ] || [ -f "/proc/driver/nvidia/version" ]; then
-    echo -e "${GREEN}NVIDIA drivers detected${NC}"
-    HAS_CUDA=true
-    BACKEND="cuda"
-fi
-
-# Check for ROCm (AMD GPU)
-if command -v rocminfo &> /dev/null; then
-    echo -e "${GREEN}ROCm detected${NC}"
-    HAS_ROCM=true
-    BACKEND="rocm"
-elif [ -d "/opt/rocm" ]; then
-    echo -e "${GREEN}ROCm installation detected${NC}"
-    HAS_ROCM=true
-    BACKEND="rocm"
-fi
+# Helper function to check for a command and print a message
+function check_and_print_command() {
+  local command="$1"
+  local message="$2"
+  if command -v "$command" &> /dev/null; then
+    print_message "$GREEN" "$message"
+    return 0
+  else
+    return 1
+  fi
+}
 
 # Check for Apple Silicon
 if [ "$OS" = "Darwin" ] && [ "$(uname -m)" = "arm64" ]; then
-    echo -e "${GREEN}Apple Silicon detected${NC}"
-    HAS_MPS=true
-    BACKEND="mps"
+  print_message "$GREEN" "Apple Silicon detected"
+  BACKEND="mps"
 fi
 
 # Check for Intel GPU
-if command -v sycl-ls &> /dev/null; then
-    echo -e "${GREEN}Intel GPU with SYCL support detected${NC}"
-    HAS_INTEL=true
-    BACKEND="intel"
+if check_and_print_command "sycl-ls" "Intel GPU with SYCL support detected"; then
+  BACKEND="intel"
 elif lspci 2>/dev/null | grep -i intel | grep -i vga &> /dev/null; then
-    echo -e "${GREEN}Intel GPU detected${NC}"
-    HAS_INTEL=true
-    BACKEND="intel"
+  print_message "$GREEN" "Intel GPU detected"
+  BACKEND="intel"
 fi
 
-DEV=""
-if [ "$INSTALL_DEV" = true ]; then
-    DEV="--with=dev"
-    echo -e "${BLUE}Installing dev dependencies${NC}"
+# Check for ROCm (AMD GPU)
+if check_and_print_command "rocminfo" "ROCm detected"; then
+  BACKEND="rocm"
+elif [ -d "/opt/rocm" ]; then
+  print_message "$GREEN" "ROCm installation detected"
+  BACKEND="rocm"
 fi
 
-PYTORCH_VERSION=2.6.0
-TRITON_VERSION=3.2.0
-ROCM_VERSION=6.2.4
-INTEL_EXTENSION_VERSION=2.6.10+xpu
-CUDA_VERSION=124
+# Check for CUDA
+if check_and_print_command "nvidia-smi" "NVIDIA GPU detected: $(nvidia-smi -L | head -n 1)"; then
+  nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader
+  BACKEND="cuda"
+elif [ -d "/proc/driver/nvidia" ] || [ -f "/proc/driver/nvidia/version" ]; then
+  print_message "$GREEN" "NVIDIA drivers detected"
+  BACKEND="cuda"
+fi
 
-# Priority: CUDA > ROCm > MPS > Intel > CPU
-if [ "$HAS_CUDA" = true ]; then
-    echo -e "${GREEN}Installing PyTorch with CUDA support${NC}"
-    BACKEND="cuda"
-    make install-poetry &&
-    # TODO: remove CUDA_VERSION dot to get cu124
-    poetry install --no-cache $DEV &&
-#    poetry run pip install -U --force --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/cu${CUDA_VERSION} &&
-    make install-precommit
-elif [ "$HAS_ROCM" = true ]; then
-    echo -e "${GREEN}Installing PyTorch with ROCm support${NC}"
-    BACKEND="rocm"
-    make install-poetry &&
-    poetry run pip install -U --force --no-cache-dir "torch>=${PYTORCH_VERSION}" "pytorch-triton-rocm>=${TRITON_VERSION}" --index-url https://download.pytorch.org/whl/rocm${ROCM_VERSION} &&
-    poetry install --no-cache $DEV &&
-    make install-precommit
-elif [ "$HAS_MPS" = true ]; then
-    echo -e "${GREEN}Installing PyTorch with MPS support${NC}"
-    BACKEND="mps"
-    make install-poetry &&
-    poetry run pip install -U --force --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/nightly/cpu &&
-    poetry install --no-cache $DEV &&
-    make install-precommit
-elif [ "$HAS_INTEL" = true ]; then
-    echo -e "${GREEN}Installing PyTorch with Intel GPU support${NC}"
-    BACKEND="intel"
-    make install-poetry &&
-    poetry run pip install -U --force --no-cache-dir "torch>=${PYTORCH_VERSION}" "pytorch-triton-xpu>=${TRITON_VERSION}" --index-url https://download.pytorch.org/whl/xpu &&
-    poetry run pip install -U --force --no-cache-dir "intel-extension-for-pytorch==${INTEL_EXTENSION_VERSION}" "oneccl_bind_pt==${PYTORCH_VERSION}+xpu" --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/xpu/us/ &&
-    poetry install --no-cache $DEV &&
-    make install-precommit
+if $INSTALL_DEV; then
+  print_message "$BLUE" "Installing dev dependencies"
+  DEV="--with=dev"
 else
-    echo -e "${YELLOW}No GPU detected. Installing PyTorch with CPU support${NC}"
-    BACKEND="cpu"
-    make install-poetry &&
-    poetry run pip install -U --force --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/cpu &&
-    poetry install --no-cache $DEV &&
-    make install-precommit
+  DEV=""
 fi
+
+# Determine installation command based on backend
+install_pytorch() {
+  local backend="$1"
+  print_message "$GREEN" "Installing PyTorch with $backend support"
+  make install-poetry
+  case "$backend" in
+    cuda)
+#      poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/cu${CUDA_VERSION}
+      echo -e "\n"
+      ;;
+    rocm)
+      poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" "pytorch-triton-rocm>=${TRITON_VERSION}" --index-url https://download.pytorch.org/whl/rocm${ROCM_VERSION}
+      ;;
+    mps)
+      poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/nightly/cpu
+      ;;
+    intel)
+      poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" "pytorch-triton-xpu>=${TRITON_VERSION}" --index-url https://download.pytorch.org/whl/xpu
+      poetry run pip install -U --force-reinstall --no-cache-dir "intel-extension-for-pytorch==${INTEL_EXTENSION_VERSION}" "oneccl_bind_pt==${PYTORCH_VERSION}+xpu" --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/xpu/us/
+      ;;
+    *) # CPU
+      poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/cpu
+      ;;
+  esac
+  poetry install --no-cache $DEV
+  make install-precommit
+}
+
+# Install PyTorch based on detected backend
+case "$BACKEND" in
+  cuda|rocm|mps|intel)
+    install_pytorch "$BACKEND"
+    ;;
+  *) # CPU
+    print_message "$YELLOW" "No GPU detected. Installing PyTorch with CPU support"
+    install_pytorch "cpu"
+    ;;
+esac
 
 # Verify installation
-echo -e "\n${BLUE}Verifying PyTorch installation...${NC}"
+print_message "$BLUE" "\nVerifying PyTorch installation..."
 
 VERIFICATION_SCRIPT=$(cat <<EOF
 import torch
@@ -171,6 +181,8 @@ if cuda_available:
     device = "cuda"
 elif mps_available:
     device = "mps"
+elif hasattr(torch, "xpu") and torch.xpu.is_available():
+    device = "xpu"
 
 print(f"Using device: {device}")
 
@@ -188,6 +200,8 @@ if cuda_available:
     actual_backend = "cuda"
 elif mps_available:
     actual_backend = "mps"
+elif hasattr(torch, "xpu") and torch.xpu.is_available():
+    actual_backend = "intel"
 
 if expected_backend == "intel":
     try:
@@ -212,10 +226,10 @@ poetry run python -c "$VERIFICATION_SCRIPT"
 
 # Check if verification was successful
 if [ $? -eq 0 ]; then
-    echo -e "\n${GREEN}PyTorch installation verified successfully!${NC}"
-    echo -e "${BLUE}Installation complete. You can now use your PyTorch project with $BACKEND backend.${NC}"
+  print_message "$GREEN" "\nPyTorch installation verified successfully!"
+  print_message "$BLUE" "Installation complete. You can now use your PyTorch project with $BACKEND backend."
 else
-    echo -e "\n${RED}PyTorch installation verification failed!${NC}"
-    echo -e "${RED}Please check the error messages above.${NC}"
-    exit 1
+  print_message "$RED" "\nPyTorch installation verification failed!"
+  print_message "$RED" "Please check the error messages above."
+  exit 1
 fi
