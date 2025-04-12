@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Basic binding methods for hyperdimensional computing (HDC) positional encodings.
 
-It contains the addition and element-wise multiplication binding methods.
+It contains the addition and component-wise multiplication binding methods.
 """
 
 # Third party imports

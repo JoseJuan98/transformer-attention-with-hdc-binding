@@ -16,7 +16,7 @@ from models import EncoderOnlyTransformerTSClassifier
 from models.pocket_algorithm import PocketAlgorithm
 from models.positional_encoding import (
     TimeSeriesCircularConvolutionPositionalEncoding,
-    TimeSeriesElementwiseMultiplicationPositionalEncoding,
+    TimeSeriesComponentwiseMultiplicationPositionalEncoding,
     TimeSeriesSinusoidalPositionalEncoding,
     TSPositionalEncodingType,
 )
@@ -45,7 +45,7 @@ class ModelFactory:
         """
         positional_encoding_catalog: dict[str, type[TSPositionalEncodingType]] = {
             "transformer_absolute_sinusoidal_pe": TimeSeriesSinusoidalPositionalEncoding,
-            "transformer_elementwise_pe": TimeSeriesElementwiseMultiplicationPositionalEncoding,
+            "transformer_component_wise_pe": TimeSeriesComponentwiseMultiplicationPositionalEncoding,
             "transformer_ciruclarconvolution_pe": TimeSeriesCircularConvolutionPositionalEncoding,
         }
 

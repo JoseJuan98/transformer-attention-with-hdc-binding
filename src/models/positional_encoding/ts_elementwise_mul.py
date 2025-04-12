@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """Time series HDC positional embedding module.
 
-This module implements element-wise multiplication binding method for hyperdimensional computing (HDC) positional
+This module implements component-wise multiplication binding method for hyperdimensional computing (HDC) positional
 encodings for time series classification.
 """
 # Third party imports
 import torch
 
 
-class TimeSeriesElementwiseMultiplicationPositionalEncoding(torch.nn.Module):
-    """This module produces HDC positional embeddings of any length with element-wise multiplication (binding) method."""
+class TimeSeriesComponentwiseMultiplicationPositionalEncoding(torch.nn.Module):
+    """This module produces HDC positional embeddings of any length with component-wise multiplication (binding) method."""
 
     def __init__(self, num_positions: int, embedding_dim: int) -> None:
         """Initializes the HDC positional encoding.
@@ -40,7 +40,7 @@ class TimeSeriesElementwiseMultiplicationPositionalEncoding(torch.nn.Module):
 
     @torch.no_grad()
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:
-        """Applies positional encoding to the input tensor using element-wise multiplication (binding).
+        """Applies positional encoding to the input tensor using component-wise multiplication (binding).
 
         Args:
             input_tensor (torch.Tensor): Input tensor of shape [bsz x seqlen x input_size].
