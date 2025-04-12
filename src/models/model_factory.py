@@ -44,7 +44,7 @@ class ModelFactory:
             EncoderOnlyTransformerTSClassifier: The model instance.
         """
         positional_encoding_catalog: dict[str, type[TSPositionalEncodingType]] = {
-            "transformer_absolute_sinusoidal_pe": TimeSeriesSinusoidalPositionalEncoding,
+            "transformer_sinusoidal_additive_pe": TimeSeriesSinusoidalPositionalEncoding,
             "transformer_component_wise_pe": TimeSeriesComponentwiseMultiplicationPositionalEncoding,
             "transformer_ciruclarconvolution_pe": TimeSeriesCircularConvolutionPositionalEncoding,
         }

@@ -16,7 +16,7 @@ class ModelConfig(BaseConfig):
     It contains the hyperparameters for the model.
 
     Attributes:
-        model_name (str): The name of the model. Values can be: "transformer_absolute_sinusoidal_pe",
+        model_name (str): The name of the model. Values can be: "transformer_sinusoidal_additive_pe",
             "transformer_elementwise_pe", "transformer_ciruclarconvolution_pe".
         desc (str): A description of the model.
         num_epochs (int): The number of training epochs.
@@ -31,7 +31,7 @@ class ModelConfig(BaseConfig):
     """
 
     model_name: Literal[
-        "transformer_absolute_sinusoidal_pe", "transformer_elementwise_pe", "transformer_ciruclarconvolution_pe"
+        "transformer_sinusoidal_additive_pe", "transformer_elementwise_pe", "transformer_ciruclarconvolution_pe"
     ]
     desc: str
 

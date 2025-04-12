@@ -1,9 +1,9 @@
 {
-  "Transformer Absolute Sinusoidal PE": {
-    "model_name": "transformer_absolute_sinusoidal_pe",
+  "Transformer Additive PE": {
+    "model_name": "transformer_sinusoidal_additive_pe",
     "desc": "Encoder Only Transformer with Absolute Sinusoidal Positional Encoding and Additive Binding for Time Series Classification",
     "num_epochs": 30,
-    "learning_rate": 0.001,
+    "learning_rate": 0.003,
     "d_model": 64,
     "num_heads": 8,
     "d_ff": 256,
@@ -15,8 +15,8 @@
   "Transformer Component-Wise PE": {
     "model_name": "transformer_component_wise_pe",
     "desc": "Encoder Only Transformer with Sinusoidal Positional Encoding and Component-Wise Binding for Time Series Classification",
-    "num_epochs": 30,
-    "learning_rate": 0.001,
+    "num_epochs": 50,
+    "learning_rate": 0.003,
     "d_model": 64,
     "num_heads": 8,
     "d_ff": 256,
@@ -29,7 +29,7 @@
     "model_name": "transformer_ciruclarconvolution_pe",
     "desc": "Encoder Only Transformer with Sinusoidal Positional Encoding and Circular Convolutional Binding for Time Series Classification",
     "num_epochs": 30,
-    "learning_rate": 0.001,
+    "learning_rate": 0.003,
     "d_model": 64,
     "num_heads": 8,
     "d_ff": 256,
