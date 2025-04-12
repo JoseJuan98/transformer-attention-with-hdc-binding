@@ -4,10 +4,22 @@ This repository contains the code and resources for my Master's thesis, which ex
 binding methods to improve positional encoding in Transformer models. The project focuses primarily on time series classification,
 with a potential extension to natural language processing (NLP) tasks.
 
+Main experiments are:
+
+- Different HDC binding methods (additive, component-wise multiplication, circular convolution) for positional encoding and embeddings
+- Different similarity shapes for absolute position encoding
 
 ## Setup
 
-For the setup of the project follow the instructions in the [SETUP.md](docs/SETUP.md) file.
+For the detailed setup instructions for different PyTorch backends (CUDA, ROCM, XPU, MPS, CPU), please refer to the
+[SETUP.md](docs/SETUP.md) file in the `docs` directory.
+
+In short, the project uses [Poetry](https://python-poetry.org/) for dependency management and virtual environment,
+you can install the project dependencies by creating a virtualenv environment with Python 3.11 or higher and running:
+
+```bash
+make install
+```
 
 ## Project Overview
 
@@ -54,25 +66,54 @@ task (e.g., sentiment analysis, language modeling).
 
 ```bash
 │
-├── artifacts                 # 'git-ignored', stores data and trained models (not tracked by Git)
+├── artifacts               # 'git-ignored', stores data and trained models (not tracked by Git)
 │     ├── data                # Datasets (e.g., UCR/UEA datasets)
 │     └── models              # Saved model checkpoints
 │
-├── src                      # Source code
-│     ├── utils                # Utility functions (e.g., logging, helper functions)
-│     ├── data_understanding   # Scripts for exploratory data analysis
-│     ├── data_preparation     # Data loading and preprocessing modules
-│     ├── experiment          # Training and evaluation scripts
+├── scripts                 # Scripts for installation
+│
+├── src                     # Source code
+│     ├── utils                # Utility functions (e.g., logging, helper functions, experiment utilities)
+│     ├── experiments          # Training and evaluation scripts
 │     │     └── time_series          # Time series specific experiments
+│     ├── test                 # Unit tests for the codebase
 │     └── models               # Model definitions
 │           ├── positional_encoding  # Implementations of different positional encoding methods (including HDC binding)
 │           └── transformer          # Transformer architecture implementation
 │
-├── docs                     # Documentation files
-│     └── SETUP.md           # Instructions for setting up the project environment
+├── docs                    # Documentation files
+│     └── SETUP.md          # Instructions for setting up the project environment
 │
-├── dev-requirements.txt     # Development dependencies (e.g., testing frameworks)
-├── pyproject.toml           # Project configuration and dependencies (using Poetry)
-├── README.md                # This file
-└── requirements.txt         # Core dependencies (for pip installation)
+├── pyproject.toml          # Project configuration and dependencies (using Poetry)
+├── README.md               # This file
+└── Makefile                # Makefile for automating tasks (e.g., installation, training, testing, cleaning)
 ```
+
+# Experiments
+
+Main experiments are:
+
+- Different HDC binding methods (additive, component-wise multiplication, circular convolution) for positional encoding and embeddings
+- Different similarity shapes for absolute position encoding
+
+## Different Binding Methods
+
+
+### Insights
+
+#### Component-wise Binding Operation:
+
+Experiments with a normalization layer before the operation showed that the model performance is significantly worse than without normalization (~60% accuracy on average with it, and over ~70% without it). This is likely due to the fact that:
+   * Sinusoidal Positional Encodings are designed to have a specific structure and magnitude. Normalizing them before the multiplication might disrupt this structure, making it harder for the model to learn the positional relationships
+
+##### Sensitivity to Initialization
+
+The performance is more sensitive to the initialization of the embeddings and positional encodings. Shown in fig. 1 & 2, despite using the same dataset, model and parameters, the model performs significantly different in both runs. This is likely due to the fact that the component-wise binding operation is more sensitive to the specific values of the embeddings and positional encodings, which can lead to different learning dynamics and convergence behavior.
+
+<div align="center">
+<img src="docs/plots/insights/initialization_sensitive_example/PenDigits_transformer_component_wise_pe_run_1_version_0.png"/>
+<p style="text-align: center"> Figure 1: Sensitivity to Initialization run 1</p>
+
+<img src="docs/plots/insights/initialization_sensitive_example/PenDigits_transformer_component_wise_pe_run_2_version_0.png"/>
+<p style="text-align: center"> Figure 2: Sensitivity to Initialization run 2</p>
+</div>
