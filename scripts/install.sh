@@ -154,79 +154,8 @@ esac
 # Verify installation
 print_message "$BLUE" "\nVerifying PyTorch installation..."
 
-VERIFICATION_SCRIPT=$(cat <<EOF
-import torch
-import sys
-
-print(f"PyTorch version: {torch.__version__}")
-
-# Check CUDA
-cuda_available = torch.cuda.is_available()
-print(f"CUDA available: {cuda_available}")
-if cuda_available:
-    print(f"CUDA device count: {torch.cuda.device_count()}")
-    print(f"CUDA device name: {torch.cuda.get_device_name(0)}")
-
-# Check MPS (Apple Silicon)
-mps_available = hasattr(torch.backends, "mps") and torch.backends.mps.is_available()
-print(f"MPS available: {mps_available}")
-
-# Check for Intel extension
-try:
-    import intel_extension_for_pytorch as ipex
-    print(f"Intel Extension for PyTorch available: {True}")
-    print(f"Intel Extension version: {ipex.__version__}")
-except ImportError:
-    print(f"Intel Extension for PyTorch available: {False}")
-
-# Determine device
-device = "cpu"
-if cuda_available:
-    device = "cuda"
-elif mps_available:
-    device = "mps"
-elif hasattr(torch, "xpu") and torch.xpu.is_available():
-    device = "xpu"
-
-print(f"Using device: {device}")
-
-# Test tensor operations
-x = torch.rand(5, 3).to(device)
-y = torch.rand(5, 3).to(device)
-z = x + y
-print(f"Test tensor on {device}:")
-print(z)
-
-# Verify backend matches expected
-expected_backend = "$BACKEND"
-actual_backend = "cpu"
-if cuda_available:
-    actual_backend = "cuda"
-elif mps_available:
-    actual_backend = "mps"
-elif hasattr(torch, "xpu") and torch.xpu.is_available():
-    actual_backend = "intel"
-
-if expected_backend == "intel":
-    try:
-        import intel_extension_for_pytorch
-        actual_backend = "intel"
-    except ImportError:
-        pass
-elif expected_backend == "rocm" and cuda_available:
-    # ROCm shows up as CUDA in PyTorch
-    actual_backend = "rocm"
-
-if expected_backend != actual_backend and not (expected_backend == "rocm" and actual_backend == "cuda"):
-    print(f"ERROR: Expected {expected_backend} backend but got {actual_backend}")
-    sys.exit(1)
-else:
-    print(f"SUCCESS: Correctly using {actual_backend} backend")
-EOF
-)
-
 # Run verification script
-poetry run python -c "$VERIFICATION_SCRIPT"
+poetry run python scripts/backend_verification.py -eb $BACKEND
 
 # Check if verification was successful
 if [ $? -eq 0 ]; then

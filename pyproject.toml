@@ -71,3 +71,4 @@ ignore = ["D104","D107","D202","D203","D213","D214","D400","D401","D404","D406",
 [tool.deptry.per_rule_ignores]
 DEP002 = ["tensorboard", "torch-tb-profiler", "aiohttp"]
 DEP004 = ["pytest"]
+DEP001 = ["intel_extension_for_pytorch"]
