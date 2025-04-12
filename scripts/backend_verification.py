@@ -79,7 +79,7 @@ if expected_backend == "intel":
     except ImportError:
         pass
 elif expected_backend == "rocm" and cuda_available:
-    # ROCm shows up as CUDA in PyTorch
+    # ROCM shows up as CUDA in PyTorch
     actual_backend = "rocm"
 
 if expected_backend != actual_backend and not (expected_backend == "rocm" and actual_backend == "cuda"):

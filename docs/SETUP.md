@@ -229,6 +229,15 @@ poetry run pre-commit run --all-files
 
 ## Troubleshooting
 
+### Backend Verification
+
+To verify that the backend is installed correctly, you can run the following command:
+
+```bash
+# Replace <backend> with the desired backend (e.g., cuda, rocm, mps, intel, cpu)
+poetry run python scripts/backend_verification.py -eb <backend>
+```
+
 ### Hardware Acceleration Issues
 
 If you're experiencing issues with hardware acceleration:

@@ -82,7 +82,17 @@ class ExperimentRunner:
     def _set_random_seed(self) -> None:
         """Sets the random seed for reproducibility."""
         lightning.seed_everything(self.seed, workers=True, verbose=False)
-        torch.cuda.manual_seed(self.seed)
+
+        # CUDA and ROCM: ROCM shows up as CUDA in PyTorch
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(self.seed)
+
+        if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            torch.mps.manual_seed(self.seed)
+
+        if hasattr(torch, "xpu") and torch.xpu.is_available():
+            torch.xpu.manual_seed(self.seed)
+
         self.logger.info(
             f"Seeds from Python's random module, NumPy, PyTorch, and CuDNN set to {self.seed} for reproducibility."
         )
@@ -181,7 +191,9 @@ class ExperimentRunner:
 
             # Train each model using the same dataloaders
             for model_name, model_cfg in self.experiment_cfg.model_configs.items():
-                self.logger.info(f"\n\n\t{f'{"=" * 24}{f" {model_name} (Run {run:<2})":^40}{"=" * 24}': ^100}\n")
+
+                banner = f"{'=' * 24}{f' {model_name} (Run {run:<2})':^40}{'=' * 24}"
+                self.logger.info(f"\n\n\t{banner:^100}\n")
 
                 # Add model-specific logger
                 component_name = f"{model_name}_{dataset}"
