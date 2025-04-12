@@ -37,6 +37,8 @@ class ExperimentConfig(BaseConfig):
         profiler (bool): Whether to use the profiler.
         summary (bool): Whether to use the summary writer.
         plots (bool): Whether to generate the plots.
+        development (bool): Whether to run in development mode. This is used to reduce the number of epochs and
+            terminates the run after any errors.
     """
 
     experiment_name: str
@@ -68,6 +70,7 @@ class ExperimentConfig(BaseConfig):
     profiler: bool
     summary: bool
     plots: bool
+    development: bool
 
     def pretty_str(self) -> str:
         """List the attributes of the class in a pretty format."""

@@ -17,5 +17,6 @@
     "precision": "16-mixed",
     "profiler": false,
     "summary": false,
-    "plots": false
+    "plots": true,
+    "development": true
 }

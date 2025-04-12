@@ -49,6 +49,7 @@ class ExperimentRunner:
         self.dataset_configs: Dict[str, DatasetConfig] = {}
 
         # Set up paths and logging
+        self.exp_name_title = self.experiment_cfg.experiment_name.replace("_", " ").title()
         self._setup_paths_and_logging()
 
         # Set random seed for reproducibility
@@ -57,8 +58,6 @@ class ExperimentRunner:
         self.logger.info(f"\n{self.experiment_cfg.pretty_str()}")
         self.logger.info(f"Saving experiment configuration to model/{self._task_exp_path}experiment_config.json")
         self.experiment_cfg.dump(path=Config.model_dir / self._task_exp_path / "experiment_config.json")
-        self.exp_name_title = self.experiment_cfg.experiment_name.replace("_", " ").title()
-        self.logger.info(f"Starting experiment {self.exp_name_title} ...\n")
         self.exp_start_time = time.perf_counter()
 
     def _setup_paths_and_logging(self) -> None:
@@ -78,6 +77,14 @@ class ExperimentRunner:
         self.logger = get_logger(
             name="lightning.pytorch.core", log_filename=self.experiment_logs_path / "main.log", propagate=False
         )
+
+        self.logger.info(f"Starting experiment {self.exp_name_title} ...\n")
+
+        # Development mode: reduce the number of epochs for development purposes
+        if self.experiment_cfg.development:
+            self.logger.info("\t => Development mode is enabled.")
+            for model_config in self.experiment_cfg.model_configs.values():
+                model_config.num_epochs = 1
 
     def _set_random_seed(self) -> None:
         """Sets the random seed for reproducibility."""
@@ -115,7 +122,7 @@ class ExperimentRunner:
                 self.single_run(dataset=dataset)
 
             except Exception as e:
-                self._handle_training_error(dataset=dataset, exception=e)
+                self._handle_error(dataset=dataset, exception=e)
 
             finally:
                 # Free memory after processing each dataset
@@ -227,7 +234,7 @@ class ExperimentRunner:
                     torch.cuda.empty_cache()
 
                 except Exception as e:
-                    self._handle_training_error(dataset=dataset, model_name=model_name, run=run, exception=e)
+                    self._handle_error(dataset=dataset, model_name=model_name, run=run, exception=e)
                 finally:
                     # Remove component handler when done
                     self.logger.remove_component_handler(component_name=component_name)
@@ -238,10 +245,10 @@ class ExperimentRunner:
         if self.errors:
             self.logger.error(f"Errors occurred during the experiment:\n{json.dumps(self.errors, indent=4)}")
 
-    def _handle_training_error(
+    def _handle_error(
         self, dataset: str, exception: Exception, model_name: Optional[str] = None, run: Optional[int] = None
     ) -> None:
-        """Handle errors during model training.
+        """Handle errors during model training or dataset preparation.
 
         Args:
             dataset (str): The dataset name.
@@ -284,6 +291,10 @@ class ExperimentRunner:
         with open(self.experiment_logs_path / "errors.log", "a") as f:
             f.write(err_msg)
             f.write(tb_msg)
+
+        if self.experiment_cfg.development:
+            self.logger.error("[DEVELOPMENT MODE ON] Terminating run after error.")
+            raise exception
 
     def _train_model_for_dataset(
         self,
