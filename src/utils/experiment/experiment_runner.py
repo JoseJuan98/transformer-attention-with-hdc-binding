@@ -390,6 +390,7 @@ class ExperimentRunner:
                 test_samples=len(test_dataloader.dataset),
                 validation_samples=len(validation_dataloader.dataset),
                 training_time=training_time,
+                n_train_epochs=trainer.current_epoch,
             )
 
     def update_global_metrics(
@@ -405,6 +406,7 @@ class ExperimentRunner:
         train_samples: int,
         test_samples: int,
         validation_samples: int,
+        n_train_epochs: int,
         training_time: float = 0.0,
     ) -> None:
         """Update the global metrics with the new metrics.
@@ -421,6 +423,7 @@ class ExperimentRunner:
             train_samples (int): The number of training samples.
             test_samples (int): The number of testing samples.
             validation_samples (int): The number of validation samples.
+            n_train_epochs (int): The number of training epochs.
             training_time (float): The training time in seconds.
         """
         # Add other information to metrics
@@ -430,6 +433,7 @@ class ExperimentRunner:
         metrics["train_samples"] = train_samples
         metrics["test_samples"] = test_samples
         metrics["validation_samples"] = validation_samples
+        metrics["n_train_epochs"] = n_train_epochs
         metrics["training_time_seconds"] = round(training_time, 2)
 
         metric_cols = metrics.columns.tolist()
