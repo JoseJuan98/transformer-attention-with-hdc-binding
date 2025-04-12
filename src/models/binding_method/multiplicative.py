@@ -13,14 +13,10 @@ class MultiplicativeBinding(EmbeddingBinding):
     def __init__(self, embedding_dim: int):
         super(MultiplicativeBinding, self).__init__()
         self.embedding_dim = embedding_dim
-        self.layer_norm_before = torch.nn.LayerNorm(embedding_dim)
         self.layer_norm_after = torch.nn.LayerNorm(embedding_dim)
 
     def forward(self, embeddings: torch.Tensor, positional_encodings: torch.Tensor) -> torch.Tensor:
         """Applies the multiplicative binding method."""
-        # Apply to both
-        embeddings = self.layer_norm_before(embeddings)
-        positional_encodings = self.layer_norm_before(positional_encodings)
 
         # Bind them
         combined = embeddings * positional_encodings
