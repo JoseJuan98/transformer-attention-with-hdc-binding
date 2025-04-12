@@ -65,7 +65,6 @@ class ModelFactory:
             num_classes=dataset_cfg.num_classes,
             dropout=model_config.dropout,
             learning_rate=model_config.learning_rate,
-            scaling="mean",
             mask_input=True,
             loss_fn=torch.nn.CrossEntropyLoss() if dataset_cfg.num_classes > 2 else torch.nn.BCELoss(),
             # Torch Profiler: https://pytorch.org/tutorials/intermediate/tensorboard_profiler_tutorial.html

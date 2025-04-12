@@ -9,6 +9,9 @@ https://github.com/huggingface/transformers/blob/9e94801146ceeb3b215bbdb9492be74
 
 Copyright 2022 The HuggingFace Inc. team. All rights reserved.
 Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+The following modifications were made:
+- Created TimeSeriesScalerType, TimeSeriesScalerTypeStr, and TimeSeriesScalerFactory classes.
 """
 # Standard imports
 from typing import Literal, Tuple, Union

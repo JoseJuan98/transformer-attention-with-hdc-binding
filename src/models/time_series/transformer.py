@@ -1,23 +1,16 @@
 # -*- coding: utf-8 -*-
 """Transformer model implementation.
 
-The TimeSeriesFeatureEmbedder class in this module are adapted from the Hugging Face Transformers library, licensed
-under the Apache License, Version 2.0.
+This module implements an encoder-only Transformer model for time series classification.
 
-Original code:
-https://github.com/huggingface/transformers/blob/9e94801146ceeb3b215bbdb9492be74d7d7b7210/src/transformers/models/time_series_transformer/modeling_time_series_transformer.py
-
-Copyright 2022 The HuggingFace Inc. team. All rights reserved.
-Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-The following modifications were made:
-- Use PyTorch Lightning for training and evaluation.
-- Adapted for time series classification.
-- Added TimeSeriesSinusoidalPositionalEmbedding for continuous time series data.
-- Integrated scaling (mean, std, or none) before the embedding layer.
+The following features are included:
+- Use of PyTorch Lightning for training and evaluation.
+- Adapted the Transformer Architecture for time series classification (replace embeddings layer for a linear layer
+    and added a classification head `fc`).
+- Applied the Factory design pattern to create the binding methods.
 - Improved masking to handle multivariate inputs and missing values.
 - Simplified the model to be encoder-only.
-- Added clear docstrings and type hints.
+- Clear docstrings and type hints.
 """
 
 # Standard imports
@@ -33,7 +26,6 @@ import torchmetrics
 from models.base_model import BaseModel
 from models.binding_method.binding_method_factory import BindingMethodFactory, BindingMethodType, BindingMethodTypeStr
 from models.positional_encoding import TSPositionalEncodingType
-from models.time_series.scaler import TimeSeriesScalerFactory, TimeSeriesScalerType, TimeSeriesScalerTypeStr
 from models.transformer.encoder import Encoder
 
 
@@ -56,7 +48,6 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         context_length (int): The length of the input sequence.
         dropout (float, optional): The dropout probability. Defaults to 0.1.
         learning_rate (float, optional): The learning rate. Defaults to 1e-3.
-        scaling (Literal["mean", "std", "none"] | None, optional): The scaling method. Defaults to "mean".
         mask_input (bool, optional): Whether to mask the input. Defaults to False.
 
     Methods:
@@ -77,7 +68,6 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         dropout: float = 0.1,
         learning_rate: float = 1e-3,
         embedding_binding: BindingMethodTypeStr = "additive",
-        scaling: TimeSeriesScalerTypeStr | None = "mean",
         mask_input: bool = False,
         torch_profiling: torch.profiler.profile | None = None,
     ):
@@ -92,7 +82,6 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
             context_length (int): The length of the input sequence.
             dropout (float, optional): The dropout probability. Defaults to 0.1.
             learning_rate (float, optional): The learning rate. Defaults to 1e-3.
-            scaling (Literal["mean", "std", "none"] | None, optional): The scaling method. Defaults to "mean".
             mask_input (bool, optional): Whether to mask the input. Defaults to False.
         """
         super(EncoderOnlyTransformerTSClassifier, self).__init__()
@@ -109,7 +98,6 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         self.d_model = d_model
         self.learning_rate = learning_rate
         self.num_heads = num_heads
-        self.scaling = scaling
         self.mask_input = mask_input
 
         # Others
@@ -122,9 +110,8 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         )
         self.profiler = torch_profiling
 
+        # Used by PyTorch Lightning for sanity checks
         self._example_input_array = torch.zeros(size=(1, self.context_length, self.input_size))
-
-        self.scaler: TimeSeriesScalerType = TimeSeriesScalerFactory().get_ts_scaler(scaling_method=scaling)
 
         self.embedding_binding_name = embedding_binding
         self.embedding_binding: BindingMethodType = BindingMethodFactory().get_binding_method(
@@ -139,7 +126,6 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
                 "encoder",
                 "fc",
                 "dropout",
-                "scaler",
                 "profiler",
                 "loss_fn",
                 "embedding_binding",
@@ -164,18 +150,11 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         elif mask is None:
             mask = torch.ones((x.shape[0], x.shape[1]), dtype=torch.bool, device=x.device)
 
-        observed_mask = ~torch.isnan(x)
-        if observed_mask.ndim == 3:
-            observed_mask = observed_mask.all(dim=2)
-
-        # Scaling
-        x_scaled, _, _ = self.scaler(x, observed_mask.unsqueeze(-1).expand_as(x))
-
         # Embedding
-        x_embed = self.embedding(x_scaled) * self.sqrt_d_model
+        x_embed = self.embedding(x) * self.sqrt_d_model
 
         # Positional Encoding
-        x_pos_enc = self.positional_encoding(x_scaled)
+        x_pos_enc = self.positional_encoding(x)
 
         # Binding
         x = self.embedding_binding(x_embed, x_pos_enc)
@@ -194,7 +173,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
 
         Args:
             batch (tuple[torch.Tensor, torch.Tensor]): The batch of data (x,y) of shape (batch_size, seq_len, input_size)
-            and (batch_size,).
+                and (batch_size,).
             stage (str): The stage of the evaluation (train, val, test).
             progress_bar (bool): Whether to display the progress bar.
         """
