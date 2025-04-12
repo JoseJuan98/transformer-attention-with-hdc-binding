@@ -2,13 +2,14 @@
 set -euo pipefail
 
 # ------------------- Configuration -------------------
-readonly PYTORCH_VERSION=2.6.0
-readonly TRITON_VERSION=3.2.0
-readonly ROCM_VERSION=6.2.4
-readonly INTEL_EXTENSION_VERSION=2.6.10+xpu
+readonly PYTORCH_VERSION=${PYTORCH_VERSION:-2.6.0}
+readonly TRITON_VERSION=${TRITON_VERSION:-3.2.0}
+readonly ROCM_VERSION=${ROCM_VERSION:-6.2.4}
+readonly INTEL_EXTENSION_VERSION=${INTEL_EXTENSION_VERSION:-2.6.10+xpu}
 # Remove the dot from the CUDA version, e.g., 12.4 -> 124
-readonly CUDA_VERSION=124
-
+readonly CUDA_VERSION=${CUDA_VERSION:-124}
+# Default backend is CPU is not specified
+BACKEND=${backend:-cpu}
 # ------------------- End Configuration -------------------
 
 # ANSI color codes
@@ -25,8 +26,15 @@ function print_message() {
   echo -e "${color}${message}${NC}"
 }
 
-print_message "$BLUE" "PyTorch Project Installation Script"
-print_message "$BLUE" "====================================\n"
+
+print_message "$BLUE" "\n   PyTorch Project Installation Script"
+print_message "$BLUE" "=========================================="
+echo -e "\tPYTORCH_VERSION=${PYTORCH_VERSION} \n\tTRITON_VERSION=${TRITON_VERSION}"
+echo -e "\tROCM_VERSION=${ROCM_VERSION} \n\tINTEL_EXTENSION_VERSION=${INTEL_EXTENSION_VERSION}"
+echo -e "\tCUDA_VERSION=${CUDA_VERSION}"
+print_message "$BLUE" "==========================================\n"
+
+exit 1
 
 # Parse command line arguments
 INSTALL_DEV=false
@@ -54,9 +62,6 @@ print_message "$BLUE" "Detecting hardware and OS..."
 # Detect OS
 OS=$(uname -s)
 print_message "$GREEN" "Operating System: $OS"
-
-# Initialize variables
-BACKEND="cpu"  # Default backend
 
 # Helper function to check for a command and print a message
 function check_and_print_command() {

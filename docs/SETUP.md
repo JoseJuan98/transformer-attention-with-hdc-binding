@@ -1,3 +1,4 @@
+
 # Setup Guide
 
 This guide outlines the steps to set up the development environment for this project.
@@ -6,7 +7,7 @@ This guide outlines the steps to set up the development environment for this pro
 
 Before you begin, ensure you have the following:
 
-*   **Python 3.11 or higher:**  The project requires Python 3.11 or a later version. Download the appropriate installer from [python.org](https://www.python.org/downloads/). Or use any tool of your choosing, e.g. `poetry` now supports installing python versions.
+*   **Python 3.11 or higher:**  The project requires Python 3.11 or a later version. Download the appropriate installer from [python.org](https://www.python.org/downloads/). Or use any tool of your choosing, e.g. `poetry` now supports installing python runtimes.
 *   **A Python Environment Manager:**  You'll need a tool to manage your Python environment and dependencies.  We recommend **Poetry** or **pip** with `virtualenv`, but other tools like `conda`, `uv`, `pipx` are also compatible.
 *   **Make (Optional, but Recommended):**  The project includes a `Makefile` to automate common tasks like dependency installation and testing.  While optional, using `make` simplifies the setup process.
 
@@ -31,22 +32,32 @@ The supported backends include:
 
 ### Supported Platforms
 
+Custom version of PyTorch can be specified in the `make install` command along any other platform specific version of
+dependencies by defining the `PYTORCH_VERSION`, e.g. `make install PYTORCH_VERSION=2.8.0`.
+
 *   **NVIDIA CUDA** - Full support for NVIDIA GPUs
     *   Default: CUDA 12.4
-    *   Custom versions can be specified in the `[install.sh](../scripts/install.sh)` by modifying the `CUDA_VERSION` variable.
+    *   Custom versions can be specified in the `make install` command by defining the `CUDA_VERSION` variable without dots,
+e.g. for version 12.6 -> `make install CUDA_VERSION=126`
 
 *   **AMD ROCm** - Optimized for AMD GPUs
     *   Default: ROCm 6.2.4
-    *   Custom versions can be specified in the `[install.sh](../scripts/install.sh)` by modifying the `ROCM_VERSION` variable.
+    *   Custom versions can be specified in the `make install` command by defining the `ROCM_VERSION` and `TRITON_VERSION` variables,
+e.g. `make install ROCM_VERSION=6.4.0 TRITON_VERSION=3.2.0`, remember to specify the `TRITON_VERSION` (`pytorch-triton-rocm`)
+corresponding to the ROCM version you are using.
 
 *   **Apple Silicon (MPS)** - Native acceleration for Apple M1/M2/M3 chips
     *   Leverages Metal Performance Shaders for optimal performance
+    *   Only the PyTorch version can be specified
 
 *   **Intel GPU** - Support for Intel GPUs with SYCL
-    *   Custom versions can be specified in the `[install.sh](../scripts/install.sh)` by modifying the `INTEL_EXTENSION_VERSION` variable.
+        *   Custom versions can be specified in the `make install` command by defining the `INTEL_EXTENSION_VERSION` and `TRITON_VERSION` variables,
+e.g. `make install INTEL_EXTENSION_VERSION=2.6.10+xpu TRITON_VERSION=3.2.0`, remember to specify the `TRITON_VERSION` (`pytorch-triton-xpu`)
+corresponding to the `intel-extension-for-pytorch` version you are using.
 
 *   **CPU-only** - Reliable fallback option
     *   Ensures compatibility on systems without supported GPUs or when troubleshooting hardware-specific issues
+    *   Only the PyTorch version can be specified
 
 ### Automatic Configuration
 
@@ -128,7 +139,7 @@ or for development setup:
 
 #### Using Poetry Manually (Less Recommended)
 
-While the Makefile automates backend selection, you can still use Poetry directly, but it's less convenient. The Makefile is the preferred method.
+While the `Makefile` automates backend selection, you *can* still use Poetry directly, but it's less convenient.  The `Makefile` is the preferred method.
 
 1. **Install Poetry:**
 
@@ -246,9 +257,9 @@ If the installation fails:
 1. Check the output for specific error messages
 2. Try running with verbose output: `make -n install` to see what commands would be executed
 3. If Poetry installation is failing, try installing it manually first
-4. For hardware detection issues, try specifying the backend manually:
-   ```bash
-   make poetry-install backend=cpu  # Replace 'cpu' with your desired backend
-   ```
+4. For hardware detection issues, the `Makefile` handles this automatically.  If you *must* specify a backend, use the `Makefile`'s `BACKEND` variable:
+    ```bash
+    make install backend=<backend>  # Replace '<backend>' with your desired backend ("cuda", "rocm", "mps", "intel", or "cpu")
+    ```
 
 For further assistance, please open an issue on the project repository.
