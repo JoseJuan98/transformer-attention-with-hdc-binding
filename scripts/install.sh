@@ -34,8 +34,6 @@ echo -e "\tROCM_VERSION=${ROCM_VERSION} \n\tINTEL_EXTENSION_VERSION=${INTEL_EXTE
 echo -e "\tCUDA_VERSION=${CUDA_VERSION}"
 print_message "$BLUE" "==========================================\n"
 
-exit 1
-
 # Parse command line arguments
 INSTALL_DEV=false
 while [[ $# -gt 0 ]]; do
@@ -127,7 +125,8 @@ install_pytorch() {
       poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" "pytorch-triton-rocm>=${TRITON_VERSION}" --index-url https://download.pytorch.org/whl/rocm${ROCM_VERSION}
       ;;
     mps)
-      poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/nightly/cpu
+#      poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/nightly/cpu
+      echo -e "\n"
       ;;
     intel)
       poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" "pytorch-triton-xpu>=${TRITON_VERSION}" --index-url https://download.pytorch.org/whl/xpu
