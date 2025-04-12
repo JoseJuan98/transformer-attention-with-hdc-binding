@@ -113,7 +113,11 @@ def get_ucr_datasets(
 
 
 def _plot_time_series_sample(
-    dsid: str, sample: numpy.ndarray, num_dimensions: int, plot_path: pathlib.Path | None = None
+    dsid: str,
+    sample: numpy.ndarray,
+    num_dimensions: int,
+    plot_path: pathlib.Path | None = None,
+    show_plot: bool = False,
 ):
     pyplot.figure(figsize=(16, 9))
 
@@ -124,11 +128,14 @@ def _plot_time_series_sample(
 
     pyplot.imshow(data_row)
     pyplot.title(f"{dsid} Sample")
-    pyplot.show()
+
+    if show_plot:
+        pyplot.show()
 
     if plot_path is not None:
         plot_path.parent.mkdir(parents=True, exist_ok=True)
         pyplot.savefig(plot_path)
+
     pyplot.close()
 
     # plot dimensions separately in a line plot
@@ -137,7 +144,9 @@ def _plot_time_series_sample(
         ax.plot(data_row[:, i], label=f"Dimension {i}")
     pyplot.title(f"{dsid} Sample")
     pyplot.legend()
-    pyplot.show()
+
+    if show_plot:
+        pyplot.show()
 
     if plot_path is not None:
         plot_path.parent.mkdir(parents=True, exist_ok=True)

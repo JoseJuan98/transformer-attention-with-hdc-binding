@@ -152,7 +152,7 @@ class ExperimentRunner:
             logger=self.logger,
             # If defined, it will plot the first sample of the dataset
             plot_path=(
-                Config.plot_dir / self.task_fmt / f"{dataset_name}_sample.png" if self.experiment_cfg.plots else None
+                Config.plot_dir / self.task_fmt / dataset_name / "sample.png" if self.experiment_cfg.plots else None
             ),
             pin_memory=True,
             prefetch_factor=2,
@@ -356,10 +356,14 @@ class ExperimentRunner:
                 + f"{dataset_name.replace('_', ' ').title()} in {run_version}",
                 logger=self.logger,
                 plots_path=(
-                    Config.plot_dir / task / dataset_name / f"epoch_metrics_{model_name}_{run_version}.png"
+                    Config.plot_dir
+                    / self.task_fmt
+                    / dataset_name
+                    / f"epoch_metrics_{model_name}_run_{run}_{run_version}.png"
                     if self.experiment_cfg.plots
                     else None
                 ),
+                show_plot=False,
             )
 
             self.update_global_metrics(
