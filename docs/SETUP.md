@@ -6,13 +6,28 @@ This guide outlines the steps to set up the development environment for this pro
 
 Before you begin, ensure you have the following:
 
-*   **Python 3.11 or higher:**  The project requires Python 3.11 or a later version. Download the appropriate installer from [python.org](https://www.python.org/downloads/).
+*   **Python 3.11 or higher:**  The project requires Python 3.11 or a later version. Download the appropriate installer from [python.org](https://www.python.org/downloads/). Or use any tool of your choosing, e.g. `poetry` now supports installing python versions.
 *   **A Python Environment Manager:**  You'll need a tool to manage your Python environment and dependencies.  We recommend **Poetry** or **pip** with `virtualenv`, but other tools like `conda`, `uv`, `pipx` are also compatible.
 *   **Make (Optional, but Recommended):**  The project includes a `Makefile` to automate common tasks like dependency installation and testing.  While optional, using `make` simplifies the setup process.
 
 ## Hardware Acceleration Support
 
-This project provides comprehensive support for multiple hardware acceleration backends to optimize performance across different systems:
+This project provides comprehensive support for multiple hardware acceleration backends to optimize performance across different systems.
+
+The installation script automatically detects your hardware and installs the appropriate backend. And meanwhile training if the experiment configuration
+attribute accelerator is set to `auto` it will automatically select the best available hardware accelerator. This ensures that you can leverage the full potential of your hardware without manual configuration.
+
+If the backend is installed properly, and meanwhile training is not detected automatically, you can set the accelerator attribute in the experiment configuration to `cpu`, `gpu`, `tpu`, `hpu` or `mps` to use the specific backend.
+
+- Choose `gpu` for NVIDIA CUDA, AMD ROCM or Intel discrete GPUs.
+- Choose `tpu` for TPU devices.
+- Choose `hpu` for Gaudi HPUs.
+- Choose `mps` for Apple Silicon GPUs.
+
+For more information on Lightning hardware acceleration with ROCM check [here](https://rocm.blogs.amd.com/artificial-intelligence/pytorch-lightning/README.html)
+For more information on Lightning hardware acceleration with Intel HPU check [here](https://www.intel.com/content/www/us/en/developer/articles/training/introduction-to-pytorch-lightning.html)
+
+The supported backends include:
 
 ### Supported Platforms
 
@@ -56,7 +71,14 @@ The `make install` command intelligently detects your hardware configuration and
 
 The project provides simple make commands that handle the entire installation process, including hardware detection and appropriate PyTorch backend installation:
 
-1.  **For standard installation:**
+
+1. **For standard installation:** create a virtual environment (**recommended**) with any tool of your choice.
+    * The python path is usually `/usr/bin/python3.XY` on Linux and macOS, or `C:\Program Files\Python3.XY\python.exe` on Windows.
+    * Poetry: install poetry and the python version you need `make install-poetry && poetry python install 3.12`
+    * Virtualenv: `python -m virtualenv .venv --python=<path to your python version>`
+
+
+2. **Install dependencies:**
 
     ```bash
     make install
@@ -68,7 +90,7 @@ The project provides simple make commands that handle the entire installation pr
     *   Install the appropriate PyTorch backend for your hardware
     *   Set up the project environment
 
-2.  **For development setup:**
+3. **For development setup:**
 
     ```bash
     make install-dev
@@ -79,7 +101,7 @@ The project provides simple make commands that handle the entire installation pr
     *   Sets up pre-commit hooks
     *   Installs testing tools
 
-3.  **Run experiments:**
+4. **Run experiments:**
 
     After installation, you can run experiments using the provided scripts. For example, to run a time series experiment:
 
