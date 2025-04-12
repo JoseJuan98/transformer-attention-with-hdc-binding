@@ -24,7 +24,7 @@ import torchmetrics
 
 # First party imports
 from models.base_model import BaseModel
-from models.binding_method.binding_method_factory import BindingMethodFactory, BindingMethodType, BindingMethodTypeStr
+from models.binding_method import BindingMethodFactory, BindingMethodType, BindingMethodTypeStr
 from models.positional_encoding import TSPositionalEncodingType
 from models.transformer.encoder import Encoder
 
@@ -115,7 +115,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
 
         self.embedding_binding_name = embedding_binding
         self.embedding_binding: BindingMethodType = BindingMethodFactory().get_binding_method(
-            binding_method_name=embedding_binding
+            binding_method_name=embedding_binding, embedding_dim=self.d_model
         )
 
         self.save_hyperparameters(

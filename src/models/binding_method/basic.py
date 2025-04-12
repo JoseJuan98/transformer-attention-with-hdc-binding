@@ -35,12 +35,3 @@ class AdditiveBinding(EmbeddingBinding):
     def forward(self, embeddings: torch.Tensor, positional_encodings: torch.Tensor) -> torch.Tensor:
         """Applies the additive binding method."""
         return embeddings + positional_encodings
-
-
-class MultiplicativeBinding(EmbeddingBinding):
-    """Binds embeddings and positional encodings by component-wise multiplication."""
-
-    @torch.no_grad()
-    def forward(self, embeddings: torch.Tensor, positional_encodings: torch.Tensor) -> torch.Tensor:
-        """Applies the multiplicative binding method."""
-        return embeddings * positional_encodings
