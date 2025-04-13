@@ -134,7 +134,8 @@ install_pytorch() {
       poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" "pytorch-triton-rocm>=${TRITON_VERSION}" --index-url https://download.pytorch.org/whl/rocm${ROCM_VERSION}
       ;;
     mps)
-      poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/nightly/cpu
+#      poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/nightly/cpu
+      WITH_TORCH="--with torch"
       ;;
     intel)
       poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" "pytorch-triton-xpu>=${TRITON_VERSION}" --index-url https://download.pytorch.org/whl/xpu
