@@ -82,9 +82,6 @@ fi
 # Check for Intel GPU
 if check_and_print_command "sycl-ls" "Intel GPU with SYCL support detected"; then
   BACKEND="intel"
-elif lspci 2>/dev/null | grep -i intel | grep -i vga &> /dev/null; then
-  print_message "$GREEN" "Intel GPU detected"
-  BACKEND="intel"
 fi
 
 # Check for ROCm (AMD GPU)
@@ -96,8 +93,8 @@ elif [ -d "/opt/rocm" ]; then
 fi
 
 # Check for CUDA
-if check_and_print_command "nvidia-smi" "NVIDIA GPU detected: $(nvidia-smi -L | head -n 1)"; then
-  nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader
+if check_and_print_command "nvidia-smi" "NVIDIA GPU detected"; then
+  check_and_print_command "nvidia-smi" "$(nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader)"
   BACKEND="cuda"
 elif [ -d "/proc/driver/nvidia" ] || [ -f "/proc/driver/nvidia/version" ]; then
   print_message "$GREEN" "NVIDIA drivers detected"
