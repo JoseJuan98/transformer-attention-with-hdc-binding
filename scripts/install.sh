@@ -73,32 +73,35 @@ function check_and_print_command() {
   fi
 }
 
-# Check for Apple Silicon
-if [ "$OS" = "Darwin" ] && [ "$(uname -m)" = "arm64" ]; then
-  print_message "$GREEN" "Apple Silicon detected"
-  BACKEND="mps"
-fi
+# Detect backend based on hardware, unless overridden by command line
+if [[ "$BACKEND" == "cpu" ]]; then # Only autodetect if backend is default (cpu)
+  # Check for Apple Silicon
+  if [ "$OS" = "Darwin" ] && [ "$(uname -m)" = "arm64" ]; then
+    print_message "$GREEN" "Apple Silicon detected"
+    BACKEND="mps"
+  fi
 
-# Check for Intel GPU
-if check_and_print_command "sycl-ls" "Intel GPU with SYCL support detected"; then
-  BACKEND="intel"
-fi
+  # Check for Intel GPU
+  if check_and_print_command "sycl-ls" "Intel GPU with SYCL support detected"; then
+    BACKEND="intel"
+  fi
 
-# Check for ROCm (AMD GPU)
-if check_and_print_command "rocminfo" "ROCm detected"; then
-  BACKEND="rocm"
-elif [ -d "/opt/rocm" ]; then
-  print_message "$GREEN" "ROCm installation detected"
-  BACKEND="rocm"
-fi
+  # Check for ROCm (AMD GPU)
+  if check_and_print_command "rocminfo" "ROCm detected"; then
+    BACKEND="rocm"
+  elif [ -d "/opt/rocm" ]; then
+    print_message "$GREEN" "ROCm installation detected"
+    BACKEND="rocm"
+  fi
 
-# Check for CUDA
-if check_and_print_command "nvidia-smi" "NVIDIA GPU detected"; then
-  check_and_print_command "nvidia-smi" "$(nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader)"
-  BACKEND="cuda"
-elif [ -d "/proc/driver/nvidia" ] || [ -f "/proc/driver/nvidia/version" ]; then
-  print_message "$GREEN" "NVIDIA drivers detected"
-  BACKEND="cuda"
+  # Check for CUDA
+  if check_and_print_command "nvidia-smi" "NVIDIA GPU detected"; then
+    check_and_print_command "nvidia-smi" "$(nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader)"
+    BACKEND="cuda"
+  elif [ -d "/proc/driver/nvidia" ] || [ -f "/proc/driver/nvidia/version" ]; then
+    print_message "$GREEN" "NVIDIA drivers detected"
+    BACKEND="cuda"
+  fi
 fi
 
 DEV=""
@@ -118,37 +121,39 @@ install_pytorch() {
   print_message "$GREEN" "Generating Poetry lock file for your environment"
   poetry lock --no-cache --regenerate
   print_message "$GREEN" "Installing PyTorch with $backend support"
-  local EXTRA_DEPS="lightning>=2.5.0 torchmetrics>=1.6.2 torch-tb-profiler>=0.4.3"
+  local COMMON_DEPS=("lightning>=2.5.0" "torchmetrics>=1.6.2" "torch-tb-profiler>=0.4.3")
   case "$backend" in
     cuda)
       if [[ "$CUDA_VERSION" == 124 ]]; then
         WITH_TORCH="--with torch"
       else
         poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/cu${CUDA_VERSION}
-        poetry run pip install -U --no-cache-dir "lightning>=2.5.0" "torchmetrics>=1.6.2" "torch-tb-profiler>=0.4.3"
       fi
       ;;
     rocm)
       poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" "pytorch-triton-rocm>=${TRITON_VERSION}" --index-url https://download.pytorch.org/whl/rocm${ROCM_VERSION}
-      poetry run pip install -U --no-cache-dir "lightning>=2.5.0" "torchmetrics>=1.6.2" "torch-tb-profiler>=0.4.3"
       ;;
     mps)
       poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/nightly/cpu
-#      WITH_TORCH="--with torch"
       ;;
     intel)
       poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" "pytorch-triton-xpu>=${TRITON_VERSION}" --index-url https://download.pytorch.org/whl/xpu
       poetry run pip install -U --force-reinstall --no-cache-dir "intel-extension-for-pytorch==${INTEL_EXTENSION_VERSION}" "oneccl_bind_pt==${PYTORCH_VERSION}+xpu" --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/xpu/us/
-      poetry run pip install -U --no-cache-dir "lightning>=2.5.0" "torchmetrics>=1.6.2" "torch-tb-profiler>=0.4.3"
       ;;
     *) # CPU
       poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/cpu
-      poetry run pip install -U --no-cache-dir "lightning>=2.5.0" "torchmetrics>=1.6.2" "torch-tb-profiler>=0.4.3"
       ;;
   esac
   print_message "$GREEN" "Installing project dependencies"
+  if [[ "$WITH_TORCH" == "" ]]; then
+    poetry run pip install -U --no-cache-dir $COMMON_DEPS
+  fi
+
   poetry install --no-cache $DEV $WITH_TORCH
-  make install-precommit
+
+  if [[ "$DEV" == "--with dev" ]]; then
+    make install-precommit
+  fi
 }
 
 # Install PyTorch based on detected backend
