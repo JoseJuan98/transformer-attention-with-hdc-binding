@@ -101,39 +101,53 @@ elif [ -d "/proc/driver/nvidia" ] || [ -f "/proc/driver/nvidia/version" ]; then
   BACKEND="cuda"
 fi
 
+DEV=""
 if $INSTALL_DEV; then
   print_message "$BLUE" "Installing dev dependencies"
-  DEV="--with=dev"
-else
-  DEV=""
+  DEV="--with dev"
 fi
 
 # Determine installation command based on backend
 install_pytorch() {
+  local WITH_TORCH=""
   local backend="$1"
-  print_message "$GREEN" "Installing PyTorch with $backend support"
+  print_message "$GREEN" "\n\nInstalling PyTorch with $backend support"
+  print_message "$BLUE"  "========================================\n"
+  print_message "$GREEN" "Installing Poetry"
   make install-poetry
+  print_message "$GREEN" "Generating Poetry lock file for your environment"
+  poetry lock --no-cache --regenerate
+  print_message "$GREEN" "Installing PyTorch with $backend support"
+  local EXTRA_DEPS="lightning>=2.5.0 torchmetrics>=1.6.2 torch-tb-profiler>=0.4.3"
   case "$backend" in
     cuda)
-#      poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/cu${CUDA_VERSION}
-      echo -e "\n"
+      if [[ "$CUDA_VERSION" == 124 ]]; then
+        WITH_TORCH="--with torch"
+      else
+        poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/cu${CUDA_VERSION}
+        poetry run pip install -U --no-cache-dir "lightning>=2.5.0" "torchmetrics>=1.6.2" "torch-tb-profiler>=0.4.3"
+      fi
       ;;
     rocm)
       poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" "pytorch-triton-rocm>=${TRITON_VERSION}" --index-url https://download.pytorch.org/whl/rocm${ROCM_VERSION}
+      poetry run pip install -U --no-cache-dir "lightning>=2.5.0" "torchmetrics>=1.6.2" "torch-tb-profiler>=0.4.3"
       ;;
     mps)
-#      poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/nightly/cpu
-      echo -e "\n"
+      poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/nightly/cpu
+#      WITH_TORCH="--with torch"
       ;;
     intel)
       poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" "pytorch-triton-xpu>=${TRITON_VERSION}" --index-url https://download.pytorch.org/whl/xpu
       poetry run pip install -U --force-reinstall --no-cache-dir "intel-extension-for-pytorch==${INTEL_EXTENSION_VERSION}" "oneccl_bind_pt==${PYTORCH_VERSION}+xpu" --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/xpu/us/
+      poetry run pip install -U --no-cache-dir "lightning>=2.5.0" "torchmetrics>=1.6.2" "torch-tb-profiler>=0.4.3"
       ;;
     *) # CPU
       poetry run pip install -U --force-reinstall --no-cache-dir "torch>=${PYTORCH_VERSION}" --index-url https://download.pytorch.org/whl/cpu
+      poetry run pip install -U --no-cache-dir "lightning>=2.5.0" "torchmetrics>=1.6.2" "torch-tb-profiler>=0.4.3"
       ;;
   esac
-  poetry install --no-cache $DEV
+  print_message "$GREEN" "Installing project dependencies"
+  poetry install --no-cache $DEV $WITH_TORCH
   make install-precommit
 }
 
