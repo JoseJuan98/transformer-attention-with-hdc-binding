@@ -21,6 +21,12 @@ def __convert_to_numpy(data: pandas.DataFrame) -> numpy.ndarray:
     the multivariate case needs to be handled correctly. sktime stores each dimension/variable of the time series in a
     separate column of the DataFrame, and each cell contains a pandas Series representing the time series for that
     dimension.
+
+    Args:
+        data (pandas.DataFrame): The sktime DataFrame to convert.
+
+    Returns:
+        numpy.ndarray: The converted numpy array.
     """
     num_samples = len(data)
     num_dimensions = len(data.columns)
@@ -56,6 +62,8 @@ def get_ucr_datasets(
     plot_path: pathlib.Path | None = None,
 ) -> tuple[TensorDataset, TensorDataset, int, int, int]:
     """Loads and standardizes a UCR dataset using sktime.
+
+    Datasets source: https://www.timeseriesclassification.com/dataset.php
 
     Args:
         dsid (str): The name of the UCR dataset.
