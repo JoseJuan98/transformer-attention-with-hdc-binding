@@ -9,6 +9,7 @@ from typing import Any, Dict, Optional
 
 # Third party imports
 import lightning
+import numpy
 import pandas
 import torch
 from scipy import stats
@@ -70,6 +71,7 @@ class ExperimentRunner:
         self.experiment_logs_path = Config.log_dir / self._task_exp_path
         self.results_path: pathlib.Path = pathlib.Path()
         self.data_dir = Config.data_dir / self.task_fmt
+        self.metrics_path = Config.model_dir / self._task_exp_path / f"metrics_{self.experiment_cfg.run_version}.csv"
 
         self.experiment_logs_path.mkdir(parents=True, exist_ok=True)
 
@@ -83,6 +85,7 @@ class ExperimentRunner:
         # Development mode: reduce the number of epochs for development purposes
         if self.experiment_cfg.development:
             self.logger.info("\t => Development mode is enabled.")
+            self.experiment_cfg.runs_per_experiment = 2
             for model_config in self.experiment_cfg.model_configs.values():
                 model_config.num_epochs = 1
 
@@ -133,6 +136,8 @@ class ExperimentRunner:
             self.logger.info(f"\n\nAll models for {dataset} trained successfully!\n{'':_^100}\n\n")
 
         total_time = time.perf_counter() - self.exp_start_time
+
+        self.aggregate_test_accuracy(metrics_path=self.metrics_path)
 
         self.logger.info(
             f"Experiment {self.exp_name_title} completed in {total_time // 60:.2f} minutes {total_time % 60:.2f} "
@@ -216,7 +221,6 @@ class ExperimentRunner:
                         f"Training {model_name} for {dataset} for {self.experiment_cfg.run_version} in run {run}"
                     )
                     self._train_model_for_dataset(
-                        task=self.experiment_cfg.task,
                         dataset_name=dataset,
                         model_name=model_cfg.model_name,
                         run=run,
@@ -298,7 +302,6 @@ class ExperimentRunner:
 
     def _train_model_for_dataset(
         self,
-        task: str,
         dataset_name: str,
         model_name: str,
         run_version: str,
@@ -312,7 +315,6 @@ class ExperimentRunner:
         """Trains a model for a dataset.
 
         Args:
-            task (str): The task name.
             dataset_name (str): The dataset name.
             model_name (str): The model name.
             run_version (str): The run version.
@@ -345,7 +347,7 @@ class ExperimentRunner:
         )
 
         # --- Train and Test ---
-        msg_task(msg=f"Train and Test (Run {run})", logger=self.logger)
+        self.logger.info(f"=> Train and Test (Run {run})")
         self.logger.info(f"Training {model_name} for {model_cfg.num_epochs} epochs...")
 
         if model_cfg.num_epochs > 0:
@@ -357,7 +359,7 @@ class ExperimentRunner:
             self.logger.info(f"{model_name.title()} training finished in {training_time:.2f} seconds!")
 
         # Test the model
-        trainer.test(model, dataloaders=test_dataloader)
+        trainer.test(model=model, dataloaders=test_dataloader)
 
         # --- Plot Metrics ---
         if model_cfg.num_epochs > 0:
@@ -379,10 +381,10 @@ class ExperimentRunner:
 
             self.update_global_metrics(
                 metrics=metrics,
+                metrics_path=self.metrics_path,
                 run=run,
                 dataset=dataset_name,
                 model=model_name,
-                version=run_version,
                 num_dimensions=dataset_cfg.input_size,
                 num_classes=dataset_cfg.num_classes,
                 sequence_length=dataset_cfg.context_length,
@@ -396,10 +398,10 @@ class ExperimentRunner:
     def update_global_metrics(
         self,
         metrics: pandas.DataFrame,
+        metrics_path: pathlib.Path,
         run: int,
         dataset: str,
         model: str,
-        version: str,
         num_dimensions: int,
         num_classes: int,
         sequence_length: int,
@@ -413,10 +415,10 @@ class ExperimentRunner:
 
         Args:
             metrics (pandas.DataFrame): The new metrics to update.
+            metrics_path (pathlib.Path): The path to save the updated metrics.
             run (int): The run number.
             dataset (str): The name of the dataset.
             model (str): The name of the model.
-            version (str): The version of the experiment.
             num_dimensions (int): The number of dimensions in the dataset.
             num_classes (int): The number of classes in the dataset.
             sequence_length (int): The length of the sequences in the dataset.
@@ -451,64 +453,43 @@ class ExperimentRunner:
             self.results = pandas.concat([self.results, metrics], axis=0)
 
         # Save updated metrics
-        self.results.to_csv(
-            path_or_buf=self.results_path.parent / f"global_metrics_{version}.csv", index=False, header=True
-        )
+        self.results.to_csv(path_or_buf=metrics_path, index=False, header=True)
 
-
-if __name__ == "__main__":
-    # Third party imports
-    import numpy
-    import pandas
-
-    pandas.set_option("display.max_columns", None)
-    pandas.set_option("display.max_rows", None)
-
-    gloabl_metrics = pandas.read_csv(
-        filepath_or_buffer=pathlib.Path(__file__).parents[3]
-        / "artifacts/model/time_series_classification/version_0/global_metrics_version_0.csv",
-        header=0,
-    )
-
-    # TODO: Create a metrics aggregator for experiments with update global metrics and this function below
-    def aggregate_test_accuracy(metrics: pandas.DataFrame):
-        """Aggregates test accuracy per model and dataset with 95% confidence interval.
+    @staticmethod
+    def aggregate_test_accuracy(metrics_path: pathlib.Path) -> None:
+        """Aggregates test accuracy per model and dataset with 95% confidence interval and stores it in a CSV file.
 
         Args:
-            metrics (pandas.DataFrame): DataFrame containing at least 'dataset', 'model', and 'test_acc' columns
-
-        Returns:
-            pandas.DataFrame: Aggregated results with mean, std, and margin of error
+            metrics_path (pathlib.Path): The path to load the metrics from.
         """
+        metrics = pandas.read_csv(
+            filepath_or_buffer=metrics_path,
+            header=0,
+        )
+
         # Group by dataset and model
         grouped = metrics.groupby(["dataset", "model"])
 
         # Calculate statistics
         result = grouped["test_acc"].agg(["mean", "std", "count"]).reset_index()
 
-        # FIXME: aggreage per dataset and model, and calculate the confidence interval per runs of the same model and
-        # dataset
-
         # Calculate margin of error for 95% confidence interval
         # Using t-distribution since we have small sample sizes
         result["margin_of_error"] = result.apply(
             lambda row: stats.t.ppf(0.95, row["count"] - 1) * row["std"] / numpy.sqrt(row["count"]), axis=1
-        )
+        ).round(3)
 
         # Format the results for better readability
-        result["mean_test_acc"] = result["mean"].round(4)
-        result["std_test_acc"] = result["std"].round(4)
+        result["mean_test_acc"] = result["mean"].round(3)
+        result["std_test_acc"] = result["std"].round(3)
         result["confidence_interval"] = result.apply(
-            lambda row: f"{row['mean']:.4f} ± {row['margin_of_error']:.4f}", axis=1
+            lambda row: f"{row['mean']:.3f} ± {row['margin_of_error']:.3f}", axis=1
         )
 
         # Select and reorder columns
-        final_result = result[
+        aggregated_metrics = result[
             ["dataset", "model", "mean_test_acc", "std_test_acc", "margin_of_error", "confidence_interval"]
         ]
 
-        return final_result
-
-    aggregated_results = aggregate_test_accuracy(gloabl_metrics)
-
-    print(aggregated_results)
+        aggregated_metrics_path = metrics_path.parent / f"aggregated_{metrics_path.name}"
+        aggregated_metrics.to_csv(path_or_buf=aggregated_metrics_path, index=False, header=True)
