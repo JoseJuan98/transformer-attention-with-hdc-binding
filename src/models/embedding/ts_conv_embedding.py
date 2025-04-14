@@ -18,6 +18,8 @@ class TimeSeries1dConvEmbedding(torch.nn.Module):
         bias (bool): Whether to include a bias term in the convolutional layer.
     """
 
+    name = "1d_conv"
+
     def __init__(
         self, c_in: int, d_model: int, kernel_size: int = 3, padding_mode: str = "circular", bias: bool = False
     ):

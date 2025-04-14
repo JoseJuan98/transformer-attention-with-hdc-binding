@@ -18,6 +18,8 @@ import torch
 class TimeSeriesSinusoidalPositionalEncoding(torch.nn.Module):
     """This module produces sinusoidal positional embeddings of any length."""
 
+    name = "ts_sinusoidal"
+
     def __init__(self, num_positions: int, embedding_dim: int, padding_idx: int | None = None) -> None:
         super().__init__()
         self.embedding_dim = embedding_dim

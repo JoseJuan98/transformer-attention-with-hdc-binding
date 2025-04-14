@@ -31,6 +31,8 @@ class SinusoidalPositionalEncoding(torch.nn.Module):
             Adds the positional encoding to the input tensor.
     """
 
+    name = "sinusoidal"
+
     def __init__(self, d_model: int, max_len: int = 5000):
         """Initializes the PositionalEncoding module.
 
