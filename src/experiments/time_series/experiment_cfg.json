@@ -11,12 +11,12 @@
         "FingerMovements",
         "MotorImagery"
     ],
-    "runs_per_experiment": 3,
+    "runs_per_experiment": 5,
     "batch_size": 64,
     "accelerator": "auto",
     "precision": "16-mixed",
     "profiler": false,
     "summary": false,
     "plots": true,
-    "development": true
+    "development": false
 }
