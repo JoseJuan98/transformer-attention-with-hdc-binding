@@ -22,9 +22,9 @@ def run_time_series_experiments() -> None:
     )
 
     # FIXME: use for development purposes only
-    # experiment_config.model_configs.pop("Transformer Absolute Sinusoidal PE")
-    experiment_config.model_configs.pop("Transformer Ciruclar Convolution PE")
-    # experiment_config.model_configs.pop("Transformer Element-Wise PE")
+    # experiment_config.model_configs.pop("Linear Additive Sinusoidal TS Transformer")
+    experiment_config.model_configs.pop("Linear Circular Convolutional Sinusoidal TS Transformer")
+    # experiment_config.model_configs.pop("Linear Component-Wise Sinusoidal TS Transformer")
 
     # Define the experiment runner, responsible for running the experiments
     experiment_runner = ExperimentRunner(
