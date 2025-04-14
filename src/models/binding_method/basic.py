@@ -31,6 +31,8 @@ class EmbeddingBinding(torch.nn.Module):
 class AdditiveBinding(EmbeddingBinding):
     """Binds embeddings and positional encodings by addition."""
 
+    name = "additive"
+
     @torch.no_grad()
     def forward(self, embeddings: torch.Tensor, positional_encodings: torch.Tensor) -> torch.Tensor:
         """Applies the additive binding method."""

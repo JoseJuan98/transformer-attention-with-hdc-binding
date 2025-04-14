@@ -15,8 +15,13 @@ BindingMethodTypeStr = Literal["additive", "multiplicative"]
 class BindingMethodFactory:
     """Factory class for obtaining the available binding methods."""
 
-    @staticmethod
-    def get_binding_method(binding_method_name: str, embedding_dim: int) -> BindingMethodType:
+    catalog = {
+        "additive": AdditiveBinding,
+        "multiplicative": MultiplicativeBinding,
+    }
+
+    @classmethod
+    def get_binding_method(cls, binding_method_name: str, embedding_dim: int) -> BindingMethodType:
         """Returns the binding method class based on the given name.
 
         Args:
@@ -26,15 +31,13 @@ class BindingMethodFactory:
         Returns:
             class: The binding method class.
         """
-        binding_methods = {
-            "additive": AdditiveBinding,
-            "multiplicative": MultiplicativeBinding,
-        }
 
-        if binding_method_name not in binding_methods:
-            raise ValueError(f"Binding method '{binding_method_name}' is not supported.")
+        if binding_method_name not in cls.catalog:
+            raise ValueError(
+                f"Binding method '{binding_method_name}' is not supported.\nSupported methods: {cls.catalog.keys()}"
+            )
 
         if binding_method_name == "multiplicative":
-            return binding_methods[binding_method_name](embedding_dim=embedding_dim)
+            return cls.catalog[binding_method_name](embedding_dim=embedding_dim)
 
-        return binding_methods[binding_method_name]()
+        return cls.catalog[binding_method_name]()

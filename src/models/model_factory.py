@@ -13,13 +13,9 @@ from lightning.pytorch.profilers import SimpleProfiler
 
 # First party imports
 from models import EncoderOnlyTransformerTSClassifier
+from models.binding_method import BindingMethodFactory
 from models.pocket_algorithm import PocketAlgorithm
-from models.positional_encoding import (
-    TimeSeriesCircularConvolutionPositionalEncoding,
-    TimeSeriesComponentwiseMultiplicationPositionalEncoding,
-    TimeSeriesSinusoidalPositionalEncoding,
-    TSPositionalEncodingType,
-)
+from models.positional_encoding import PositionalEncodingFactory
 from utils import Config
 from utils.experiment.dataset_config import DatasetConfig
 from utils.experiment.experiment_config import ExperimentConfig
@@ -29,9 +25,13 @@ from utils.experiment.model_config import ModelConfig
 class ModelFactory:
     """Factory class for creating models based on configuration."""
 
-    @staticmethod
+    model_catalog: dict = {
+        "encoder-only-transformer": EncoderOnlyTransformerTSClassifier,
+    }
+
+    @classmethod
     def get_model(
-        model_config: ModelConfig, dataset_cfg: DatasetConfig, profiler_path: str = ""
+        cls, model_config: ModelConfig, dataset_cfg: DatasetConfig, profiler_path: str = ""
     ) -> EncoderOnlyTransformerTSClassifier:
         """Get the model based on the configuration.
 
@@ -43,18 +43,26 @@ class ModelFactory:
         Returns:
             EncoderOnlyTransformerTSClassifier: The model instance.
         """
-        positional_encoding_catalog: dict[str, type[TSPositionalEncodingType]] = {
-            "transformer_sinusoidal_additive_pe": TimeSeriesSinusoidalPositionalEncoding,
-            "transformer_component_wise_pe": TimeSeriesComponentwiseMultiplicationPositionalEncoding,
-            "transformer_ciruclarconvolution_pe": TimeSeriesCircularConvolutionPositionalEncoding,
-        }
+        if model_config.model not in cls.model_catalog:
+            raise ValueError(
+                f"Model '{model_config.model}' is not supported.\nSupported models: {cls.model_catalog.keys()}"
+            )
 
-        # Get the positional encoding class based on the configuration and instantiate it
-        positional_encoding = positional_encoding_catalog[model_config.model_name](
-            embedding_dim=model_config.d_model, num_positions=dataset_cfg.context_length
+        model = cls.model_catalog[model_config.model]
+
+        # Get the positional encoding instance based on the configuration
+        positional_encoding = PositionalEncodingFactory.get_positional_encoding(
+            positional_encoding_type=model_config.positional_encoding,
+            embedding_dim=model_config.d_model,
+            num_positions=dataset_cfg.context_length,
         )
 
-        return EncoderOnlyTransformerTSClassifier(
+        # Get the Embedding Binding Method instance based on the configuration
+        embedding_binding = BindingMethodFactory.get_binding_method(
+            binding_method_name=model_config.embedding_binding, embedding_dim=model_config.d_model
+        )
+
+        return model(
             num_layers=model_config.num_layers,
             d_model=model_config.d_model,
             num_heads=model_config.num_heads,
@@ -78,11 +86,12 @@ class ModelFactory:
                 if profiler_path
                 else None
             ),
-            embedding_binding=model_config.embedding_binding,
+            embedding_binding=embedding_binding,
         )
 
-    @staticmethod
+    @classmethod
     def get_trainer(
+        cls,
         default_root_dir: pathlib.Path,
         experiment_cfg: ExperimentConfig,
         num_epochs: int,

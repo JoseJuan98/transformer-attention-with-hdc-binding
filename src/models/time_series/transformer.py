@@ -24,7 +24,7 @@ import torchmetrics
 
 # First party imports
 from models.base_model import BaseModel
-from models.binding_method import BindingMethodFactory, BindingMethodType, BindingMethodTypeStr
+from models.binding_method import BindingMethodType
 from models.positional_encoding import TSPositionalEncodingType
 from models.transformer.encoder import Encoder
 
@@ -65,9 +65,9 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         positional_encoding: TSPositionalEncodingType,
         loss_fn: torch.nn.Module | torch.nn.CrossEntropyLoss | torch.nn.BCELoss,
         num_classes: int,
+        embedding_binding: BindingMethodType,
         dropout: float = 0.1,
         learning_rate: float = 1e-3,
-        embedding_binding: BindingMethodTypeStr = "additive",
         mask_input: bool = False,
         torch_profiling: torch.profiler.profile | None = None,
     ):
@@ -82,12 +82,18 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
             context_length (int): The length of the input sequence.
             dropout (float, optional): The dropout probability. Defaults to 0.1.
             learning_rate (float, optional): The learning rate. Defaults to 1e-3.
+            loss_fn (torch.nn.Module | torch.nn.CrossEntropyLoss | torch.nn.BCELoss): The loss function.
+            num_classes (int): The number of classes for classification.
             mask_input (bool, optional): Whether to mask the input. Defaults to False.
+            positional_encoding (TSPositionalEncodingType): The positional encoding layer.
+            embedding_binding (BindingMethodType): The binding method for the embeddings.
+            torch_profiling (torch.profiler.profile | None): The PyTorch profiler for performance profiling.
         """
         super(EncoderOnlyTransformerTSClassifier, self).__init__()
         # Layers
         self.embedding = torch.nn.Linear(in_features=input_size, out_features=d_model, bias=False)
         self.positional_encoding = positional_encoding
+        self.embedding_binding = embedding_binding
         self.encoder = Encoder(num_layers=num_layers, d_model=d_model, num_heads=num_heads, d_ff=d_ff, dropout=dropout)
         self.fc = torch.nn.Linear(in_features=d_model, out_features=num_classes)
         self.dropout = torch.nn.Dropout(dropout)
@@ -104,7 +110,8 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         self.loss_fn = loss_fn
         self.sqrt_d_model = math.sqrt(d_model)
         self.num_classes = num_classes
-        self.positional_encoding_name = positional_encoding.__class__.__name__
+        self.positional_encoding_name = positional_encoding.name
+        self.embedding_binding_name = embedding_binding.name
         self.classification_task: Literal["binary", "multiclass", "multilabel"] = (
             "multiclass" if num_classes > 1 else "binary"
         )
@@ -112,11 +119,6 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
 
         # Used by PyTorch Lightning for sanity checks
         self._example_input_array = torch.zeros(size=(1, self.context_length, self.input_size))
-
-        self.embedding_binding_name = embedding_binding
-        self.embedding_binding: BindingMethodType = BindingMethodFactory().get_binding_method(
-            binding_method_name=embedding_binding, embedding_dim=self.d_model
-        )
 
         self.save_hyperparameters(
             ignore=[

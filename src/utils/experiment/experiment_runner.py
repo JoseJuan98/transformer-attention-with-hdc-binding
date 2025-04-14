@@ -202,23 +202,23 @@ class ExperimentRunner:
             self.logger.info(f"\n\n{'*' * 40} Run {run} {'*' * 40}\n")
 
             # Train each model using the same dataloaders
-            for model_name, model_cfg in self.experiment_cfg.model_configs.items():
+            for cfg_name, model_cfg in self.experiment_cfg.model_configs.items():
 
-                banner = f"{'=' * 24}{f' {model_name} (Run {run:<2})':^40}{'=' * 24}"
+                banner = f"{'=' * 24}{f' {cfg_name} (Run {run:<2})':^40}{'=' * 24}"
                 self.logger.info(f"\n\n\t{banner:^100}\n")
 
                 # Add model-specific logger
-                component_name = f"{model_name}_{dataset}"
+                component_name = f"{model_cfg.model_name}_{dataset}"
                 self.logger.add_component_handler(
                     component_name=component_name,
-                    log_filename=self.experiment_logs_path / dataset / f"{model_name}.log",
+                    log_filename=self.experiment_logs_path / dataset / f"{model_cfg.model_name}.log",
                     log_file_mode="a",
                 )
 
                 try:
                     # Train the model for the dataset
                     self.logger.info(
-                        f"Training {model_name} for {dataset} for {self.experiment_cfg.run_version} in run {run}"
+                        f"Training {cfg_name} for {dataset} for {self.experiment_cfg.run_version} in run {run}"
                     )
                     self._train_model_for_dataset(
                         dataset_name=dataset,
@@ -232,13 +232,13 @@ class ExperimentRunner:
                         validation_dataloader=dataloaders["val"],
                     )
 
-                    self.logger.info(f"Model {model_name} for {dataset} trained successfully")
+                    self.logger.info(f"Model {cfg_name} for {dataset} trained successfully")
 
                     # Explicitly free memory after training each model
                     torch.cuda.empty_cache()
 
                 except Exception as e:
-                    self._handle_error(dataset=dataset, model_name=model_name, run=run, exception=e)
+                    self._handle_error(dataset=dataset, model_name=model_cfg.model_name, run=run, exception=e)
                 finally:
                     # Remove component handler when done
                     self.logger.remove_component_handler(component_name=component_name)

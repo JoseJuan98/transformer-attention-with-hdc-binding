@@ -6,6 +6,7 @@ import pathlib
 # First party imports
 from utils.experiment.experiment_config_factory import ExperimentConfigFactory
 from utils.experiment.experiment_runner import ExperimentRunner
+from utils.experiment.model_cfg_factory import ModelConfigFactory
 
 
 def run_time_series_experiments() -> None:
@@ -13,9 +14,11 @@ def run_time_series_experiments() -> None:
 
     current_dir = pathlib.Path(__file__).resolve().parent
 
+    model_configs = ModelConfigFactory().create_model_configs(model_cfg_path=current_dir / "models_cfg.json")
+
     # Load the models and experiment configurations
     experiment_config = ExperimentConfigFactory().create_experiment_config(
-        model_cfg_path=current_dir / "models_cfg.json", experiment_cfg_path=current_dir / "experiment_cfg.json"
+        experiment_cfg_path=current_dir / "experiment_cfg.json", model_configs=model_configs
     )
 
     # FIXME: use for development purposes only

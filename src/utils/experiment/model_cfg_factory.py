@@ -1,0 +1,22 @@
+# -*- codong: utf-8 -*-
+"""Factory class for creating model configurations based on the provided configuration file."""
+# Standard imports
+import pathlib
+
+# First party imports
+from utils.experiment.config_parser import ConfigParser
+from utils.experiment.model_config import ModelConfig
+
+
+class ModelConfigFactory:
+    """Factory class for creating model configurations based on the provided configuration file."""
+
+    @staticmethod
+    def create_model_configs(model_cfg_path: pathlib.Path | str) -> dict[str, ModelConfig]:
+        """Loads the configuration from a configuration file."""
+        config_dict = ConfigParser.parse_config(path=model_cfg_path)
+        cfg = {}
+        for k, v in config_dict.items():
+            cfg[k] = ModelConfig(**v)
+
+        return cfg
