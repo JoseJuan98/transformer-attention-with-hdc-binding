@@ -15,6 +15,12 @@ class ModelConfigFactory:
     def create_model_configs(model_cfg_path: pathlib.Path | str) -> dict[str, ModelConfig]:
         """Loads the configuration from a configuration file."""
         config_dict = ConfigParser.parse_config(path=model_cfg_path)
+
+        # Check that `model_name` is not duplicated
+        model_names = [model["model_name"] for model in config_dict.values()]
+        if len(model_names) != len(set(model_names)):
+            raise ValueError(f"Duplicated model names found in the configuration file: {model_names}")
+
         cfg = {}
         for k, v in config_dict.items():
             cfg[k] = ModelConfig(**v)
