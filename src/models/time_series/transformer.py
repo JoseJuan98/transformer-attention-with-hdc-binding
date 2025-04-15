@@ -25,6 +25,7 @@ import torchmetrics
 # First party imports
 from models.base_model import BaseModel
 from models.binding_method import BindingMethodType
+from models.embedding.embedding_factory import EmbeddingType
 from models.positional_encoding import TSPositionalEncodingType
 from models.transformer.encoder import Encoder
 
@@ -63,8 +64,9 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         input_size: int,
         context_length: int,
         positional_encoding: TSPositionalEncodingType,
-        loss_fn: torch.nn.Module | torch.nn.CrossEntropyLoss | torch.nn.BCELoss,
+        loss_fn: torch.nn.Module | torch.nn.CrossEntropyLoss | torch.nn.BCEWithLogitsLoss,
         num_classes: int,
+        embedding: EmbeddingType,
         embedding_binding: BindingMethodType,
         dropout: float = 0.1,
         learning_rate: float = 1e-3,
@@ -91,11 +93,12 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         """
         super(EncoderOnlyTransformerTSClassifier, self).__init__()
         # Layers
-        self.embedding = torch.nn.Linear(in_features=input_size, out_features=d_model, bias=False)
+        self.embedding = embedding
         self.positional_encoding = positional_encoding
         self.embedding_binding = embedding_binding
         self.encoder = Encoder(num_layers=num_layers, d_model=d_model, num_heads=num_heads, d_ff=d_ff, dropout=dropout)
-        self.fc = torch.nn.Linear(in_features=d_model, out_features=num_classes)
+        # Classification head
+        self.fc = torch.nn.Linear(in_features=d_model, out_features=num_classes if num_classes > 2 else 1)
         self.dropout = torch.nn.Dropout(dropout)
 
         # Hyperparameters
@@ -113,7 +116,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         self.positional_encoding_name = positional_encoding.name
         self.embedding_binding_name = embedding_binding.name
         self.classification_task: Literal["binary", "multiclass", "multilabel"] = (
-            "multiclass" if num_classes > 1 else "binary"
+            "multiclass" if num_classes > 2 else "binary"
         )
         self.profiler = torch_profiling
 

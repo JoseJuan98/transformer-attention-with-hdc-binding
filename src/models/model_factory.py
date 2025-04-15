@@ -14,6 +14,7 @@ from lightning.pytorch.profilers import SimpleProfiler
 # First party imports
 from models import EncoderOnlyTransformerTSClassifier
 from models.binding_method import BindingMethodFactory
+from models.embedding.embedding_factory import EmbeddingFactory
 from models.pocket_algorithm import PocketAlgorithm
 from models.positional_encoding import PositionalEncodingFactory
 from utils import Config
@@ -57,6 +58,11 @@ class ModelFactory:
             num_positions=dataset_cfg.context_length,
         )
 
+        # Get the embedding instance based on the configuration
+        embedding = EmbeddingFactory.get_embedding(
+            embedding_type=model_config.embedding, num_dimensions=dataset_cfg.input_size, d_model=model_config.d_model
+        )
+
         # Get the Embedding Binding Method instance based on the configuration
         embedding_binding = BindingMethodFactory.get_binding_method(
             binding_method_name=model_config.embedding_binding, embedding_dim=model_config.d_model
@@ -69,12 +75,14 @@ class ModelFactory:
             d_ff=model_config.d_ff,
             input_size=dataset_cfg.input_size,
             context_length=dataset_cfg.context_length,
+            embedding=embedding,
+            embedding_binding=embedding_binding,
             positional_encoding=positional_encoding,
             num_classes=dataset_cfg.num_classes,
             dropout=model_config.dropout,
             learning_rate=model_config.learning_rate,
             mask_input=True,
-            loss_fn=torch.nn.CrossEntropyLoss() if dataset_cfg.num_classes > 2 else torch.nn.BCELoss(),
+            loss_fn=torch.nn.CrossEntropyLoss() if dataset_cfg.num_classes > 2 else torch.nn.BCEWithLogitsLoss(),
             # Torch Profiler: https://pytorch.org/tutorials/intermediate/tensorboard_profiler_tutorial.html
             torch_profiling=(
                 torch.profiler.profile(
@@ -86,7 +94,6 @@ class ModelFactory:
                 if profiler_path
                 else None
             ),
-            embedding_binding=embedding_binding,
         )
 
     @classmethod
