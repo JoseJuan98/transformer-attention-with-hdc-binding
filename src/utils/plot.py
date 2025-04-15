@@ -49,7 +49,12 @@ def get_train_metrics_and_plot(
     metrics.drop(columns=["step", "n_samples"], axis=1, inplace=True, errors="ignore")
     metrics.set_index("epoch", inplace=True)
 
-    test_loss = metrics["test_loss"].dropna(how="all").mean().round(4)
+    test_loss = metrics["test_loss"].dropna(how="all").mean()
+
+    if pandas.isna(test_loss):
+        test_loss = None
+    else:
+        test_loss = round(test_loss, 4)
     test_acc = metrics["test_acc"].dropna(how="all").mean().round(4)
 
     if logger is None:
