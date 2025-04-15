@@ -180,7 +180,17 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
             progress_bar (bool): Whether to display the progress bar.
         """
         x, y = batch
-        logits = self(x)  # No mask needed, handled in forward
+
+        # Squeezing the first dimension to match the target shape, needed for BCEWithLogitsLoss. It doesn't affect
+        #  multiclass classification with CrossEntropyLoss.
+        logits = self(x).squeeze()  # No mask needed, handled in forward
+
+        # TODO: for the future avoid if statements during training
+        # Casting y to the same type as logits for BCEWithLogitsLoss
+        if self.classification_task == "binary":
+            y = y.type(logits.dtype)
+
+        # Calculate loss
         loss = self.loss_fn(logits, y)
 
         # Calculate and log accuracy
