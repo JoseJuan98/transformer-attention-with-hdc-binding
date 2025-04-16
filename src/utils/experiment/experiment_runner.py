@@ -11,6 +11,7 @@ from typing import Any, Dict, Optional
 import lightning
 import pandas
 import torch
+from lightning.pytorch.tuner import Tuner
 
 # First party imports
 from models.model_factory import ModelFactory
@@ -162,7 +163,7 @@ class ExperimentRunner:
         # Load dataset and create dataloaders
         dataset_cfg, data_module = self.data_factory.get_data_loaders_and_config(
             dataset_name=dataset_name,
-            batch_size=self.experiment_cfg.batch_size,
+            batch_size=self.experiment_cfg.default_batch_size,
             seed=self.seed,
             extract_path=self.data_dir,
             logger=self.logger,
@@ -343,6 +344,21 @@ class ExperimentRunner:
             save_version=f"run_{run}",
             logger=self.logger,
         )
+
+        # --- Tune Batch Size ---
+        if self.experiment_cfg.auto_scale_batch_size:
+
+            self.logger.info("=> Tuning batch size")
+            tuner = Tuner(trainer)
+
+            # Auto-scale batch size by growing it exponentially (default)
+            # You can change the mode to "binsearch" for a binary search approach
+            new_batch_size = tuner.scale_batch_size(model, datamodule=data_module, mode="binsearch")
+
+            self.logger.info(f"Optimal batch size found: {new_batch_size}")
+
+            # Update the datamodule with the new batch size
+            data_module.batch_size = new_batch_size
 
         # --- Train and Test ---
         self.logger.info(f"=> Train and Test (Run {run})")

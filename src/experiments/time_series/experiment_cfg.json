@@ -12,9 +12,10 @@
         "MotorImagery"
     ],
     "runs_per_experiment": 5,
-    "batch_size": 64,
+    "default_batch_size": 64,
     "accelerator": "auto",
     "precision": "16-mixed",
+    "auto_scale_batch_size": true,
     "metrics_mode": "append",
     "profiler": false,
     "summary": false,
