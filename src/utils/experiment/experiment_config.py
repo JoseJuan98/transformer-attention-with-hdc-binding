@@ -11,6 +11,7 @@ from lightning.pytorch.trainer.connectors.accelerator_connector import _PRECISIO
 
 # First party imports
 from utils.base_config import BaseConfig
+from utils.experiment.metrics_handler import METRICS_MODE_STR
 from utils.experiment.model_config import ModelConfig
 
 
@@ -67,6 +68,7 @@ class ExperimentConfig(BaseConfig):
     precision: _PRECISION_INPUT
 
     # Other settings
+    metrics_mode: METRICS_MODE_STR
     profiler: bool
     summary: bool
     plots: bool
