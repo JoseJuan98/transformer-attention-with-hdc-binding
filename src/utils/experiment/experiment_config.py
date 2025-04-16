@@ -40,6 +40,9 @@ class ExperimentConfig(BaseConfig):
         plots (bool): Whether to generate the plots.
         development (bool): Whether to run in development mode. This is used to reduce the number of epochs and
             terminates the run after any errors.
+        metrics_mode (str): The mode to aggregate metrics to. Values are ['append', 'write']. If 'append', and the
+            metrics file already exist, the new metrics will be appended to the existing file. If 'write', the new
+            experiment's metrics will overwrite the existing file.
     """
 
     experiment_name: str

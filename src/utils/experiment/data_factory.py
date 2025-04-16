@@ -4,14 +4,13 @@
 import logging
 import multiprocessing
 import pathlib
-from typing import Dict, Optional, Tuple
+from typing import Optional, Tuple
 
 # Third party imports
-import torch
-from torch.utils.data import DataLoader, Dataset, random_split
+import lightning
 
 # First party imports
-from utils.experiment.dataset import get_ucr_datasets
+from utils.experiment.dataset import UCRDataModule
 from utils.experiment.dataset_config import DatasetConfig
 
 
@@ -30,7 +29,7 @@ class DataFactory:
         pin_memory: bool = True,
         prefetch_factor: int = 2,
         persistent_workers: bool = True,
-    ) -> Tuple[DatasetConfig, DataLoader, DataLoader, DataLoader]:
+    ) -> Tuple[DatasetConfig, lightning.LightningDataModule]:
         """Get the dataset configuration and data loaders based on the dataset name.
 
         Args:
@@ -51,113 +50,45 @@ class DataFactory:
             torch.utils.data.DataLoader: The testing data loader.
             torch.utils.data.DataLoader: The validation data loader.
         """
-        # Get the datasets
-        train_dataset, test_dataset, max_len, num_classes, num_channels = get_ucr_datasets(
-            dsid=dataset_name,
-            extract_path=extract_path,
-            plot_path=plot_path,
-        )
-
-        # Calculate validation split sizes
-        train_size = int((1 - val_split) * len(train_dataset))
-        val_size = len(train_dataset) - train_size
-
-        logger.info(f"Splitting training data: {train_size} samples for training, {val_size} samples for validation")
-
-        # Create validation split
-        train_subset, val_subset = random_split(
-            dataset=train_dataset,
-            lengths=[train_size, val_size],
-            # Fixed seed for reproducibility
-            generator=torch.Generator().manual_seed(seed),
-        )
-
-        # Create dataset configuration
-        dataset_cfg = DatasetConfig(
-            dataset_name=dataset_name, num_classes=num_classes, input_size=num_channels, context_length=max_len
-        )
-
         # Determine optimal number of workers
         cpu_count = multiprocessing.cpu_count()
         num_workers = min(cpu_count - 2, 4) if cpu_count > 4 else 1
 
         logger.info(f"Using {num_workers} workers for data loading")
 
-        # Common DataLoader parameters
-        dataloader_kwargs = {
-            "batch_size": batch_size,
-            "num_workers": num_workers,
-            "pin_memory": pin_memory,
-            "prefetch_factor": prefetch_factor if num_workers > 0 else None,
-            "persistent_workers": persistent_workers if num_workers > 0 else False,
-        }
-
-        # Create data loaders
-        train_dataloader = DataLoader(
-            dataset=train_subset,
-            shuffle=True,  # Shuffle training data
-            **dataloader_kwargs,
+        data_module = UCRDataModule(
+            dsid=dataset_name,
+            extract_path=extract_path,
+            batch_size=batch_size,
+            plot_path=plot_path,
+            num_workers=num_workers,
+            val_split=val_split,
+            logger=logger,
+            seed=seed,
+            pin_memory=pin_memory,
+            prefetch_factor=prefetch_factor,
+            persistent_workers=persistent_workers,
         )
 
-        test_dataloader = DataLoader(
-            dataset=test_dataset,
-            shuffle=False,  # Don't shuffle test data
-            **dataloader_kwargs,
-        )
+        # Prepare and setup the data module
+        data_module.prepare_data()
+        data_module.setup("fit")
 
-        val_dataloader = DataLoader(
-            dataset=val_subset,
-            shuffle=False,  # Don't shuffle validation data
-            **dataloader_kwargs,
+        # Create dataset configuration
+        dataset_cfg = DatasetConfig(
+            dataset_name=dataset_name,
+            num_classes=data_module.num_classes,
+            input_size=data_module.num_dimensions,
+            context_length=data_module.max_len,
         )
 
         # Log dataset information
         logger.info(f"Dataset '{dataset_name}' loaded successfully.")
-        logger.info(f"  - Training samples: {len(train_subset)}")
-        logger.info(f"  - Validation samples: {len(val_subset)}")
-        logger.info(f"  - Test samples: {len(test_dataset)}")
-        logger.info(f"  - Number of classes: {num_classes}")
-        logger.info(f"  - Number of dimensions: {num_channels}")
-        logger.info(f"  - Maximum sequence length: {max_len}")
+        logger.info(f"  - Training samples: {len(data_module.train_dataset)}")  # type: ignore [arg-type]
+        logger.info(f"  - Validation samples: {len(data_module.val_dataset)}")  # type: ignore [arg-type]
+        logger.info(f"  - Test samples: {len(data_module.test_dataset)}")  # type: ignore [arg-type]
+        logger.info(f"  - Number of classes: {data_module.num_classes}")
+        logger.info(f"  - Number of dimensions: {data_module.num_dimensions}")
+        logger.info(f"  - Maximum sequence length: {data_module.max_len}")
 
-        return dataset_cfg, train_dataloader, test_dataloader, val_dataloader
-
-    @staticmethod
-    def create_cached_dataloaders(
-        datasets: Dict[str, Dataset],
-        batch_size: int,
-        logger: logging.Logger,
-    ) -> Dict[str, DataLoader]:
-        """Create cached data loaders for multiple datasets.
-
-        This method is useful when you want to reuse the same datasets
-        across multiple models or experiments.
-
-        Args:
-            datasets: Dictionary mapping split names to datasets
-            batch_size: Batch size for the data loaders
-            logger: Logger instance
-
-        Returns:
-            Dictionary mapping split names to data loaders
-        """
-        # Determine optimal number of workers
-        cpu_count = multiprocessing.cpu_count()
-        num_workers = min(cpu_count - 2, 4) if cpu_count > 4 else 1
-
-        logger.info(f"Creating cached dataloaders with {num_workers} workers")
-
-        dataloaders = {}
-        for split_name, dataset in datasets.items():
-            shuffle = split_name == "train"  # Only shuffle training data
-
-            dataloaders[split_name] = DataLoader(
-                dataset=dataset,
-                batch_size=batch_size,
-                shuffle=shuffle,
-                num_workers=num_workers,
-                pin_memory=True,
-                persistent_workers=True if num_workers > 0 else False,
-            )
-
-        return dataloaders
+        return dataset_cfg, data_module

@@ -11,7 +11,6 @@ from typing import Any, Dict, Optional
 import lightning
 import pandas
 import torch
-from torch.utils.data import DataLoader
 
 # First party imports
 from models.model_factory import ModelFactory
@@ -45,7 +44,7 @@ class ExperimentRunner:
         self.data_factory = DataFactory()
 
         # Cache for dataloaders to reuse across models
-        self.dataset_cache: Dict[str, Dict[str, DataLoader]] = {}
+        self.dataset_cache: Dict[str, lightning.LightningDataModule] = {}  # Changed to store DataModules
         self.dataset_configs: Dict[str, DatasetConfig] = {}
 
         # Set up paths and logging
@@ -161,7 +160,7 @@ class ExperimentRunner:
             return
 
         # Load dataset and create dataloaders
-        dataset_cfg, train_dataloader, test_dataloader, val_dataloader = self.data_factory.get_data_loaders_and_config(
+        dataset_cfg, data_module = self.data_factory.get_data_loaders_and_config(
             dataset_name=dataset_name,
             batch_size=self.experiment_cfg.batch_size,
             seed=self.seed,
@@ -177,13 +176,13 @@ class ExperimentRunner:
         )
 
         # Cache the dataloaders and config for reuse
-        self.dataset_cache[dataset_name] = {"train": train_dataloader, "test": test_dataloader, "val": val_dataloader}
+        self.dataset_cache[dataset_name] = data_module
         self.dataset_configs[dataset_name] = dataset_cfg
 
         # Save dataset configuration
         self.results_path.mkdir(parents=True, exist_ok=True)
         self.logger.info(f"Saving dataset configuration to {self._task_exp_path}/{dataset_name}/dataset_config.json")
-        dataset_cfg.dump(path=self.results_path / "dataset_config.json")
+        self.dataset_configs[dataset_name].dump(path=self.results_path / "dataset_config.json")
 
     def single_run(self, dataset: str):
         """Run the experiment for a single dataset.
@@ -192,7 +191,7 @@ class ExperimentRunner:
             dataset (str): The name of the dataset.
         """
         # Get cached dataloaders and config
-        dataloaders = self.dataset_cache[dataset]
+        data_module = self.dataset_cache[dataset]
         dataset_cfg = self.dataset_configs[dataset]
 
         for run in range(1, self.experiment_cfg.runs_per_experiment + 1):
@@ -232,9 +231,7 @@ class ExperimentRunner:
                         run_version=self.experiment_cfg.run_version,
                         model_cfg=model_cfg,
                         dataset_cfg=dataset_cfg,
-                        train_dataloader=dataloaders["train"],
-                        test_dataloader=dataloaders["test"],
-                        validation_dataloader=dataloaders["val"],
+                        data_module=data_module,
                     )
 
                     self.logger.info(f"Model {cfg_name} for {dataset} trained successfully")
@@ -313,9 +310,7 @@ class ExperimentRunner:
         run: int,
         model_cfg: ModelConfig,
         dataset_cfg: DatasetConfig,
-        train_dataloader: DataLoader,
-        test_dataloader: DataLoader,
-        validation_dataloader: DataLoader,
+        data_module: lightning.LightningDataModule,
     ) -> None:
         """Trains a model for a dataset.
 
@@ -326,9 +321,7 @@ class ExperimentRunner:
             run (int): The run number.
             model_cfg (ModelConfig): The model configuration.
             dataset_cfg (DatasetConfig): The dataset configuration.
-            train_dataloader (DataLoader): The training dataloader.
-            test_dataloader (DataLoader): The testing dataloader.
-            validation_dataloader (DataLoader): The validation dataloader.
+            data_module (lightning.LightningDataModule): The LightningDataModule.
         """
         model_run_path = self.results_path / model_name
 
@@ -358,13 +351,14 @@ class ExperimentRunner:
         if model_cfg.num_epochs > 0:
             # Train the model
             start_time = time.perf_counter()
-            trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=validation_dataloader)
+            trainer.fit(model, datamodule=data_module)
+
             training_time = time.perf_counter() - start_time
 
             self.logger.info(f"{model_name.title()} training finished in {training_time:.2f} seconds!")
 
         # Test the model
-        trainer.test(model=model, dataloaders=test_dataloader)
+        trainer.test(model=model, datamodule=data_module)
 
         # --- Plot Metrics ---
         if model_cfg.num_epochs > 0:
@@ -392,9 +386,9 @@ class ExperimentRunner:
                 num_dimensions=dataset_cfg.input_size,
                 num_classes=dataset_cfg.num_classes,
                 sequence_length=dataset_cfg.context_length,
-                train_samples=len(train_dataloader.dataset),
-                test_samples=len(test_dataloader.dataset),
-                validation_samples=len(validation_dataloader.dataset),
+                train_samples=len(data_module.train_dataset),  # Use DataModule
+                test_samples=len(data_module.test_dataset),  # Use DataModule
+                validation_samples=len(data_module.val_dataset),  # Use DataModule
                 training_time=training_time,
                 n_train_epochs=trainer.current_epoch,
             )
