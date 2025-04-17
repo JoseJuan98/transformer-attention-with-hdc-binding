@@ -92,7 +92,7 @@ class ExperimentRunner:
             self.logger.info("\t => Development mode is enabled.")
             self.experiment_cfg.runs_per_experiment = 2
             for model_config in self.experiment_cfg.model_configs.values():
-                model_config.num_epochs = 1
+                model_config.num_epochs = 2
 
     def _set_random_seed(self) -> None:
         """Sets the random seed for reproducibility."""
@@ -242,6 +242,7 @@ class ExperimentRunner:
 
                 except Exception as e:
                     self._handle_error(dataset=dataset, model_name=model_cfg.model_name, run=run, exception=e)
+
                 finally:
                     # Remove component handler when done
                     self.logger.remove_component_handler(component_name=component_name)
@@ -335,14 +336,23 @@ class ExperimentRunner:
 
         # Create trainer
         trainer = self.model_factory.get_trainer(
-            default_root_dir=Config.root_dir,
+            default_root_dir=model_run_path,
             experiment_cfg=self.experiment_cfg,
             num_epochs=model_cfg.num_epochs,
             model_relative_path=(model_run_path / f"run_{run}" / "model.pth").as_posix(),
-            save_dir=model_run_path.parent,
+            save_dir=self.results_path,
             save_dir_name=model_name,
             save_version=f"run_{run}",
             logger=self.logger,
+            gradient_clip_val=(
+                self.experiment_cfg.gradient_clip_val if hasattr(self.experiment_cfg, "gradient_clip_val") else 0
+            ),
+            gradient_clip_algorithm=(
+                self.experiment_cfg.gradient_clip_algorithm
+                if hasattr(self.experiment_cfg, "gradient_clip_algorithm")
+                else "norm"
+            ),
+            lr_iterations=model_cfg.num_epochs,
         )
 
         # --- Tune Batch Size ---
@@ -353,7 +363,9 @@ class ExperimentRunner:
 
             # Auto-scale batch size by growing it exponentially (default)
             # You can change the mode to "binsearch" for a binary search approach
-            new_batch_size = tuner.scale_batch_size(model, datamodule=data_module, mode="binsearch")
+            new_batch_size = tuner.scale_batch_size(
+                model, init_val=self.experiment_cfg.default_batch_size, datamodule=data_module, mode="binsearch"
+            )
 
             self.logger.info(f"Optimal batch size found: {new_batch_size}")
 

@@ -31,7 +31,7 @@ class PocketAlgorithm(Callback):
         self,
         monitor: str = "val_acc",
         mode: str = "max",
-        ckpt_filepath: str | pathlib.Path = "best_model.ckpt",
+        ckpt_filepath: str | pathlib.Path | None = "best_model.ckpt",
         model_file_path: str | pathlib.Path = "best_model.pt",
         logger: logging.Logger | None = None,
         store_on_cpu: bool = False,
@@ -40,7 +40,7 @@ class PocketAlgorithm(Callback):
         self.monitor = monitor
         self.mode = mode
         self.store_on_cpu = store_on_cpu
-        self.ckpt_filepath = ckpt_filepath if isinstance(ckpt_filepath, pathlib.Path) else pathlib.Path(ckpt_filepath)
+        self.ckpt_filepath = pathlib.Path(ckpt_filepath) if isinstance(ckpt_filepath, str) else ckpt_filepath
         self.model_file_path = (
             model_file_path if isinstance(model_file_path, pathlib.Path) else pathlib.Path(model_file_path)
         )
@@ -63,7 +63,10 @@ class PocketAlgorithm(Callback):
             self.mode == "min" and current_score < self.best_score
         ):
             self.best_score = current_score
-            trainer.save_checkpoint(filepath=self.ckpt_filepath)
+
+            if self.ckpt_filepath:
+                trainer.save_checkpoint(filepath=self.ckpt_filepath)
+
             torch.save(obj=trainer.model, f=self.model_file_path)
 
             # Store the best model state dict

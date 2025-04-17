@@ -75,6 +75,9 @@ class MetricsHandler:
             n_train_epochs (int): The number of training epochs.
             training_time (float): The training time in seconds.
         """
+        if metrics.empty:
+            raise ValueError(f"Metrics DataFrame is empty. Cannot update metrics.\n{metrics}")
+
         # Add other information to metrics
         metrics["num_dimensions"] = num_dimensions
         metrics["num_classes"] = num_classes

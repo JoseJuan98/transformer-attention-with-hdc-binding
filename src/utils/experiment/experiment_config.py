@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Experiment configuration module."""
+"""Model configuration module."""
 # Standard imports
 import json
 import pathlib
-from dataclasses import dataclass
-from typing import Literal
+from dataclasses import dataclass, field
+from typing import Dict, Literal, Union
 
 # Third party imports
 from lightning.pytorch.trainer.connectors.accelerator_connector import _PRECISION_INPUT
@@ -78,6 +78,15 @@ class ExperimentConfig(BaseConfig):
     summary: bool
     plots: bool
     development: bool
+
+    # New parameters for advanced training techniques
+    accumulate_grad_batches: Union[int, Dict[int, int]] = 1  # Default: no accumulation
+    gradient_clip_val: float = 0.0  # Default: no gradient clipping
+    gradient_clip_algorithm: Literal["norm", "value"] = "norm"  # Default: clip by norm
+    use_swa: bool = False  # Default: don't use SWA
+    swa_learning_rate: float = 1e-2  # Default SWA learning rate
+    use_lr_finder: bool = False  # Default: don't use LR Finder
+    lr_finder_milestones: list[int] = field(default_factory=list)  # Default: LR Finder milestones
 
     def pretty_str(self) -> str:
         """List the attributes of the class in a pretty format."""

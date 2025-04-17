@@ -7,15 +7,21 @@ import pathlib
 # Third party imports
 import lightning
 import torch
-from lightning.pytorch.callbacks import EarlyStopping, ModelSummary
+from lightning.pytorch.callbacks import (
+    EarlyStopping,
+    GradientAccumulationScheduler,
+    ModelSummary,
+    StochasticWeightAveraging,
+)
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from lightning.pytorch.profilers import SimpleProfiler
 
 # First party imports
 from models import EncoderOnlyTransformerTSClassifier
 from models.binding_method import BindingMethodFactory
+from models.callbacks.fine_tune_lr_finder import FineTuneLearningRateFinder
+from models.callbacks.pocket_algorithm import PocketAlgorithm
 from models.embedding.embedding_factory import EmbeddingFactory
-from models.pocket_algorithm import PocketAlgorithm
 from models.positional_encoding import PositionalEncodingFactory
 from utils import Config
 from utils.experiment.dataset_config import DatasetConfig
@@ -106,7 +112,10 @@ class ModelFactory:
         save_dir: str | pathlib.Path,
         save_dir_name: str,
         save_version: str,
-        logger: logging.Logger | None = None,
+        logger: logging.Logger,
+        gradient_clip_val: float = 0.0,
+        gradient_clip_algorithm: str = "norm",
+        lr_iterations: int = 10,
     ) -> lightning.Trainer:
         """Get the trainer based on the configuration.
 
@@ -118,24 +127,58 @@ class ModelFactory:
             save_dir (str | pathlib.Path): The directory to save the model.
             save_dir_name (str): The name of the directory to save the model.
             save_version (str): The version of the model to save.
+            logger (logging.Logger): The logger object.
+            gradient_clip_val (float): The value to clip gradients to.
+            gradient_clip_algorithm (str): The algorithm to use for gradient clipping.
             logger (logging.Logger | None, optional): Logger object. Defaults to None.
+            lr_iterations (int, optional): Number of iterations for learning rate finder. Defaults to 10.
 
         Returns:
             lightning.Trainer: The trainer instance.
         """
-        # --- Callbacks ---
+
+        # --- Configure Trainer Callbacks ---
+        # Default callbacks (Early Stopping, Pocket Algorithm)
         early_stopping = EarlyStopping(monitor="val_loss", mode="min", patience=5)
         pocket_algorithm = PocketAlgorithm(
             monitor="val_acc",
             mode="max",
-            ckpt_filepath=Config.model_dir / pathlib.Path(model_relative_path).with_suffix(".ckpt"),
+            ckpt_filepath=None,  # Config.model_dir / pathlib.Path(model_relative_path).with_suffix(".ckpt"),
             model_file_path=Config.model_dir / model_relative_path,
             logger=logger,
         )
 
-        callbacks = [early_stopping, pocket_algorithm]
+        callbacks: list[lightning.pytorch.callbacks.Callback] = [early_stopping, pocket_algorithm]
+
+        # Model Deep Summary
         if experiment_cfg.summary:
             callbacks.append(ModelSummary(max_depth=-1))
+
+        # Best-practices Callbacks
+        # 1. Gradient Accumulation
+        if (
+            isinstance(experiment_cfg.accumulate_grad_batches, int) and experiment_cfg.accumulate_grad_batches > 1
+        ) or isinstance(experiment_cfg.accumulate_grad_batches, dict):
+            accumulator = GradientAccumulationScheduler(scheduling=experiment_cfg.accumulate_grad_batches)
+            callbacks.append(accumulator)
+            logger.info(
+                f"\t=> Using GradientAccumulationScheduler with scheduling: {experiment_cfg.accumulate_grad_batches}"
+            )
+
+        # 2. Stochastic Weight Averaging
+        if experiment_cfg.use_swa:
+            swa_lrs = experiment_cfg.swa_learning_rate if hasattr(experiment_cfg, "swa_learning_rate") else 1e-2
+            callbacks.append(StochasticWeightAveraging(swa_lrs=swa_lrs))
+            logger.info(f"\t=> Using Stochastic Weight Averaging with swa_lrs={swa_lrs}")
+
+        # 3. Learning Rate Finder
+        if experiment_cfg.use_lr_finder:
+            if hasattr(experiment_cfg, "lr_finder_milestones"):
+                lr_finder_callback = FineTuneLearningRateFinder(
+                    milestones=experiment_cfg.lr_finder_milestones, update_attr=True, num_training_steps=lr_iterations
+                )
+                callbacks.append(lr_finder_callback)
+                logger.info(f"\t=> Using Learning Rate Finder with milestones={experiment_cfg.lr_finder_milestones}")
 
         return lightning.Trainer(
             default_root_dir=default_root_dir,
@@ -149,6 +192,9 @@ class ModelFactory:
             ],
             log_every_n_steps=1,
             callbacks=callbacks,
+            # 4. Gradient Clipping
+            gradient_clip_val=gradient_clip_val,
+            gradient_clip_algorithm=gradient_clip_algorithm,
             # measures all the key methods across Callbacks, DataModules and the LightningModule in the training loop.
             profiler=SimpleProfiler(filename="simple_profiler") if experiment_cfg.profiler else None,
             # If True, runs 1 batch of train, test and val to find any bugs. Also, it can be specified the number of
@@ -157,4 +203,5 @@ class ModelFactory:
             # PyTorch operations are non-deterministic by default. This means that the results of the operations may
             #  vary from run to run.
             deterministic=True,
+            enable_checkpointing=False,
         )
