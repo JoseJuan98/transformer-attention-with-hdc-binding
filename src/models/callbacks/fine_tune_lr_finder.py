@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """FineTuneLearningRateFinder callback for Lightning Trainer."""
+
 # Third party imports
 import lightning
 from lightning.pytorch.callbacks import LearningRateFinder

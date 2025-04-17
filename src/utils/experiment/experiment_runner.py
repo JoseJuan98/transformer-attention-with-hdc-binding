@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """This module is responsible for running the experiments."""
 # Standard imports
+import glob
 import json
+import os
 import pathlib
 import time
 import traceback
@@ -358,8 +360,8 @@ class ExperimentRunner:
         # --- Tune Batch Size ---
         if self.experiment_cfg.auto_scale_batch_size:
 
-            self.logger.info("=> Tuning batch size")
-            tuner = Tuner(trainer)
+            self.logger.info("\t=> Tuning batch size")
+            tuner = Tuner(trainer=trainer)
 
             # Auto-scale batch size by growing it exponentially (default)
             # You can change the mode to "binsearch" for a binary search approach
@@ -371,6 +373,9 @@ class ExperimentRunner:
 
             # Update the datamodule with the new batch size
             data_module.batch_size = new_batch_size
+
+            # self.logger.info("\t=> Tuning learning rate")
+            # tuner.lr_find(model=model, datamodule=data_module, mode="exponential", method="fit", num_training=50)
 
         # --- Train and Test ---
         self.logger.info(f"=> Train and Test (Run {run})")
@@ -420,3 +425,18 @@ class ExperimentRunner:
                 training_time=training_time,
                 n_train_epochs=trainer.current_epoch,
             )
+
+        # --- Teardown ---
+        self.teardown(trainer_default_dir=trainer.default_root_dir)
+
+    @staticmethod
+    def teardown(trainer_default_dir: str):
+        """Teardown the experiment.
+
+        Args:
+            trainer_default_dir (str): The default directory for the trainer.
+        """
+        # if a file in trainder.root_dir starts with 'lr_finder' and ends in `.ckpt`, remove it for next run
+        files = glob.glob(os.path.join(trainer_default_dir, ".lr_find*.ckpt"))
+        for file in files:
+            os.remove(file)
