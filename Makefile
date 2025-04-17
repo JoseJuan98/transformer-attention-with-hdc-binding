@@ -35,9 +35,16 @@ tensorboard:
 kill-tensorboard:
 	kill $(ps -e | grep 'tensorboard' | awk '{print $$1}')
 
+## Clean logs
+clean:
+	@echo "Cleaning artifacts..."
+	@rm -rf $(ROOT_DIR)/artifacts/model/
+	@rm -rf $(ROOT_DIR)/artifacts/log/
+
 ## Delete compiled Python files
 clean-files:
-	find . | grep -E "build$|\/__pycache__$|\.pyc$|\.pyo$|\.egg-info$|\.ipynb_checkpoints" | xargs rm -rf || echo "Already clean"
+	@echo "Cleaning compiled Python files..."
+	@find . | grep -E "build$|\/__pycache__$|\.pyc$|\.pyo$|\.egg-info$|\.ipynb_checkpoints" | xargs rm -rf || echo "Already clean"
 
 ### Delete compiled Python files
 #clean-files:
@@ -58,12 +65,6 @@ test:
 ## Run experiment
 run-ts:
 	@poetry run python src/experiments/time_series/train.py
-
-## Clean logs
-clean-artifacts:
-	@echo "Cleaning artifacts..."
-	@rm -rf $(ROOT_DIR)/artifacts/model/
-	@rm -rf $(ROOT_DIR)/artifacts/log/
 
 DEFAULT_GOAL := help
 .PHONY: help
