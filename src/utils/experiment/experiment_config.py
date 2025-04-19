@@ -44,6 +44,17 @@ class ExperimentConfig(BaseConfig):
         metrics_mode (str): The mode to aggregate metrics to. Values are ['append', 'write']. If 'append', and the
             metrics file already exist, the new metrics will be appended to the existing file. If 'write', the new
             experiment's metrics will overwrite the existing file.
+        accumulate_grad_batches (Union[int, Dict[int, int]]): The number of batches to accumulate gradients over.
+            Default: 1 (no accumulation). If a dictionary is provided, the keys are the number of batches to
+            accumulate over and the values are the number of batches to accumulate gradients over.
+        gradient_clip_val (float): The value to clip gradients to. Default: 0.0 (no clipping). Only use if
+            `gradient_clip_algorithm` is set to "value".
+        gradient_clip_algorithm (str): The algorithm to use for gradient clipping. Values are ['norm', 'value'].
+            Default: "norm" (clip by norm). Only use if `gradient_clip_val` is set to a value greater than 0.
+        use_swa (bool): Whether to use Stochastic Weight Averaging (SWA). Default: False.
+        swa_learning_rate (float): The learning rate to use for SWA. Default: 1e-2.
+        use_lr_finder (bool): Whether to use the learning rate finder. Default: False.
+        lr_finder_milestones (list[int]): The milestones to use for the learning rate finder. Default: [].
     """
 
     experiment_name: str

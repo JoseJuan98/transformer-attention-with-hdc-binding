@@ -193,7 +193,7 @@ class ModelFactory:
             log_every_n_steps=1,
             callbacks=callbacks,
             # 4. Gradient Clipping
-            gradient_clip_val=gradient_clip_val,
+            gradient_clip_val=gradient_clip_val if gradient_clip_val > 0 else None,
             gradient_clip_algorithm=gradient_clip_algorithm,
             # measures all the key methods across Callbacks, DataModules and the LightningModule in the training loop.
             profiler=SimpleProfiler(filename="simple_profiler") if experiment_cfg.profiler else None,

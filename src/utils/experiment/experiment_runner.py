@@ -144,7 +144,7 @@ class ExperimentRunner:
 
         total_time = time.perf_counter() - self.exp_start_time
 
-        self.metrics_handler.aggregate_test_accuracy()
+        self.metrics_handler.aggregate_test_acc_per_dataset_and_model()
 
         self.logger.info(
             f"Experiment {self.exp_name_title} completed in {total_time // 60:.2f} minutes {total_time % 60:.2f} "
