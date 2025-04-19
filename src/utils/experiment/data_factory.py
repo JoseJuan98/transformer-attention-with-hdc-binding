@@ -54,7 +54,7 @@ class DataFactory:
         cpu_count = multiprocessing.cpu_count()
         num_workers = min(cpu_count - 2, 4) if cpu_count > 4 else 1
 
-        n_jobs = -1
+        n_jobs = cpu_count - 2
         data_module = UCRDataModule(
             dsid=dataset_name,
             extract_path=extract_path,
