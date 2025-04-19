@@ -1,9 +1,7 @@
-.PHONY: init tensorboard kill-tensorboard clean-files help install install-dev install-poetry poetry-install poetry-install-dev lint test run-ts clean-artifacts
+.PHONY: init tensorboard kill-tensorboard clean-files help install install-dev install-poetry poetry-install \
+poetry-install-dev lint test run-ts clean-artifacts clean install-precommit clean-run-ts
 
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-
-# Define a variable for the backend, allowing it to be passed from the command line
-#BACKEND ?= cpu
 
 install-poetry:
 	pip install --no-cache-dir -U "poetry>=2.1.1" && \
@@ -62,9 +60,12 @@ lint:
 test:
 	@poetry run pytest
 
-## Run experiment
+## Run experiment for time series classification
 run-ts:
 	@poetry run python src/experiments/time_series/train.py
+
+## Alias for clean + run-ts
+clean-run-ts: clean run-ts
 
 DEFAULT_GOAL := help
 .PHONY: help

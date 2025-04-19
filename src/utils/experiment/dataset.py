@@ -9,6 +9,7 @@ import lightning
 import numpy
 import pandas
 import torch
+from joblib import Parallel, delayed
 from matplotlib import pyplot
 from sklearn.preprocessing import StandardScaler
 from sktime.datasets import load_UCR_UEA_dataset
@@ -16,8 +17,8 @@ from torch.utils.data import DataLoader, TensorDataset, random_split
 from tqdm import tqdm
 
 
-def __convert_to_numpy(data: pandas.DataFrame) -> numpy.ndarray:
-    """Converts a sktime DataFrame to a numpy array.
+def __convert_row_univariate(series: pandas.Series, max_len: int) -> numpy.ndarray:
+    """Converts a sktime univariate DataFrame to a numpy array.
 
     sktime returns pandas DataFrames which needs to be coverted to numpy arrays and then to PyTorch tensors. Also,
     the multivariate case needs to be handled correctly. sktime stores each dimension/variable of the time series in a
@@ -25,36 +26,73 @@ def __convert_to_numpy(data: pandas.DataFrame) -> numpy.ndarray:
     dimension.
 
     Args:
-        data (pandas.DataFrame): The sktime DataFrame to convert.
+        series (pandas.Series): Time series to convert.
+        max_len (int): The maximum length of the time series.
 
     Returns:
         numpy.ndarray: The converted numpy array.
     """
+    arr = numpy.zeros((max_len, 1))
+    s = series.to_numpy()
+    arr[: len(s), 0] = s
+    return arr
+
+
+def __convert_row_multivariate(row: pandas.DataFrame, num_dimensions: int, max_len: int) -> numpy.ndarray:
+    """Converts a sktime multivariate DataFrame to a numpy array.
+
+    sktime returns pandas DataFrames which needs to be coverted to numpy arrays and then to PyTorch tensors. Also,
+    the multivariate case needs to be handled correctly. sktime stores each dimension/variable of the time series in a
+    separate column of the DataFrame, and each cell contains a pandas Series representing the time series for that
+    dimension.
+
+    Args:
+        row (pandas.DataFrame): Time series to convert.
+        num_dimensions (int): The number of dimensions in the time series.
+        max_len (int): The maximum length of the time series.
+
+    Returns:
+        numpy.ndarray: The converted numpy array.
+    """
+    arr = numpy.zeros((max_len, num_dimensions))
+    for j in range(num_dimensions):
+        s = row.iloc[j].to_numpy()
+        arr[: len(s), j] = s
+    return arr
+
+
+def __convert_to_numpy(data: pandas.DataFrame, n_jobs: int = -1) -> numpy.ndarray:
+    """Parallelized conversion of sktime DataFrame to numpy array."""
     num_samples = len(data)
     num_dimensions = len(data.columns)
 
-    # Handle univariate case: if only one column, the DataFrame contains the time series directly
     if num_dimensions == 1:
         max_len = max(len(data.iloc[i, 0]) for i in range(num_samples))
-
-        # Still keep the dimension axis
-        arr = numpy.zeros((num_samples, max_len, 1))
-
-        for i in tqdm(iterable=range(num_samples), desc="Converting to numpy", unit=" samples"):
-            series = data.iloc[i, 0].to_numpy()
-            arr[i, : len(series), 0] = series
+        results = list(
+            tqdm(
+                Parallel(n_jobs=n_jobs, prefer="threads")(
+                    delayed(__convert_row_univariate)(data.iloc[i, 0], max_len) for i in range(num_samples)
+                ),
+                total=num_samples,
+                desc="Converting to tensor",
+                unit=" samples",
+            )
+        )
+        arr = numpy.stack(results, axis=0)
     else:
         max_len = max(len(data.iloc[i, j]) for i in range(num_samples) for j in range(num_dimensions))
-
-        # Initialize an array to hold the data.  Shape: (num_cases, max_len, num_dimensions)
-        arr = numpy.zeros((num_samples, max_len, num_dimensions))
-
-        for i in tqdm(iterable=range(num_samples), desc="Converting to numpy", unit=" samples"):
-            for j in range(num_dimensions):
-                # Pad the series with zeros to the max_len
-                series = data.iloc[i, j].to_numpy()
-                arr[i, : len(series), j] = series
-
+        results = list(
+            tqdm(
+                Parallel(n_jobs=n_jobs, prefer="threads")(
+                    delayed(__convert_row_multivariate)(data.iloc[i, :], num_dimensions, max_len)
+                    for i in range(num_samples)
+                ),
+                total=num_samples,
+                desc="Converting to tensor",
+                unit=" samples",
+            )
+        )
+        arr = numpy.stack(results, axis=0)
     return arr
 
 
@@ -62,6 +100,7 @@ def get_ucr_datasets(
     dsid: str,
     extract_path: pathlib.Path | str,
     plot_path: pathlib.Path | None = None,
+    n_jobs: int = -1,
 ) -> tuple[TensorDataset, TensorDataset, int, int, int]:
     """Loads and standardizes a UCR dataset using sktime.
 
@@ -71,6 +110,7 @@ def get_ucr_datasets(
         dsid (str): The name of the UCR dataset.
         extract_path (`pathlib.Path`): The path to extract the dataset to.
         plot_path (`pathlib.Path`, optional): The path to save the plot. Defaults to None.
+        n_jobs (int, optional): The number of jobs to use for parallel processing. Defaults to -1 (use all available cores).
 
     Returns:
         ~`torch.utils.data.TensorDataset`: The training dataset.
@@ -87,8 +127,8 @@ def get_ucr_datasets(
     X_train, y_train = load_UCR_UEA_dataset(dsid, split="train", return_X_y=True, extract_path=extract_path)
     X_test, y_test = load_UCR_UEA_dataset(dsid, split="test", return_X_y=True, extract_path=extract_path)
 
-    X_train = __convert_to_numpy(X_train)
-    X_test = __convert_to_numpy(X_test)
+    X_train = __convert_to_numpy(X_train, n_jobs=n_jobs)
+    X_test = __convert_to_numpy(X_test, n_jobs=n_jobs)
 
     # Standardize data using sklearn.preprocessing.StandardScaler
     # Each feature needs to be standarized independently. This means the data needs to be reshaped to
@@ -108,20 +148,19 @@ def get_ucr_datasets(
     X_train = torch.from_numpy(X_train.reshape(num_cases_train, max_len_train, num_dimensions)).float()
 
     X_test = X_test.reshape(num_cases_test * max_len_test, num_dimensions)
-    X_test = scaler.transform(X_test)  # Use the same scaler fitted on training data
+    X_test = scaler.transform(X_test)
     X_test = torch.from_numpy(X_test.reshape(num_cases_test, max_len_test, num_dimensions)).float()
 
-    # Convert y to numerical labels and tensors
-    unique_labels = numpy.unique(numpy.concatenate((y_train, y_test)))
-    label_mapping = {label: i for i, label in enumerate(unique_labels)}
-    y_train = torch.tensor([label_mapping[label] for label in y_train], dtype=torch.long)
-    y_test = torch.tensor([label_mapping[label] for label in y_test], dtype=torch.long)
+    # Vectorized label mapping
+    unique_labels, y_train_idx = numpy.unique(y_train, return_inverse=True)
+    y_test_idx = numpy.searchsorted(unique_labels, y_test)
+    y_train = torch.tensor(y_train_idx, dtype=torch.long)
+    y_test = torch.tensor(y_test_idx, dtype=torch.long)
 
     # Create TensorDatasets
     train_dataset = TensorDataset(X_train, y_train)
     test_dataset = TensorDataset(X_test, y_test)
-
-    num_classes = len(torch.unique(y_train))
+    num_classes = len(unique_labels)
 
     return train_dataset, test_dataset, max_len_train, num_classes, num_dimensions
 
@@ -179,7 +218,7 @@ class UCRDataModule(lightning.LightningDataModule):
 
     Args:
         dsid (str): The name of the UCR dataset.
-        extract_path (str): The path to extract the dataset to.
+        extract_path (pathlib.Path, str): The path to extract the dataset to.
         batch_size (int, optional): The batch size for the data loaders. Defaults to 32.
         plot_path (str | None, optional): The path to save the plot. Defaults to None.
         num_workers (int, optional): The number of workers for the data loaders. Defaults to 0.
@@ -200,6 +239,7 @@ class UCRDataModule(lightning.LightningDataModule):
         pin_memory: bool = True,
         prefetch_factor: int = 2,
         persistent_workers: bool = True,
+        n_jobs: int = -1,
     ):
         super().__init__()
         self.dsid = dsid
@@ -221,16 +261,7 @@ class UCRDataModule(lightning.LightningDataModule):
         self.pin_memory = pin_memory
         self.prefetch_factor = prefetch_factor if num_workers > 0 else None
         self.persistent_workers = persistent_workers if num_workers > 0 else False
-
-    def prepare_data(self):
-        """Prepare the data for training and testing."""
-        # download only
-        load_UCR_UEA_dataset(
-            self.dsid, split="train", return_X_y=False, extract_path=self.extract_path
-        )  # Changed return_X_y to False
-        load_UCR_UEA_dataset(
-            self.dsid, split="test", return_X_y=False, extract_path=self.extract_path
-        )  # Changed return_X_y to False
+        self.n_jobs = n_jobs
 
     def setup(self, stage: str):
         """Set up the data for training and testing."""
@@ -244,7 +275,12 @@ class UCRDataModule(lightning.LightningDataModule):
                 self.max_len,
                 self.num_classes,
                 self.num_dimensions,
-            ) = get_ucr_datasets(dsid=self.dsid, extract_path=self.extract_path, plot_path=self.plot_path)
+            ) = get_ucr_datasets(
+                dsid=self.dsid,
+                extract_path=self.extract_path,
+                plot_path=self.plot_path,
+                n_jobs=self.n_jobs,
+            )
 
             # Calculate validation split sizes
             train_size = int((1 - self.val_split) * len(train_dataset))
@@ -302,11 +338,3 @@ class UCRDataModule(lightning.LightningDataModule):
             prefetch_factor=self.prefetch_factor,
             persistent_workers=self.persistent_workers,
         )
-
-    # def predict_dataloader(self):
-    #     return DataLoader(
-    #         self.test_dataset,
-    #         batch_size=self.batch_size,
-    #         shuffle=False,
-    #         num_workers=self.num_workers,
-    #     )

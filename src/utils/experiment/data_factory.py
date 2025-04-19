@@ -54,8 +54,7 @@ class DataFactory:
         cpu_count = multiprocessing.cpu_count()
         num_workers = min(cpu_count - 2, 4) if cpu_count > 4 else 1
 
-        logger.info(f"Using {num_workers} workers for data loading")
-
+        n_jobs = -1
         data_module = UCRDataModule(
             dsid=dataset_name,
             extract_path=extract_path,
@@ -68,10 +67,11 @@ class DataFactory:
             pin_memory=pin_memory,
             prefetch_factor=prefetch_factor,
             persistent_workers=persistent_workers,
+            n_jobs=n_jobs,
         )
 
-        # Prepare and setup the data module
-        data_module.prepare_data()
+        logger.info("Downloading and preparing the dataset...")
+        logger.info(f"Using {cpu_count if n_jobs == -1 else n_jobs} cores for preparing the data.")
         data_module.setup("fit")
 
         # Create dataset configuration

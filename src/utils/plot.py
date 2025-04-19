@@ -62,8 +62,9 @@ def get_train_metrics_and_plot(
     else:
         logger.info(f"\nExperiment {experiment}\n\tTest loss: {test_loss}.\n\tTest accuracy: {test_acc}.\n\n")
 
-    if plots_path is not None:
-        seaborn.relplot(data=metrics.drop(columns=["test_loss", "test_acc"], axis=1, errors="ignore"), kind="line")
+    plotting_data = metrics.drop(columns=["test_loss", "test_acc"], axis=1, errors="ignore").copy()
+    if plots_path is not None and not plotting_data.empty:
+        seaborn.relplot(data=plotting_data, kind="line")
 
         plots_path.parent.mkdir(parents=True, exist_ok=True)
         pyplot.savefig(fname=plots_path)
