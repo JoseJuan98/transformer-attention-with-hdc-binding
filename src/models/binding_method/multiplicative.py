@@ -18,7 +18,15 @@ class MultiplicativeBinding(EmbeddingBinding):
         self.layer_norm_after = torch.nn.LayerNorm(embedding_dim)
 
     def forward(self, embeddings: torch.Tensor, positional_encodings: torch.Tensor) -> torch.Tensor:
-        """Applies the multiplicative binding method."""
+        """Applies the multiplicative binding method.
+
+        Args:
+            embeddings (torch.Tensor): The input embeddings.
+            positional_encodings (torch.Tensor): The positional encodings.
+
+        Returns:
+            torch.Tensor: The multiplicatively bound embeddings.
+        """
 
         # Bind them
         combined = embeddings * positional_encodings
