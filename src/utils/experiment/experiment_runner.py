@@ -72,6 +72,11 @@ class ExperimentRunner:
         """Set up paths and logging for the experiment."""
         # Format task name for path creation
         self.task_fmt = self.experiment_cfg.task.replace(" ", "_")
+
+        # Development mode: reduce the number of epochs for development purposes
+        if self.experiment_cfg.development:
+            self.experiment_cfg.run_version = "dev"
+
         self._task_exp_path = f"{self.task_fmt}/{self.experiment_cfg.run_version}/"
 
         # Create the directories for the experiment
@@ -363,16 +368,27 @@ class ExperimentRunner:
             self.logger.info("\t=> Tuning batch size")
             tuner = Tuner(trainer=trainer)
 
+            # Turning off the memory growth for the GPU for the batch size tuning
+            os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:False"
+
             # Auto-scale batch size by growing it exponentially (default)
             # You can change the mode to "binsearch" for a binary search approach
             new_batch_size = tuner.scale_batch_size(
                 model, init_val=self.experiment_cfg.default_batch_size, datamodule=data_module, mode="binsearch"
             )
 
+            # Big number batch sizes gives memory problems, so better to reduce it 10%
+            if new_batch_size > 1024:
+                new_batch_size = 1024
+                # new_batch_size = int(new_batch_size * 0.9)
+
             self.logger.info(f"Optimal batch size found: {new_batch_size}")
 
             # Update the datamodule with the new batch size
             data_module.batch_size = new_batch_size
+
+            # Turning on the memory growth for the GPU for the training
+            os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
             # self.logger.info("\t=> Tuning learning rate")
             # tuner.lr_find(model=model, datamodule=data_module, mode="exponential", method="fit", num_training=50)
