@@ -175,7 +175,10 @@ class ModelFactory:
         if experiment_cfg.use_lr_finder:
             if hasattr(experiment_cfg, "lr_finder_milestones"):
                 lr_finder_callback = FineTuneLearningRateFinder(
-                    milestones=experiment_cfg.lr_finder_milestones, update_attr=True, num_training_steps=lr_iterations
+                    milestones=experiment_cfg.lr_finder_milestones,
+                    update_attr=True,
+                    num_training_steps=lr_iterations,
+                    early_stop_threshold=3.0,
                 )
                 callbacks.append(lr_finder_callback)
                 logger.info(f"\t=> Using Learning Rate Finder with milestones={experiment_cfg.lr_finder_milestones}")
