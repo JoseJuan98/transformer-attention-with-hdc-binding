@@ -7,6 +7,7 @@ import os
 import pathlib
 
 # Third party imports
+import numpy
 import pandas
 import seaborn
 from matplotlib import pyplot
@@ -79,8 +80,18 @@ def get_train_metrics_and_plot(
         # Drop if the row is full of NaN values
         .dropna(how="all")
     )
-    # Get the last row of the metrics
-    metrics = metrics[metrics.index == metrics.index[-1]].mean(axis=0).round(4)
+
+    # Get the last row of the metrics if it is not empty
+    if not metrics.empty:
+        metrics = metrics[metrics.index == metrics.index[-1]].mean(axis=0).round(4)
+    else:
+        # Most likely, due to exploding or vanishing gradients
+        metrics = pandas.Series()
+        metrics["train_loss"] = numpy.nan
+        metrics["train_acc"] = numpy.nan
+        metrics["val_loss"] = numpy.nan
+        metrics["val_acc"] = numpy.nan
+
     metrics["test_loss"] = test_loss
     metrics["test_acc"] = test_acc
     metrics["size_MB"] = round(pathlib.Path(f"{csv_dir}/model.pth").stat().st_size / (1024**2), 4)

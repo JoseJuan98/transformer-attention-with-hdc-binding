@@ -166,6 +166,7 @@ class MetricsHandler:
         grouped = metrics.groupby(["model"] if aggregate_by == "model" else ["dataset", "model"])
 
         # Calculate statistics
+        # TODO: calculate the average training time and epochs
         result = grouped["test_acc"].agg(["mean", "std", "count"]).reset_index()
 
         # Calculate margin of error for 95% confidence interval
@@ -180,9 +181,10 @@ class MetricsHandler:
         result["confidence_interval"] = result.apply(
             lambda row: f"{row['mean']:.3f} ± {row['margin_of_error']:.3f}", axis=1
         )
+        result["num_runs"] = result["count"].astype(int)
 
         # Select and reorder columns
-        cols = ["model", "mean_test_acc", "std_test_acc", "margin_of_error", "confidence_interval"]
+        cols = ["model", "mean_test_acc", "std_test_acc", "margin_of_error", "confidence_interval", "num_runs"]
         if aggregate_by == "dataset_model":
             cols = ["dataset"] + cols
         aggregated_metrics = result[cols]
