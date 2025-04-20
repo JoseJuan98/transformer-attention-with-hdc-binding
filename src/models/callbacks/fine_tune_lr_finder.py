@@ -22,7 +22,7 @@ class FineTuneLearningRateFinder(LearningRateFinder):
 
         early_stop_threshold: Threshold for stopping the search. If the
             loss at any point is larger than early_stop_threshold*best_loss
-            then the search is stopped. To disable, set to None.
+            then the search is stopped. To disable, set to None. Default is 4.
         update_attr: Whether to update the learning rate attribute or not.
         attr_name: Name of the attribute which stores the learning rate. The names 'learning_rate' or 'lr' get
             automatically detected. Otherwise, set the name here.
@@ -34,7 +34,7 @@ class FineTuneLearningRateFinder(LearningRateFinder):
 
     def on_fit_start(self, *args, **kwargs):
         """Do nothing."""
-        super(FineTuneLearningRateFinder, self).on_fit_start(*args, **kwargs)
+        return
 
     def on_train_epoch_start(self, trainer: lightning.Trainer, pl_module: lightning.LightningModule):
         """On train epoch start, check if we need to run the LR finder."""
@@ -44,4 +44,3 @@ class FineTuneLearningRateFinder(LearningRateFinder):
             or trainer.current_epoch == 0
         ):
             self.lr_find(trainer=trainer, pl_module=pl_module)
-            super(FineTuneLearningRateFinder, self).on_train_epoch_start(trainer, pl_module)
