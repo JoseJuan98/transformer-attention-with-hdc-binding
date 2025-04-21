@@ -41,6 +41,8 @@ class ExperimentConfig(BaseConfig):
         plots (bool): Whether to generate the plots.
         development (bool): Whether to run in development mode. This is used to reduce the number of epochs and
             terminates the run after any errors.
+        early_stopping_patience (int): The number of epochs to wait for early stopping. Default: 10 epochs. If equals to
+            0, early stopping is disabled.
         metrics_mode (str): The mode to aggregate metrics to. Values are ['append', 'write']. If 'append', and the
             metrics file already exist, the new metrics will be appended to the existing file. If 'write', the new
             experiment's metrics will overwrite the existing file.
@@ -90,7 +92,8 @@ class ExperimentConfig(BaseConfig):
     plots: bool
     development: bool
 
-    # New parameters for advanced training techniques
+    # Parameters for advanced training techniques
+    early_stopping_patience: int = 10  # Default: 10 epochs
     accumulate_grad_batches: Union[int, Dict[int, int]] = 1  # Default: no accumulation
     gradient_clip_val: float = 0.0  # Default: no gradient clipping
     gradient_clip_algorithm: Literal["norm", "value"] = "norm"  # Default: clip by norm

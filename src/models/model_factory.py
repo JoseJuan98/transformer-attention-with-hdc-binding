@@ -138,8 +138,7 @@ class ModelFactory:
         """
 
         # --- Configure Trainer Callbacks ---
-        # Default callbacks (Early Stopping, Pocket Algorithm)
-        early_stopping = EarlyStopping(monitor="val_loss", mode="min", patience=10, verbose=False)
+        # Default callback (Pocket Algorithm)
         pocket_algorithm = PocketAlgorithm(
             monitor="val_acc",
             mode="max",
@@ -148,14 +147,22 @@ class ModelFactory:
             logger=logger,
         )
 
-        callbacks: list[lightning.pytorch.callbacks.Callback] = [early_stopping, pocket_algorithm]
+        callbacks: list[lightning.pytorch.callbacks.Callback] = [pocket_algorithm]
 
         # Model Deep Summary
         if experiment_cfg.summary:
             callbacks.append(ModelSummary(max_depth=-1))
 
         # Best-practices Callbacks
-        # 1. Gradient Accumulation
+        # 1. Early Stopping
+        if experiment_cfg.early_stopping_patience > 0:
+            early_stopping = EarlyStopping(
+                monitor="val_loss", mode="min", patience=experiment_cfg.early_stopping_patience, verbose=False
+            )
+            callbacks.append(early_stopping)
+            logger.info(f"\t=> Using EarlyStopping with patience={experiment_cfg.early_stopping_patience}")
+
+        # 2. Gradient Accumulation
         if (
             isinstance(experiment_cfg.accumulate_grad_batches, int) and experiment_cfg.accumulate_grad_batches > 1
         ) or isinstance(experiment_cfg.accumulate_grad_batches, dict):
@@ -165,13 +172,13 @@ class ModelFactory:
                 f"\t=> Using GradientAccumulationScheduler with scheduling: {experiment_cfg.accumulate_grad_batches}"
             )
 
-        # 2. Stochastic Weight Averaging
+        # 3. Stochastic Weight Averaging
         if experiment_cfg.use_swa:
             swa_lrs = experiment_cfg.swa_learning_rate if hasattr(experiment_cfg, "swa_learning_rate") else 1e-2
             callbacks.append(StochasticWeightAveraging(swa_lrs=swa_lrs))
             logger.info(f"\t=> Using Stochastic Weight Averaging with swa_lrs={swa_lrs}")
 
-        # 3. Learning Rate Finder
+        # 4. Learning Rate Finder
         if experiment_cfg.use_lr_finder:
             if hasattr(experiment_cfg, "lr_finder_milestones"):
                 lr_finder_callback = FineTuneLearningRateFinder(
