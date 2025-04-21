@@ -15,7 +15,6 @@ class ConvolutionalBinding(EmbeddingBinding):
     def __init__(self, embedding_dim: int):
         super(ConvolutionalBinding, self).__init__()
         self.embedding_dim = embedding_dim
-        # TODO: check if the layer norm is needed, and if not register torch no grads
         self.layer_norm_after = torch.nn.LayerNorm(embedding_dim)
 
     def forward(self, embeddings: torch.Tensor, positional_encodings: torch.Tensor) -> torch.Tensor:
@@ -33,11 +32,11 @@ class ConvolutionalBinding(EmbeddingBinding):
         emb_fft = torch.fft.fft(embeddings.float())
         pos_fft = torch.fft.fft(positional_encodings.float())
 
-        # Element-wise multiplication in the frequency domain
+        # Component-wise multiplication in the frequency domain
         C_fft = emb_fft * pos_fft
 
         # Compute the inverse FFT to get the circular convolution result
         c = torch.fft.ifft(C_fft)
 
         # Return the real part (imaginary part should be negligible)
-        return c.real
+        return self.layer_norm_after(c.real)
