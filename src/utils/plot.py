@@ -58,9 +58,7 @@ def get_train_metrics_and_plot(
         test_loss = round(test_loss, 4)
     test_acc = metrics["test_acc"].dropna(how="all").mean().round(4)
 
-    if logger is None:
-        print(f"\nExperiment {experiment}\n\tTest loss: {test_loss}.\n\tTest accuracy: {test_acc}.\n\n")
-    else:
+    if logger:
         logger.info(f"\nExperiment {experiment}\n\tTest loss: {test_loss}.\n\tTest accuracy: {test_acc}.\n\n")
 
     plotting_data = metrics.drop(columns=["test_loss", "test_acc"], axis=1, errors="ignore").copy()
@@ -83,7 +81,9 @@ def get_train_metrics_and_plot(
 
     # Get the last row of the metrics if it is not empty
     if not metrics.empty:
-        metrics = metrics[metrics.index == metrics.index[-1]].mean(axis=0).round(4)
+        best_val_acc_index = metrics["val_acc"].idxmax()
+        metrics = metrics[metrics.index == best_val_acc_index].mean(axis=0).round(4)
+
     else:
         # Most likely, due to exploding or vanishing gradients
         metrics = pandas.Series()
