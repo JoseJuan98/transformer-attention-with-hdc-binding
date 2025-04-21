@@ -50,6 +50,9 @@ class DataFactory:
             torch.utils.data.DataLoader: The testing data loader.
             torch.utils.data.DataLoader: The validation data loader.
         """
+        if val_split < 0.0 or val_split > 1.0:
+            raise ValueError("Validation split must be between 0.0 and 1.0.")
+
         # Determine optimal number of workers
         cpu_count = multiprocessing.cpu_count()
         num_workers = min(cpu_count - 2, 4) if cpu_count > 4 else 1

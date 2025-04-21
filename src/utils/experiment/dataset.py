@@ -141,7 +141,6 @@ def get_ucr_datasets(
     if plot_path is not None and num_dimensions >= 1:
         _plot_time_series_sample(dsid=dsid, plot_path=plot_path, sample=X_train[0], num_dimensions=num_dimensions)
 
-    # TODO: try with scale (-1, 1)
     scaler = StandardScaler(with_std=True, with_mean=True)
     X_train = X_train.reshape(num_cases_train * max_len_train, num_dimensions)
     X_train = scaler.fit_transform(X_train)

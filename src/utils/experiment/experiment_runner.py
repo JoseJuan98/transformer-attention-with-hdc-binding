@@ -195,6 +195,7 @@ class ExperimentRunner:
             pin_memory=True,
             prefetch_factor=2,
             persistent_workers=True,
+            val_split=self.experiment_cfg.validation_split,
         )
 
         # Cache the dataloaders and config for reuse

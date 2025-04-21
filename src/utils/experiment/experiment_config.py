@@ -41,6 +41,7 @@ class ExperimentConfig(BaseConfig):
         plots (bool): Whether to generate the plots.
         development (bool): Whether to run in development mode. This is used to reduce the number of epochs and
             terminates the run after any errors.
+        validation_split (float): The percentage of training data to use for validation (0.0-1.0).
         early_stopping_patience (int): The number of epochs to wait for early stopping. Default: 10 epochs. If equals to
             0, early stopping is disabled.
         metrics_mode (str): The mode to aggregate metrics to. Values are ['append', 'write']. If 'append', and the
@@ -93,6 +94,7 @@ class ExperimentConfig(BaseConfig):
     development: bool
 
     # Parameters for advanced training techniques
+    validation_split: float
     early_stopping_patience: int = 10  # Default: 10 epochs
     accumulate_grad_batches: Union[int, Dict[int, int]] = 1  # Default: no accumulation
     gradient_clip_val: float = 0.0  # Default: no gradient clipping
