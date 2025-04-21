@@ -390,9 +390,6 @@ class ExperimentRunner:
             # Turning on the memory growth for the GPU for the training
             os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
-            # self.logger.info("\t=> Tuning learning rate")
-            # tuner.lr_find(model=model, datamodule=data_module, mode="exponential", method="fit", num_training=50)
-
         # --- Train and Test ---
         self.logger.info(f"=> Train and Test (Run {run})")
         self.logger.info(f"Training {model_name} for {model_cfg.num_epochs} epochs...")

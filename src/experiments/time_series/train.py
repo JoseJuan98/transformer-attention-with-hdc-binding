@@ -21,11 +21,6 @@ def run_time_series_experiments() -> None:
         experiment_cfg_path=current_dir / "experiment_cfg.json", model_configs=model_configs
     )
 
-    # FIXME: use for development purposes only
-    # experiment_config.model_configs.pop("Linear Additive Sinusoidal TS Transformer")
-    experiment_config.model_configs.pop("Linear Circular Convolutional Sinusoidal TS Transformer")
-    # experiment_config.model_configs.pop("Linear Component-Wise Sinusoidal TS Transformer")
-
     # Define the experiment runner, responsible for running the experiments
     experiment_runner = ExperimentRunner(
         experiment_cfg=experiment_config,

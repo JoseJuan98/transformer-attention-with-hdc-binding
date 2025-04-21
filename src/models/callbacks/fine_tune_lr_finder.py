@@ -35,24 +35,17 @@ class FineTuneLearningRateFinder(LearningRateFinder):
         super(FineTuneLearningRateFinder, self).__init__(*args, **kwargs)
         self.milestones = milestones
 
-    # def on_fit_start(self, trainer: lightning.Trainer, pl_module: lightning.LightningModule) -> None:
-    #     """On fit start, run the LR finder."""
-    #     self.lr_find(trainer=trainer, pl_module=pl_module)
-    #     pl_module.learning_rate = self.optimal_lr
-    #     self.teardown(trainer, pl_module, stage="fit")
-
     def on_train_epoch_start(self, trainer: lightning.Trainer, pl_module: lightning.LightningModule):
         """On train epoch start, check if we need to run the LR finder."""
         if trainer.current_epoch in self.milestones:
             self.lr_find(trainer=trainer, pl_module=pl_module)
             pl_module.learning_rate = self.optimal_lr
-            # self.teardown(trainer, pl_module, stage="fit")
 
     def teardown(self, trainer: lightning.Trainer, pl_module: lightning.LightningModule, stage: str) -> None:
         """Tear down the callback."""
         super().teardown(trainer, pl_module, stage)
 
-        # if a file in trainder.root_dir starts with 'lr_finder' and ends in `.ckpt`, remove it for next run
+        # If a file in trainder.root_dir starts with 'lr_finder' and ends in `.ckpt`, remove it for next run
         files = glob.glob(os.path.join(trainer.default_root_dir, ".lr_find*.ckpt"))
         for file in files:
             os.remove(file)

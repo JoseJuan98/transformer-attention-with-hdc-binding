@@ -139,7 +139,7 @@ class ModelFactory:
 
         # --- Configure Trainer Callbacks ---
         # Default callbacks (Early Stopping, Pocket Algorithm)
-        early_stopping = EarlyStopping(monitor="val_loss", mode="min", patience=5)
+        early_stopping = EarlyStopping(monitor="val_loss", mode="min", patience=10, verbose=False)
         pocket_algorithm = PocketAlgorithm(
             monitor="val_acc",
             mode="max",
@@ -206,5 +206,7 @@ class ModelFactory:
             # PyTorch operations are non-deterministic by default. This means that the results of the operations may
             #  vary from run to run.
             deterministic=True,
+            # benchmark=False,
             enable_checkpointing=False,
+            enable_progress_bar=True,
         )

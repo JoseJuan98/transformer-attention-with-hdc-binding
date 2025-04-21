@@ -120,36 +120,6 @@ class MetricsHandler:
 
     def aggregate_test_acc_per_dataset_and_model(self) -> None:
         """Aggregates test accuracy per model and dataset with 95% confidence interval and stores it in a CSV file."""
-        # metrics = pandas.read_csv(
-        #     filepath_or_buffer=self.metrics_path,
-        #     header=0,
-        # )
-        #
-        # # Group by dataset and model
-        # grouped = metrics.groupby(["dataset", "model"])
-        #
-        # # Calculate statistics
-        # result = grouped["test_acc"].agg(["mean", "std", "count"]).reset_index()
-        #
-        # # Calculate margin of error for 95% confidence interval
-        # # Using t-distribution since we have small sample sizes
-        # result["margin_of_error"] = result.apply(
-        #     lambda row: stats.t.ppf(0.95, row["count"] - 1) * row["std"] / numpy.sqrt(row["count"]), axis=1
-        # ).round(3)
-        #
-        # # Format the results for better readability
-        # result["mean_test_acc"] = result["mean"].round(3)
-        # result["std_test_acc"] = result["std"].round(3)
-        # result["confidence_interval"] = result.apply(
-        #     lambda row: f"{row['mean']:.3f} ± {row['margin_of_error']:.3f}", axis=1
-        # )
-        #
-        # # Select and reorder columns
-        # aggregated_metrics = result[
-        #     ["dataset", "model", "mean_test_acc", "std_test_acc", "margin_of_error", "confidence_interval"]
-        # ]
-        #
-        # aggregated_metrics.to_csv(path_or_buf=self.aggregated_metrics_path, index=False, header=True)
         self._aggregate_metrics(aggregate_by="dataset_model")
 
     def aggregate_test_acc_per_model(self) -> None:
