@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 """This module is responsible for running the experiments."""
 # Standard imports
-import glob
 import json
 import os
 import pathlib
 import time
-import traceback
-from typing import Any, Dict, Optional
+from typing import Dict
 
 # Third party imports
 import lightning
@@ -20,6 +18,7 @@ from models.model_factory import ModelFactory
 from utils import Config, get_logger, get_train_metrics_and_plot, msg_task
 from utils.experiment.data_factory import DataFactory
 from utils.experiment.dataset_config import DatasetConfig
+from utils.experiment.error_handler import ErrorHandler
 from utils.experiment.experiment_config import ExperimentConfig
 from utils.experiment.metrics_handler import MetricsHandler
 from utils.experiment.model_config import ModelConfig
@@ -38,19 +37,18 @@ class ExperimentRunner:
         self.experiment_cfg = experiment_cfg
         self.seed = seed
 
-        # Initialize data structures for results and errors
+        # Initialize data structures for results
         self.results = pandas.DataFrame()
-        self.errors: Dict[str, list] = {}
 
         # Initialize factories
         self.model_factory = ModelFactory()
         self.data_factory = DataFactory()
 
         # Cache for dataloaders to reuse across models
-        self.dataset_cache: Dict[str, lightning.LightningDataModule] = {}  # Changed to store DataModules
+        self.dataset_cache: Dict[str, lightning.LightningDataModule] = {}
         self.dataset_configs: Dict[str, DatasetConfig] = {}
 
-        # Set up paths and logging
+        # Set up paths and logging: `self.logger` and `self.experiment_logs_path`
         self.exp_name_title = self.experiment_cfg.experiment_name.replace("_", " ").title()
         self._setup_paths_and_logging()
 
@@ -61,6 +59,13 @@ class ExperimentRunner:
         self.metrics_handler = MetricsHandler(
             metrics_path=self.metrics_path,
             aggregated_metrics_path=self.metrics_path.parent / f"aggregated_{self.metrics_path.name}",
+        )
+
+        # Initialize ErrorHandler (AFTER logger and paths are set)
+        self.error_handler = ErrorHandler(
+            logger=self.logger,
+            error_log_path=self.experiment_logs_path / "errors.log",
+            development_mode=self.experiment_cfg.development,
         )
 
         self.logger.info(f"\n{self.experiment_cfg.pretty_str()}")
@@ -81,7 +86,7 @@ class ExperimentRunner:
 
         # Create the directories for the experiment
         self.experiment_logs_path = Config.log_dir / self._task_exp_path
-        self.results_path: pathlib.Path = pathlib.Path()
+        self.results_path: pathlib.Path = pathlib.Path()  # Will be set per dataset
         self.data_dir = Config.data_dir / self.task_fmt
         self.metrics_path = Config.model_dir / self._task_exp_path / f"metrics_{self.experiment_cfg.run_version}.csv"
 
@@ -116,7 +121,8 @@ class ExperimentRunner:
             torch.xpu.manual_seed(self.seed)
 
         self.logger.info(
-            f"Seeds from Python's random module, NumPy, PyTorch, and CuDNN set to {self.seed} for reproducibility."
+            f"Seeds from Python's random module, NumPy, PyTorch, and any backend in used set to {self.seed} for "
+            "reproducibility."
         )
 
     def run(self):
@@ -137,19 +143,27 @@ class ExperimentRunner:
                 self.single_run(dataset=dataset)
 
             except Exception as e:
-                self._handle_error(dataset=dataset, exception=e)
+                self.error_handler.handle_error(dataset=dataset, exception=e)
 
             finally:
                 # Free memory after processing each dataset
                 if dataset in self.dataset_cache:
                     del self.dataset_cache[dataset]
-                    torch.cuda.empty_cache()
+                    self._clean_backend_cache()
 
             self.logger.info(f"\n\nAll models for {dataset} trained successfully!\n{'':_^100}\n\n")
 
         total_time = time.perf_counter() - self.exp_start_time
 
+        # Calculate aggregated metrics
         self.metrics_handler.aggregate_test_acc_per_dataset_and_model()
+        self.metrics_handler.aggregate_test_acc_per_model()
+
+        # Log final errors if any occurred
+        if self.error_handler.errors:
+            self.logger.error(
+                f"Summary of errors occurred during the experiment:\n{json.dumps(self.error_handler.errors, indent=4)}"
+            )
 
         self.logger.info(
             f"Experiment {self.exp_name_title} completed in {total_time // 60:.2f} minutes {total_time % 60:.2f} "
@@ -245,10 +259,12 @@ class ExperimentRunner:
                     self.logger.info(f"Model {cfg_name} for {dataset} trained successfully")
 
                     # Explicitly free memory after training each model
-                    torch.cuda.empty_cache()
+                    self._clean_backend_cache()
 
                 except Exception as e:
-                    self._handle_error(dataset=dataset, model_name=model_cfg.model_name, run=run, exception=e)
+                    self.error_handler.handle_error(
+                        dataset=dataset, model_name=model_cfg.model_name, run=run, exception=e
+                    )
 
                 finally:
                     # Remove component handler when done
@@ -256,60 +272,6 @@ class ExperimentRunner:
 
             # Remove run-specific logger
             self.logger.remove_component_handler(component_name=f"run_{run}")
-
-        if self.errors:
-            self.logger.error(f"Errors occurred during the experiment:\n{json.dumps(self.errors, indent=4)}")
-
-    def _handle_error(
-        self, dataset: str, exception: Exception, model_name: Optional[str] = None, run: Optional[int] = None
-    ) -> None:
-        """Handle errors during model training or dataset preparation.
-
-        Args:
-            dataset (str): The dataset name.
-            model_name (str): The model name.
-            run (int): The run number.
-            exception (Exception): The exception that occurred.
-        """
-        # TODO: error messages can be parametrized
-        if model_name:
-            err_msg = f"\n\n\t{f'{"x" * 24}'f' {dataset} | {model_name} | Run {run} 'f'{"x" * 24}': ^100}\n\n"
-            err_msg += f"Error for {dataset} training {model_name}"
-
-        else:
-            err_msg = f"\n\n\t{f'{"x" * 24}'f' {dataset} 'f'{"x" * 24}': ^100}\n\n"
-            err_msg += f"Error loading or preparing {dataset}"
-
-        err_msg += f":\n\n{str(exception)}\n\n"
-
-        tb_msg = f"Traceback:\n{traceback.format_exc()}"
-        self.logger.error(err_msg)
-        self.logger.error(tb_msg)
-
-        # Update errors for model
-        err_key = model_name if model_name else dataset
-
-        errors = self.errors.get(err_key, [])
-        error_dict: dict[str, Any] = {
-            "dataset": dataset,
-            "error": str(exception),
-            "traceback": traceback.format_exc(),
-        }
-        if model_name:
-            error_dict["model_name"] = model_name
-            error_dict["run"] = run
-
-        errors.append(error_dict)
-        self.errors[err_key] = errors
-
-        # Write to error log file
-        with open(self.experiment_logs_path / "errors.log", "a") as f:
-            f.write(err_msg)
-            f.write(tb_msg)
-
-        if self.experiment_cfg.development:
-            self.logger.error("[DEVELOPMENT MODE ON] Terminating run after error.")
-            raise exception
 
     def _train_model_for_dataset(
         self,
@@ -369,31 +331,47 @@ class ExperimentRunner:
             tuner = Tuner(trainer=trainer)
 
             # Turning off the memory growth for the GPU for the batch size tuning
-            os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:False"
+            # Note: This env var might not be the most reliable way across systems/versions
+            original_alloc_conf = None
+            if torch.cuda.is_available():
+                original_alloc_conf = os.environ.get("PYTORCH_CUDA_ALLOC_CONF")
+                expandable_segments = "expandable_segments:False"
+                os.environ["PYTORCH_CUDA_ALLOC_CONF"] = (
+                    expandable_segments
+                    if original_alloc_conf is None
+                    else original_alloc_conf + "," + expandable_segments
+                )
 
-            # Auto-scale batch size by growing it exponentially (default)
-            # You can change the mode to "binsearch" for a binary search approach
-            new_batch_size = tuner.scale_batch_size(
-                model, init_val=self.experiment_cfg.default_batch_size, datamodule=data_module, mode="binsearch"
-            )
+            try:
+                # Auto-scale batch size by growing it exponentially (default)
+                # You can change the mode to "binsearch" for a binary search approach
+                new_batch_size = tuner.scale_batch_size(
+                    model, init_val=self.experiment_cfg.default_batch_size, datamodule=data_module, mode="binsearch"
+                )
 
-            # Big number batch sizes gives memory problems, so better to reduce it 10%
-            if new_batch_size > 1024:
-                new_batch_size = 1024
-                # new_batch_size = int(new_batch_size * 0.9)
+                # Big number batch sizes gives memory problems, so better to reduce it 10%
+                if new_batch_size > 1024:
+                    self.logger.warning(f"Tuned batch size {new_batch_size} > 1024, capping at 1024.")
+                    new_batch_size = 1024
+                    # new_batch_size = int(new_batch_size * 0.9) # Alternative reduction
 
-            self.logger.info(f"Optimal batch size found: {new_batch_size}")
+                self.logger.info(f"Optimal batch size found: {new_batch_size}")
 
-            # Update the datamodule with the new batch size
-            data_module.batch_size = new_batch_size
+                # Update the datamodule with the new batch size
+                data_module.batch_size = new_batch_size
 
-            # Turning on the memory growth for the GPU for the training
-            os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+            finally:
+                # Restore original alloc conf and turning on the memory growth for the GPU for the training
+                expandable_segments = "expandable_segments:True"
+                os.environ["PYTORCH_CUDA_ALLOC_CONF"] = (
+                    original_alloc_conf + "," + expandable_segments if original_alloc_conf else expandable_segments
+                )
 
         # --- Train and Test ---
         self.logger.info(f"=> Train and Test (Run {run})")
         self.logger.info(f"Training {model_name} for {model_cfg.num_epochs} epochs...")
 
+        training_time = 0.0
         if model_cfg.num_epochs > 0:
             # Train the model
             start_time = time.perf_counter()
@@ -402,8 +380,11 @@ class ExperimentRunner:
             training_time = time.perf_counter() - start_time
 
             self.logger.info(f"{model_name.title()} training finished in {training_time:.2f} seconds!")
+        else:
+            self.logger.info("Skipping training as num_epochs is 0.")
 
-        # Test the model
+        # Test the model (always test, even if not trained in this run, e.g., loading checkpoint)
+        self.logger.info("Testing model...")
         trainer.test(model=model, datamodule=data_module)
 
         # --- Plot Metrics ---
@@ -442,14 +423,34 @@ class ExperimentRunner:
         # --- Teardown ---
         self.teardown(trainer_default_dir=trainer.default_root_dir)
 
-    @staticmethod
-    def teardown(trainer_default_dir: str):
-        """Teardown the experiment.
+    def teardown(self, trainer_default_dir: str):
+        """Teardown steps after a model run, like cleaning temporary files.
+
+        Removes tuner temporary files if they exist.
 
         Args:
-            trainer_default_dir (str): The default directory for the trainer.
+            trainer_default_dir (str): The default directory used by the trainer for this run.
         """
-        # if a file in trainder.root_dir starts with 'lr_finder' and ends in `.ckpt`, remove it for next run
-        files = glob.glob(os.path.join(trainer_default_dir, ".lr_find*.ckpt"))
-        for file in files:
-            os.remove(file)
+        try:
+            base_dir = pathlib.Path(trainer_default_dir)
+
+            # Check for files starting with .lr_find and ending with .ckpt
+            for file in base_dir.glob(".lr_find*.ckpt"):
+                if file.is_file():
+                    file.unlink()  # Remove the file
+
+        except Exception as e:
+            # Log error if cleanup fails but don't stop the experiment
+            self.logger.warning(f"[Warning] Failed to clean up tuner files in {trainer_default_dir}: {e}")
+
+    @staticmethod
+    def _clean_backend_cache() -> None:
+        """Clean up the cache to free memory."""
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            torch.mps.empty_cache()
+
+        if hasattr(torch, "xpu") and torch.xpu.is_available():
+            torch.xpu.empty_cache()
