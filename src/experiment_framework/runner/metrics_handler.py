@@ -223,8 +223,9 @@ class MetricsHandler:
             .dropna(how="all")
         )
 
-        # Get the last row of the metrics if it is not empty
-        if not metrics.empty:
+        # Get the values of the row with the best validation accuracy, if it is not empty, "val_acc" is in the columns,
+        #   and it has at least one value
+        if not metrics.empty and "val_acc" in metrics.columns.tolist() and metrics["val_acc"].notna().any():
             best_val_acc_index = metrics["val_acc"].idxmax()
             metrics = metrics[metrics.index == best_val_acc_index].mean(axis=0).round(4)
 
