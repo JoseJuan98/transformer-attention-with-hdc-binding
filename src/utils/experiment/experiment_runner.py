@@ -149,7 +149,7 @@ class ExperimentRunner:
                 # Free memory after processing each dataset
                 if dataset in self.dataset_cache:
                     del self.dataset_cache[dataset]
-                    self._clean_backend_cache()
+                self._clean_backend_cache()
 
             self.logger.info(f"\n\nAll models for {dataset} trained successfully!\n{'':_^100}\n\n")
 
@@ -259,15 +259,15 @@ class ExperimentRunner:
 
                     self.logger.info(f"Model {cfg_name} for {dataset} trained successfully")
 
-                    # Explicitly free memory after training each model
-                    self._clean_backend_cache()
-
                 except Exception as e:
                     self.error_handler.handle_error(
                         dataset=dataset, model_name=model_cfg.model_name, run=run, exception=e
                     )
 
                 finally:
+                    # Explicitly free memory after training each model
+                    self._clean_backend_cache()
+
                     # Remove component handler when done
                     self.logger.remove_component_handler(component_name=component_name)
 
@@ -344,11 +344,21 @@ class ExperimentRunner:
                 )
 
             try:
+                # if default batchsize is bigger than the dataset size, set it to the dataset size
+                n_train_samples = len(data_module.train_dataset)
+                new_batch_size = min(self.experiment_cfg.default_batch_size, n_train_samples // 2)
+                # it will use the batch size in the datamodule as initial value
+                data_module.batch_size = new_batch_size
+
+                if self.experiment_cfg.default_batch_size > n_train_samples:
+                    self.logger.warning(
+                        f"Default batch size {self.experiment_cfg.default_batch_size} is larger than the dataset "
+                        f"size {n_train_samples // 2}, setting it to the dataset size."
+                    )
+
                 # Auto-scale batch size by growing it exponentially (default)
                 # You can change the mode to "binsearch" for a binary search approach
-                new_batch_size = tuner.scale_batch_size(
-                    model, init_val=self.experiment_cfg.default_batch_size, datamodule=data_module, mode="binsearch"
-                )
+                new_batch_size = tuner.scale_batch_size(model, datamodule=data_module, mode="binsearch", max_trials=25)
 
                 # Big number batch sizes gives memory problems, so better to reduce it 10%
                 if new_batch_size > 1024:

@@ -42,7 +42,7 @@ clean:
 ## Delete compiled Python files
 clean-files:
 	@echo "Cleaning compiled Python files..."
-	@find src | grep -E "build$|\/__pycache__$|\.pyc$|\.pyo$|\.egg-info$|\.ipynb_checkpoints" | xargs rm -rf || echo "Already clean"
+	find src | grep -E "build$|\/__pycache__$|\.pyc$|\.pyo$|\.egg-info$|\.ipynb_checkpoints" | xargs rm -rf || echo "Already clean"
 
 ### Delete compiled Python files
 #clean-files:
