@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Time series scaling.
+"""Time series scaling. (NOT USED IN THE CURRENT VERSION)
 
 The TimeSeriesMeanScaler, TimeSeriesStdScaler, TimeSeriesNOPScaler, and classes in this module are adapted from the
 Hugging Face Transformers library, licensed under the Apache License, Version 2.0.

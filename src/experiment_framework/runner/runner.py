@@ -20,7 +20,7 @@ from experiment_framework.config.model import ModelConfig
 from experiment_framework.data.factory import DataFactory
 from experiment_framework.runner.error_handler import ErrorHandler
 from experiment_framework.runner.metrics_handler import MetricsHandler
-from models.model_factory import ModelFactory
+from models.factory import ModelFactory
 from utils import Config, get_logger, get_train_metrics_and_plot, msg_task
 
 

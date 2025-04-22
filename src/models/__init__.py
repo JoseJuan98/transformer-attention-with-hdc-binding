@@ -4,7 +4,7 @@
 from typing import Literal, Union
 
 # First party imports
-from models.time_series.transformer import EncoderOnlyTransformerTSClassifier
+from models.architectures.time_series_classifier import EncoderOnlyTransformerTSClassifier
 
 # Local imports
 from .base_model import BaseModel
