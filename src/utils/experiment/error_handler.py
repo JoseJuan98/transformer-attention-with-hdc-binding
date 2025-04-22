@@ -26,7 +26,9 @@ class ErrorHandler:
         self.error_log_path.parent.mkdir(parents=True, exist_ok=True)
         self.errors: Dict[str, list] = {}
 
-    def handle_error(self, dataset: str, exception: Exception, run: int, model_name: Optional[str] = None) -> None:
+    def handle_error(
+        self, dataset: str, exception: Exception, run: Optional[int] = None, model_name: Optional[str] = None
+    ) -> None:
         """Handles, logs, and formats an error that occurred during the experiment.
 
         Args:
