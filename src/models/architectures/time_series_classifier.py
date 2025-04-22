@@ -186,25 +186,40 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         """
         x, y = batch
 
-        # Squeezing the first dimension to match the target shape, needed for BCEWithLogitsLoss. It doesn't affect
-        #  multiclass classification with CrossEntropyLoss.
-        logits = self(x).squeeze()  # No mask needed, handled in forward
+        # Get logits from the model
+        logits = self(x)  # Shape: (batch_size (N), 1) for binary, (batch_size (N), num_classes (C)) for multiclass
 
         # TODO: for the future avoid if statements during training
-        # Casting y to the same type as logits for BCEWithLogitsLoss
+
+        # Squeeze the *last* dimension ONLY if it's 1 (i.e., binary classification).
+        # This converts (N, 1) -> (N,) for BCEWithLogitsLoss compatibility, including the case (1, 1) -> (1,).
+        # It leaves multiclass output (N, C) unchanged.
         if self.classification_task == "binary":
+            logits = logits.squeeze(dim=-1)  # Squeeze the feature dimension
+
+            # Casting y to the same type as logits for BCEWithLogitsLoss. This should already be (N,) or (1,),
+            #   matching the squeezed logits
             y = y.type(logits.dtype)
 
-        # If logits is 1D, add a batch dimension
+        # If logits is 1D (shape [C]) for multiclass, add a batch dimension
         if self.classification_task == "multiclass" and logits.ndim == 1:
+            # logits are (C,). Unsqueeze adds batch dim -> (1, C).
             logits = logits.unsqueeze(dim=0)
 
         # Calculate loss
         loss = self.loss_fn(logits, y)
 
         # Calculate and log accuracy
+        # For binary accuracy with BCEWithLogitsLoss, preds should be probabilities or logits.
+        # For multiclass accuracy with CrossEntropyLoss, preds should be logits or probabilities.
+        # torchmetrics handles this based on the 'task'.
         accuracy = torchmetrics.functional.accuracy(
-            preds=logits, target=y, task=self.classification_task, num_classes=self.num_classes
+            preds=logits,
+            target=y.long() if self.classification_task == "binary" else y,  # Accuracy often expects long targets
+            task=self.classification_task,
+            num_classes=(
+                self.num_classes if self.classification_task == "multiclass" else None
+            ),  # num_classes only for multiclass/multilabel
         )
 
         metrics = {f"{stage}_loss": loss, f"{stage}_acc": accuracy.round(decimals=4)}
