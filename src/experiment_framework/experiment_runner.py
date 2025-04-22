@@ -14,14 +14,14 @@ import torch
 from lightning.pytorch.tuner import Tuner
 
 # First party imports
+from experiment_framework.data_factory import DataFactory
+from experiment_framework.dataset_config import DatasetConfig
+from experiment_framework.error_handler import ErrorHandler
+from experiment_framework.experiment_config import ExperimentConfig
+from experiment_framework.metrics_handler import MetricsHandler
+from experiment_framework.model_config import ModelConfig
 from models.model_factory import ModelFactory
 from utils import Config, get_logger, get_train_metrics_and_plot, msg_task
-from utils.experiment.data_factory import DataFactory
-from utils.experiment.dataset_config import DatasetConfig
-from utils.experiment.error_handler import ErrorHandler
-from utils.experiment.experiment_config import ExperimentConfig
-from utils.experiment.metrics_handler import MetricsHandler
-from utils.experiment.model_config import ModelConfig
 
 
 class ExperimentRunner:

@@ -10,8 +10,8 @@ from typing import Optional, Tuple
 import lightning
 
 # First party imports
-from utils.experiment.dataset import UCRDataModule
-from utils.experiment.dataset_config import DatasetConfig
+from experiment_framework.dataset import UCRDataModule
+from experiment_framework.dataset_config import DatasetConfig
 
 
 class DataFactory:

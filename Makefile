@@ -58,8 +58,8 @@ test:
 
 ## Run experiment for time series classification
 run-ts:
-	export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True && \
-	@poetry run python src/experiments/time_series/train.py
+	@export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True && \
+	poetry run python src/experiments/time_series/train.py
 
 ## Alias for clean + run-ts
 clean-run-ts: clean run-ts

@@ -17,6 +17,9 @@ from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from lightning.pytorch.profilers import SimpleProfiler
 
 # First party imports
+from experiment_framework.dataset_config import DatasetConfig
+from experiment_framework.experiment_config import ExperimentConfig
+from experiment_framework.model_config import ModelConfig
 from models import EncoderOnlyTransformerTSClassifier
 from models.binding_method import BindingMethodFactory
 from models.callbacks.fine_tune_lr_finder import FineTuneLearningRateFinder
@@ -24,9 +27,6 @@ from models.callbacks.pocket_algorithm import PocketAlgorithm
 from models.embedding.embedding_factory import EmbeddingFactory
 from models.positional_encoding import PositionalEncodingFactory
 from utils import Config
-from utils.experiment.dataset_config import DatasetConfig
-from utils.experiment.experiment_config import ExperimentConfig
-from utils.experiment.model_config import ModelConfig
 
 
 class ModelFactory:
