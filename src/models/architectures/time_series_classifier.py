@@ -196,7 +196,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
             y = y.type(logits.dtype)
 
         # If logits is 1D, add a batch dimension
-        if logits.ndim == 1:
+        if self.classification_task == "multiclass" and logits.ndim == 1:
             logits = logits.unsqueeze(dim=0)
 
         # Calculate loss
