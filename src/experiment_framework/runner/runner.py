@@ -21,7 +21,7 @@ from experiment_framework.data.factory import DataFactory
 from experiment_framework.runner.error_handler import ErrorHandler
 from experiment_framework.runner.metrics_handler import MetricsHandler
 from models.factory import ModelFactory
-from utils import Config, get_logger, get_train_metrics_and_plot, msg_task
+from utils import Config, get_logger, msg_task
 
 
 class ExperimentRunner:
@@ -410,7 +410,7 @@ class ExperimentRunner:
 
         # --- Plot Metrics ---
         if model_cfg.num_epochs > 0:
-            metrics = get_train_metrics_and_plot(
+            metrics = self.metrics_handler.get_train_metrics_and_plot(
                 csv_dir=trainer.log_dir,
                 experiment=f"{model_name.replace('_', ' ').title()} for "
                 + f"{dataset_name.replace('_', ' ').title()} in {run_version}",
