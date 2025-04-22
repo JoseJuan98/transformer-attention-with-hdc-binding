@@ -4,8 +4,8 @@
 import pathlib
 
 # First party imports
-from experiment_framework.config_parser import ConfigParser
-from experiment_framework.model_config import ModelConfig
+from experiment_framework.config.model_config import ModelConfig
+from experiment_framework.config.parser import ConfigParser
 
 
 class ModelConfigFactory:

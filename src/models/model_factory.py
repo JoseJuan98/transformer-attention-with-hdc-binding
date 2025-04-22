@@ -17,9 +17,9 @@ from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from lightning.pytorch.profilers import SimpleProfiler
 
 # First party imports
-from experiment_framework.dataset_config import DatasetConfig
-from experiment_framework.experiment_config import ExperimentConfig
-from experiment_framework.model_config import ModelConfig
+from experiment_framework.config.dataset import DatasetConfig
+from experiment_framework.config.experiment import ExperimentConfig
+from experiment_framework.config.model_config import ModelConfig
 from models import EncoderOnlyTransformerTSClassifier
 from models.binding_method import BindingMethodFactory
 from models.callbacks.fine_tune_lr_finder import FineTuneLearningRateFinder

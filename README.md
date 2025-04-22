@@ -68,18 +68,30 @@ task (e.g., sentiment analysis, language modeling).
 │
 ├── artifacts               # 'git-ignored', stores data and trained models (not tracked by Git)
 │     ├── data                # Datasets (e.g., UCR/UEA datasets)
-│     └── models              # Saved model checkpoints
+│     └── models              # Saved model checkpoints and metrics
 │
-├── scripts                 # Scripts for installation
+├── scripts                 # Scripts for installation and verification of hardware backends
 │
 ├── src                     # Source code
-│     ├── utils                # Utility functions (e.g., logging, helper functions, experiment utilities)
-│     ├── experiments          # Training and evaluation scripts
+│     ├── models                # Model definitions
+│     │     ├── binding_method       # HDC binding methods (e.g., addition, component-wise multiplication, circular convolution)
+│     │     ├── callbacks            # Callbacks for training (e.g., early stopping, learning rate scheduling)
+│     │     ├── embedding            # Embedding layers (e.g. linear projection, 1D convolution)
+│     │     ├── positional_encoding  # Implementations of different positional encoding methods (including HDC binding)
+│     │     ├── time_series          # Time series specific models (e.g., encoder-only transformer classifier)
+│     │     └── transformer          # Transformer architecture implementation
+│     │
+│     ├── experiments           # Training and evaluation scripts
 │     │     └── time_series          # Time series specific experiments
-│     ├── test                 # Unit tests for the codebase
-│     └── models               # Model definitions
-│           ├── positional_encoding  # Implementations of different positional encoding methods (including HDC binding)
-│           └── transformer          # Transformer architecture implementation
+│     │
+│     ├── experiment_framework  # Experiment framework for preparing the data, running experiments, and evaluating results
+│     │     ├── config              # Configuration schemas, factories, and utilities
+│     │     ├── data                # Data loading and preprocessing (e.g., UCR/UEA datasets)
+│     │     └── runner              # Experiment runner (e.g.,training, metrics handling, error handling)
+│     │
+│     ├── test                  # Unit tests for the codebase
+│     │
+│     └── utils                 # Utility functions (e.g., logging, helper functions, experiment utilities)
 │
 ├── docs                    # Documentation files
 │     └── SETUP.md          # Instructions for setting up the project environment
