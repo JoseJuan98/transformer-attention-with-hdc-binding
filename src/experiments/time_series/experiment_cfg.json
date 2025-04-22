@@ -4,7 +4,6 @@
   "description": "Time Series Classification Positional Encodings Experiment",
   "run_version": "version_2",
   "dataset_names": [
-    "ArticularyWordRecognition",
     "FaceDetection",
     "InsectWingbeat",
     "PenDigits",
@@ -54,5 +53,5 @@
   "profiler": false,
   "summary": false,
   "plots": true,
-  "development": true
+  "development": false
 }
