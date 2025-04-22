@@ -10,7 +10,7 @@ from typing import Dict, Literal, Union
 from lightning.pytorch.trainer.connectors.accelerator_connector import _PRECISION_INPUT
 
 # First party imports
-from experiment_framework.config.model_config import ModelConfig
+from experiment_framework.config.model import ModelConfig
 from experiment_framework.runner.metrics_handler import METRICS_MODE_STR
 from utils.base_config import BaseConfig
 

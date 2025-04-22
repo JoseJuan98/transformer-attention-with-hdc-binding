@@ -4,7 +4,7 @@
 import pathlib
 
 # First party imports
-from experiment_framework.config.model_config import ModelConfig
+from experiment_framework.config.model import ModelConfig
 from experiment_framework.config.parser import ConfigParser
 
 

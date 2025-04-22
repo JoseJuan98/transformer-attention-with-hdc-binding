@@ -16,7 +16,7 @@ from lightning.pytorch.tuner import Tuner
 # First party imports
 from experiment_framework.config.dataset import DatasetConfig
 from experiment_framework.config.experiment import ExperimentConfig
-from experiment_framework.config.model_config import ModelConfig
+from experiment_framework.config.model import ModelConfig
 from experiment_framework.data.factory import DataFactory
 from experiment_framework.runner.error_handler import ErrorHandler
 from experiment_framework.runner.metrics_handler import MetricsHandler
