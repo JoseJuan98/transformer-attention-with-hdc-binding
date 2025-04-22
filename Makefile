@@ -39,18 +39,13 @@ clean:
 	@rm -rf $(ROOT_DIR)/artifacts/model/
 	@rm -rf $(ROOT_DIR)/artifacts/log/
 
-## Delete compiled Python files
-clean-files:
-	@echo "Cleaning compiled Python files..."
-	find src | grep -E "build$|\/__pycache__$|\.pyc$|\.pyo$|\.egg-info$|\.ipynb_checkpoints" | xargs rm -rf || echo "Already clean"
-
 ### Delete compiled Python files
-#clean-files:
-#	find . -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete
-#	find . -type d -name "__pycache__" -delete
-#	find . -type d -name "build" -delete
-#	find . -type d -name "*.egg-info" -delete
-#	find . -type d -name ".ipynb_checkpoints" -delete
+clean-files:
+	@find src/ -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete
+	@find src/ -type d -name "__pycache__" -delete
+	@find src/ -type d -name "build" -delete
+	@find src/ -type d -name "*.egg-info" -delete
+	@find src/ -type d -name ".ipynb_checkpoints" -delete
 
 ## Lint
 lint:
