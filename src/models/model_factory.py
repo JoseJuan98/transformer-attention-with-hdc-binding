@@ -157,7 +157,11 @@ class ModelFactory:
         # 1. Early Stopping
         if experiment_cfg.early_stopping_patience > 0:
             early_stopping = EarlyStopping(
-                monitor="val_loss", mode="min", patience=experiment_cfg.early_stopping_patience, verbose=False
+                monitor="val_loss",
+                mode="min",
+                patience=experiment_cfg.early_stopping_patience,
+                verbose=False,
+                strict=False,
             )
             callbacks.append(early_stopping)
             logger.info(f"\t=> Using EarlyStopping with patience={experiment_cfg.early_stopping_patience}")

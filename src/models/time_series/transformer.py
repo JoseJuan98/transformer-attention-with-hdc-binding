@@ -55,6 +55,8 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         forward(x, mask): Performs a forward pass through the model.
     """
 
+    name = "encoder-only-transformer-classifier"
+
     def __init__(
         self,
         num_layers: int,
@@ -192,6 +194,10 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         # Casting y to the same type as logits for BCEWithLogitsLoss
         if self.classification_task == "binary":
             y = y.type(logits.dtype)
+
+        # If logits is 1D, add a batch dimension
+        if logits.ndim == 1:
+            logits = logits.unsqueeze(dim=0)
 
         # Calculate loss
         loss = self.loss_fn(logits, y)
