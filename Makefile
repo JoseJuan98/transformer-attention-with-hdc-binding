@@ -41,6 +41,7 @@ clean:
 
 ### Delete compiled Python files
 clean-files:
+	@echo "Cleaning compiled Python files..."
 	@find src/ -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete
 	@find src/ -type d -name "__pycache__" -delete
 	@find src/ -type d -name "build" -delete

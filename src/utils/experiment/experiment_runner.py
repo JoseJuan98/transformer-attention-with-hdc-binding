@@ -344,7 +344,7 @@ class ExperimentRunner:
                 )
 
             try:
-                # if default batchsize is bigger than the dataset size, set it to the dataset size
+                # if default batchsize is bigger than the dataset size, set it to the dataset size for faster tuning
                 n_train_samples = len(data_module.train_dataset)
                 new_batch_size = min(self.experiment_cfg.default_batch_size, n_train_samples // 2)
                 # it will use the batch size in the datamodule as initial value
@@ -358,13 +358,23 @@ class ExperimentRunner:
 
                 # Auto-scale batch size by growing it exponentially (default)
                 # You can change the mode to "binsearch" for a binary search approach
-                new_batch_size = tuner.scale_batch_size(model, datamodule=data_module, mode="binsearch", max_trials=25)
+                new_batch_size = tuner.scale_batch_size(model, datamodule=data_module, mode="power", max_trials=25)
 
                 # Big number batch sizes gives memory problems, so better to reduce it 10%
                 if new_batch_size > 1024:
                     self.logger.warning(f"Tuned batch size {new_batch_size} > 1024, capping at 1024.")
                     new_batch_size = 1024
                     # new_batch_size = int(new_batch_size * 0.9) # Alternative reduction
+
+                # |Bug fix| for small datasets when the batch size is too small or bigger than the train sampoles
+                # `binsearch` mode doesn't finish and power mode finds one too big
+                if new_batch_size > n_train_samples:
+                    # Find the closest exponent of 2 to the number of train samples if the batch size is bigger than the
+                    #   dataset
+                    exponent = 0
+                    while 2**exponent < n_train_samples:
+                        exponent += 1
+                    new_batch_size = 2 ** (exponent - 1)
 
                 self.logger.info(f"Optimal batch size found: {new_batch_size}")
 
