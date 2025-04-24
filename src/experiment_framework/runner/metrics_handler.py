@@ -176,6 +176,9 @@ class MetricsHandler:
         logger: logging.Logger | None = None,
         plots_path: pathlib.Path | None = None,
         show_plot: bool = False,
+        dataset_name: str = "",
+        model_name: str = "",
+        run_version: str = "",
     ) -> pandas.DataFrame:
         """Save the metrics plot.
 
@@ -185,6 +188,9 @@ class MetricsHandler:
             experiment (str): Name of the experiment.
             logger (logging.Logger, optional): Logger object. Defaults to None.
             show_plot (bool, optional): Whether to display the plot. Defaults to False.
+            dataset_name (str, optional): Name of the dataset.
+            model_name (str, optional): Name of the model.
+            run_version (str, optional): Version of the run.
 
         Returns:
             pandas.DataFrame: Pandas DataFrame containing the final metrics of the plot.
@@ -207,7 +213,10 @@ class MetricsHandler:
 
         plotting_data = metrics.drop(columns=["test_loss", "test_acc"], axis=1, errors="ignore").copy()
         if plots_path is not None and not plotting_data.empty:
-            seaborn.relplot(data=plotting_data, kind="line")
+            graph = seaborn.relplot(data=plotting_data, kind="line")
+            graph.figure.suptitle(f"{dataset_name} - {model_name} run {run_version}")
+            graph.figure.subplots_adjust(top=0.9)
+            graph.tight_layout()
 
             plots_path.parent.mkdir(parents=True, exist_ok=True)
             pyplot.savefig(fname=plots_path)
@@ -242,3 +251,20 @@ class MetricsHandler:
         metrics["size_MB"] = round(pathlib.Path(f"{csv_dir}/model.pth").stat().st_size / (1024**2), 4)
 
         return metrics.to_frame().T
+
+
+if __name__ == "__main__":
+    # Standard imports
+    import pathlib
+
+    metrics_path = (
+        pathlib.Path(__file__).parents[3]
+        / "artifacts/metrics/version_2/metrics_version_2_until_characters_trajectory.csv"
+    )
+
+    if not metrics_path.exists():
+        raise FileNotFoundError(metrics_path)
+
+    handler = MetricsHandler(metrics_path=metrics_path)
+    handler.aggregate_test_acc_per_model()
+    handler.aggregate_test_acc_per_dataset_and_model()

@@ -127,8 +127,9 @@ def get_ucr_datasets(
     X_train, y_train = load_UCR_UEA_dataset(dsid, split="train", return_X_y=True, extract_path=extract_path)
     X_test, y_test = load_UCR_UEA_dataset(dsid, split="test", return_X_y=True, extract_path=extract_path)
 
-    X_train = __convert_to_numpy(X_train, n_jobs=n_jobs)
-    X_test = __convert_to_numpy(X_test, n_jobs=n_jobs)
+    # Distribute the number of jobs across the available cores or the number of samples if less than the number of cores
+    X_train = __convert_to_numpy(X_train, n_jobs=min(n_jobs, X_train.shape[0]))
+    X_test = __convert_to_numpy(X_test, n_jobs=min(n_jobs, X_test.shape[0]))
 
     # Standardize data using sklearn.preprocessing.StandardScaler
     # Each feature needs to be standarized independently. This means the data needs to be reshaped to

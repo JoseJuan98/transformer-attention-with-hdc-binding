@@ -424,6 +424,9 @@ class ExperimentRunner:
                     else None
                 ),
                 show_plot=False,
+                dataset_name=dataset_name,
+                model_name=model_name,
+                run_version=run_version,
             )
 
             self.metrics_handler.update_metrics(
