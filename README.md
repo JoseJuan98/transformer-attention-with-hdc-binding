@@ -103,6 +103,11 @@ task (e.g., sentiment analysis, language modeling).
 
 # Experiments
 
+<div style="text-align: center">
+<img src="docs/diagrams/Experiment_System.png">
+<p style="text-align: center">A high-level design of the proposed experiment framework.</p>
+</div>
+
 Main experiments are:
 
 - Different HDC binding methods (additive, component-wise multiplication, circular convolution) for positional encoding and embeddings
