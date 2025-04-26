@@ -29,7 +29,7 @@ class MetricsHandler:
         """Initializes the MetricsHandler class.
 
         Args:
-            metrics_path (pathlib.Path): The path to save the metrics.
+            metrics_path (pathlib.Path, str): The path to save the metrics.
             aggregated_metrics_path (pathlib.Path): The path to save the aggregated metrics. If None, it will be set to
                 the parent directory of the metrics path with the prefix "aggregated_".
             model_metrics_path (pathlib.Path): The path to save the model metrics. If None, it will be set to the parent

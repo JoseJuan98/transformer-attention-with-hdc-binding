@@ -367,7 +367,8 @@ class ExperimentRunner:
                     # new_batch_size = int(new_batch_size * 0.9) # Alternative reduction
 
                 # |Bug fix| for small datasets when the batch size is too small or bigger than the train sampoles
-                # `binsearch` mode doesn't finish and power mode finds one too big
+                # `binsearch` mode doesn't finish and `power` mode finds one too big. So, this uses the closest exponent
+                # of 2 to the number of train samples if the batch size is bigger than the dataset
                 if new_batch_size > n_train_samples:
                     # Find the closest exponent of 2 to the number of train samples if the batch size is bigger than the
                     #   dataset
@@ -375,6 +376,13 @@ class ExperimentRunner:
                     while 2**exponent < n_train_samples:
                         exponent += 1
                     new_batch_size = 2 ** (exponent - 1)
+
+                new_batch_size = max(1, new_batch_size)  # Ensure batch size is at least 1, it some cases it can be 0
+
+                # |Bug fix| for the dataset SelfRegulationSCP1 and model linear_component_wise_sinusoidal it will not
+                #   select the proper batch size
+                # if model_name == "linear_component_wise_sinusoidal" and dataset_name == "SelfRegulationSCP1":
+                #     new_batch_size = 32
 
                 self.logger.info(f"Optimal batch size found: {new_batch_size}")
 
