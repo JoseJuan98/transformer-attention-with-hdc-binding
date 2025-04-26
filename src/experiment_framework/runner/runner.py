@@ -156,8 +156,7 @@ class ExperimentRunner:
         total_time = time.perf_counter() - self.exp_start_time
 
         # Calculate aggregated metrics
-        self.metrics_handler.aggregate_test_acc_per_dataset_and_model()
-        self.metrics_handler.aggregate_test_acc_per_model()
+        self.metrics_handler.aggregate_metrics()
 
         # Log final errors if any occurred
         if self.error_handler.errors:

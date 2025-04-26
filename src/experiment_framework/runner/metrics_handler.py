@@ -171,6 +171,23 @@ class MetricsHandler:
 
         return aggregated_metrics
 
+    def aggregate_per_dataset_with_model_as_cols(self) -> pandas.DataFrame:
+        """Aggregates test accuracy per dataset with models as columns and stores it in a CSV file."""
+        # Pivot over the models
+        agg_metrics = self.aggregate_test_acc_per_dataset_and_model()[
+            ["dataset", "model", "confidence_interval"]
+        ].pivot(index="dataset", columns="model", values="confidence_interval")
+
+        agg_metrics.to_csv(path_or_buf=handler.metrics_path.parent / "dataset_results.csv", index=True, header=True)
+
+        return agg_metrics
+
+    def aggregate_metrics(self) -> None:
+        """Alias for all aggregate methods."""
+        self.aggregate_test_acc_per_dataset_and_model()
+        self.aggregate_test_acc_per_model()
+        self.aggregate_per_dataset_with_model_as_cols()
+
     @staticmethod
     def get_train_metrics_and_plot(
         csv_dir: str,
