@@ -122,15 +122,15 @@ class MetricsHandler:
         # Save updated metrics
         self.results.to_csv(path_or_buf=self.metrics_path, index=False, header=True)
 
-    def aggregate_test_acc_per_dataset_and_model(self) -> None:
+    def aggregate_test_acc_per_dataset_and_model(self) -> pandas.DataFrame:
         """Aggregates test accuracy per model and dataset with 95% confidence interval and stores it in a CSV file."""
-        self._aggregate_metrics(aggregate_by="dataset_model")
+        return self._aggregate_metrics(aggregate_by="dataset_model")
 
-    def aggregate_test_acc_per_model(self) -> None:
+    def aggregate_test_acc_per_model(self) -> pandas.DataFrame:
         """Aggregates test accuracy per model with 95% confidence interval and stores it in a CSV file."""
-        self._aggregate_metrics(aggregate_by="model")
+        return self._aggregate_metrics(aggregate_by="model")
 
-    def _aggregate_metrics(self, aggregate_by: Literal["dataset_model", "model"]) -> None:
+    def _aggregate_metrics(self, aggregate_by: Literal["dataset_model", "model"]) -> pandas.DataFrame:
         metrics = pandas.read_csv(
             filepath_or_buffer=self.metrics_path,
             header=0,
@@ -168,6 +168,8 @@ class MetricsHandler:
             index=False,
             header=True,
         )
+
+        return aggregated_metrics
 
     @staticmethod
     def get_train_metrics_and_plot(

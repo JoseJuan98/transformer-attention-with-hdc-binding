@@ -5,7 +5,7 @@ import json
 import os
 import pathlib
 import time
-from typing import Dict
+from typing import Dict, Optional
 
 # Third party imports
 import lightning
@@ -326,75 +326,16 @@ class ExperimentRunner:
         )
 
         # --- Tune Batch Size ---
-        if self.experiment_cfg.auto_scale_batch_size:
-
-            self.logger.info("\t=> Tuning batch size")
-            tuner = Tuner(trainer=trainer)
-
-            # Turning off the memory growth for the GPU for the batch size tuning
-            # Note: This env var might not be the most reliable way across systems/versions
-            original_alloc_conf = None
-            if torch.cuda.is_available():
-                original_alloc_conf = os.environ.get("PYTORCH_CUDA_ALLOC_CONF")
-                expandable_segments = "expandable_segments:False"
-                os.environ["PYTORCH_CUDA_ALLOC_CONF"] = (
-                    expandable_segments
-                    if original_alloc_conf is None
-                    else original_alloc_conf + "," + expandable_segments
-                )
-
-            try:
-                # if default batchsize is bigger than the dataset size, set it to the dataset size for faster tuning
-                n_train_samples = len(data_module.train_dataset)
-                new_batch_size = min(self.experiment_cfg.default_batch_size, n_train_samples // 2)
-                # it will use the batch size in the datamodule as initial value
-                data_module.batch_size = new_batch_size
-
-                if self.experiment_cfg.default_batch_size > n_train_samples:
-                    self.logger.warning(
-                        f"Default batch size {self.experiment_cfg.default_batch_size} is larger than the dataset "
-                        f"size {n_train_samples // 2}, setting it to the dataset size."
-                    )
-
-                # Auto-scale batch size by growing it exponentially (default)
-                # You can change the mode to "binsearch" for a binary search approach
-                new_batch_size = tuner.scale_batch_size(model, datamodule=data_module, mode="power", max_trials=25)
-
-                # Big number batch sizes gives memory problems, so better to reduce it 10%
-                if new_batch_size > 1024:
-                    self.logger.warning(f"Tuned batch size {new_batch_size} > 1024, capping at 1024.")
-                    new_batch_size = 1024
-                    # new_batch_size = int(new_batch_size * 0.9) # Alternative reduction
-
-                # |Bug fix| for small datasets when the batch size is too small or bigger than the train sampoles
-                # `binsearch` mode doesn't finish and `power` mode finds one too big. So, this uses the closest exponent
-                # of 2 to the number of train samples if the batch size is bigger than the dataset
-                if new_batch_size > n_train_samples:
-                    # Find the closest exponent of 2 to the number of train samples if the batch size is bigger than the
-                    #   dataset
-                    exponent = 0
-                    while 2**exponent < n_train_samples:
-                        exponent += 1
-                    new_batch_size = 2 ** (exponent - 1)
-
-                new_batch_size = max(1, new_batch_size)  # Ensure batch size is at least 1, it some cases it can be 0
-
-                # |Bug fix| for the dataset SelfRegulationSCP1 and model linear_component_wise_sinusoidal it will not
-                #   select the proper batch size
-                # if model_name == "linear_component_wise_sinusoidal" and dataset_name == "SelfRegulationSCP1":
-                #     new_batch_size = 32
-
-                self.logger.info(f"Optimal batch size found: {new_batch_size}")
-
-                # Update the datamodule with the new batch size
-                data_module.batch_size = new_batch_size
-
-            finally:
-                # Restore original alloc conf and turning on the memory growth for the GPU for the training
-                expandable_segments = "expandable_segments:True"
-                os.environ["PYTORCH_CUDA_ALLOC_CONF"] = (
-                    original_alloc_conf + "," + expandable_segments if original_alloc_conf else expandable_segments
-                )
+        # This method modifies data_module.batch_size in place if tuning is enabled and successful.
+        tuned_batch_size = self._tune_batch_size(
+            trainer=trainer,
+            model=model,
+            data_module=data_module,
+            model_name=model_name,
+            dataset_name=dataset_name,
+        )
+        # Update the datamodule with the new batch size
+        data_module.batch_size = tuned_batch_size
 
         # --- Train and Test ---
         self.logger.info(f"=> Train and Test (Run {run})")
@@ -455,6 +396,125 @@ class ExperimentRunner:
         # --- Teardown ---
         self.teardown(trainer_default_dir=trainer.default_root_dir)
 
+    def _tune_batch_size(
+        self,
+        trainer: lightning.Trainer,
+        model: lightning.LightningModule,
+        data_module: lightning.LightningDataModule,
+        model_name: str,
+        dataset_name: str,
+    ) -> int:
+        """Tunes the batch size for the given model and datamodule using the trainer.
+
+        Modifies the `data_module.batch_size` in place if tuning is successful.
+
+        Args:
+            trainer (lightning.Trainer): The Lightning Trainer instance.
+            model (lightning.LightningModule): The Lightning model instance.
+            data_module (lightning.LightningDataModule): The LightningDataModule instance.
+            model_name (str): The name of the model (used for specific bug fixes).
+            dataset_name (str): The name of the dataset (used for specific bug fixes).
+
+        Returns:
+            int: The tuned batch size (or the original batch size if tuning is skipped or fails).
+        """
+        if not self.experiment_cfg.auto_scale_batch_size:
+            self.logger.info("Batch size tuning skipped as auto_scale_batch_size is False.")
+            return data_module.batch_size
+
+        self.logger.info("\t=> Tuning batch size")
+        tuner = Tuner(trainer=trainer)
+
+        # Turning off the memory growth for the GPU for the batch size tuning
+        # Note: This env var might not be the most reliable way across systems/versions
+        original_alloc_conf: Optional[str] = None
+        if torch.cuda.is_available():
+            original_alloc_conf = os.environ.get("PYTORCH_CUDA_ALLOC_CONF")
+            expandable_segments = "expandable_segments:False"
+            os.environ["PYTORCH_CUDA_ALLOC_CONF"] = (
+                expandable_segments if original_alloc_conf is None else original_alloc_conf + "," + expandable_segments
+            )
+            self.logger.debug(f"Set PYTORCH_CUDA_ALLOC_CONF to: {os.environ['PYTORCH_CUDA_ALLOC_CONF']}")
+
+        new_batch_size = data_module.batch_size  # Default to original if tuning fails
+        try:
+            # if default batchsize is bigger than the dataset size, set it to the dataset size for faster tuning
+            n_train_samples = len(data_module.train_dataset)
+            initial_batch_size = min(self.experiment_cfg.default_batch_size, n_train_samples // 2)
+            # it will use the batch size in the datamodule as initial value
+            data_module.batch_size = initial_batch_size
+
+            # TODO: only works for GPUs with 11 Gb of VRAM, modify for other GPUs
+            # |Bug fix| for the dataset SelfRegulationSCP1 and model linear_component_wise_sinusoidal it will not
+            #   select the proper batch size
+            if model_name == "linear_component_wise_sinusoidal" and dataset_name == "SelfRegulationSCP1":
+                self.logger.warning(
+                    f"Applying specific fix for {model_name} on {dataset_name}. Overriding tuned batch size "
+                    f"{new_batch_size} with 32."
+                )
+                return 32
+
+            if self.experiment_cfg.default_batch_size > n_train_samples // 2:
+                self.logger.warning(
+                    f"Default batch size {self.experiment_cfg.default_batch_size} is larger than half the dataset "
+                    f"size ({n_train_samples // 2}), setting initial tuning batch size to {initial_batch_size}."
+                )
+
+            # Auto-scale batch size by growing it exponentially (default)
+            # You can change the mode to "binsearch" for a binary search approach
+            new_batch_size = tuner.scale_batch_size(model, datamodule=data_module, mode="power", max_trials=25)
+
+            # Big number batch sizes gives memory unstability, better to cap it to 1024
+            if new_batch_size > 1024:
+                self.logger.warning(f"Tuned batch size {new_batch_size} > 1024, capping at 1024.")
+                new_batch_size = 1024
+
+            # |Bug fix| for small datasets when the batch size is too small or bigger than the train sampoles
+            # `binsearch` mode doesn't finish and `power` mode finds one too big. So, this uses the closest exponent
+            # of 2 to the number of train samples if the batch size is bigger than the dataset
+            if new_batch_size > n_train_samples:
+                # Find the closest exponent of 2 to the number of train samples if the batch size is bigger than the
+                #   dataset
+                exponent = 0
+                previous_batch_size = new_batch_size
+                while 2**exponent < n_train_samples:
+                    exponent += 1
+                new_batch_size = 2 ** (exponent - 1)
+                self.logger.warning(
+                    f"Tuned batch size {previous_batch_size} was larger than train samples ({n_train_samples}). "
+                    f"Adjusted to nearest power of 2: {new_batch_size}"
+                )
+
+            new_batch_size = max(1, new_batch_size)  # Ensure batch size is at least 1, it some cases it can be 0
+
+            self.logger.info(f"Optimal batch size found: {new_batch_size}")
+
+        except Exception as e:
+            self.logger.error(f"Batch size tuning failed: {e}. Using original batch size {data_module.batch_size}.")
+            # Keep the original or initial batch size set before the try block
+            new_batch_size = data_module.batch_size
+
+        finally:
+            # Restore original alloc conf and turning on the memory growth for the GPU for the training
+            if torch.cuda.is_available():
+                expandable_segments = "expandable_segments:True"
+                if original_alloc_conf is None:
+                    # If it wasn't set before, try removing our setting or just set to default True
+                    # Setting it explicitly might be safer if the tuner changed other things.
+                    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = expandable_segments
+                else:
+                    # Attempt to restore the original setting plus the default expandable_segments
+                    # This assumes the original didn't explicitly set expandable_segments to False
+                    if "expandable_segments" not in original_alloc_conf:
+                        os.environ["PYTORCH_CUDA_ALLOC_CONF"] = original_alloc_conf + "," + expandable_segments
+                    else:
+                        # If original had it, just restore original (might be True or False)
+                        os.environ["PYTORCH_CUDA_ALLOC_CONF"] = original_alloc_conf
+
+                self.logger.debug(f"Restored PYTORCH_CUDA_ALLOC_CONF to: {os.environ.get('PYTORCH_CUDA_ALLOC_CONF')}")
+
+        return new_batch_size
+
     def teardown(self, trainer_default_dir: str):
         """Teardown steps after a model run, like cleaning temporary files.
 
@@ -467,9 +527,14 @@ class ExperimentRunner:
             base_dir = pathlib.Path(trainer_default_dir)
 
             # Check for files starting with .lr_find and ending with .ckpt
-            for file in base_dir.glob(".lr_find*.ckpt"):
-                if file.is_file():
-                    file.unlink()  # Remove the file
+            # Add ".scale_batch_size_*.ckpt" to the list if you want to remove the files used by the batch size tuner,
+            #   but it's preferable to keep them to be shared among differents runs of the same model
+            patterns_to_remove = [".lr_find*.ckpt"]
+            for pattern in patterns_to_remove:
+                for file in base_dir.glob(pattern):
+                    if file.is_file():
+                        self.logger.debug(f"Removing temporary tuner file: {file}")
+                        file.unlink()  # Remove the file
 
         except Exception as e:
             # Log error if cleanup fails but don't stop the experiment
