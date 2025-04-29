@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
 """Factory class for creating positional encodings based on configuration."""
 # Standard imports
-from typing import Literal
+from typing import Literal, Union
 
 # First party imports
+from models.positional_encoding.sinusoidal import SinusoidalPositionalEncoding
 from models.positional_encoding.ts_sinusoidal import TimeSeriesSinusoidalPositionalEncoding
 
-TSPositionalEncodingType = TimeSeriesSinusoidalPositionalEncoding
+TSPositionalEncodingType = Union[TimeSeriesSinusoidalPositionalEncoding, SinusoidalPositionalEncoding]
 
-TSPositionalEncodingTypeStr = Literal["ts_sinusoidal"]
+TSPositionalEncodingTypeStr = Literal["ts_sinusoidal", "sinusoidal"]
 
 
 class PositionalEncodingFactory:
     """Factory class for creating positional encodings based on configuration."""
 
-    catalog = {
-        "ts_sinusoidal": TimeSeriesSinusoidalPositionalEncoding,
-    }
+    catalog = {"ts_sinusoidal": TimeSeriesSinusoidalPositionalEncoding, "sinusoidal": SinusoidalPositionalEncoding}
 
     @classmethod
     def get_positional_encoding(cls, positional_encoding_type: str, **kwargs) -> TSPositionalEncodingType:

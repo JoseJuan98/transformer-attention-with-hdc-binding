@@ -50,7 +50,13 @@ class TimeSeries1dConvEmbedding(torch.nn.Module):
     name = "1d_conv"
 
     def __init__(
-        self, c_in: int, d_model: int, kernel_size: int = 3, padding_mode: str = "circular", bias: bool = False
+        self,
+        c_in: int,
+        d_model: int,
+        kernel_size: int = 3,
+        padding_mode: str = "circular",
+        bias: bool = False,
+        stride: int = 1,
     ):
         super(TimeSeries1dConvEmbedding, self).__init__()
 
@@ -61,6 +67,7 @@ class TimeSeries1dConvEmbedding(torch.nn.Module):
             out_channels=d_model,
             kernel_size=kernel_size,
             padding=padding,
+            stride=stride,
             padding_mode=padding_mode,
             bias=bias,
         )

@@ -32,29 +32,26 @@ class TimeSeriesSinusoidalPositionalEncoding(torch.nn.Module):
 
     name = "ts_sinusoidal"
 
-    def __init__(self, num_positions: int, embedding_dim: int, padding_idx: int | None = None) -> None:
+    def __init__(self, num_positions: int, d_model: int, padding_idx: int | None = None) -> None:
         super().__init__()
-        self.embedding_dim = embedding_dim
+        self.d_model = d_model
         self.num_positions = num_positions  # max_len
         self.padding_idx = padding_idx
-        self.weight = self._init_weight(num_positions, embedding_dim)
+        self.weight = self._init_weight(num_positions, d_model)
 
     @staticmethod
-    def _init_weight(num_positions: int, embedding_dim: int) -> torch.nn.Parameter:
+    def _init_weight(num_positions: int, d_model: int) -> torch.nn.Parameter:
         """Initialize the sinusoidal positional embeddings.
 
         Identical to the XLM create_sinusoidal_embeddings except features are not interleaved. The cos features are in
         the 2nd half of the vector. [dim // 2:]
         """
         position_enc = numpy.array(
-            [
-                [pos / numpy.power(10000, 2 * (j // 2) / embedding_dim) for j in range(embedding_dim)]
-                for pos in range(num_positions)
-            ]
+            [[pos / numpy.power(10000, 2 * (j // 2) / d_model) for j in range(d_model)] for pos in range(num_positions)]
         )
         # Convert numpy array to tensor and move requires_grad inside the function
-        out = torch.zeros(num_positions, embedding_dim, requires_grad=False)
-        sentinel = embedding_dim // 2 if embedding_dim % 2 == 0 else (embedding_dim // 2) + 1
+        out = torch.zeros(num_positions, d_model, requires_grad=False)
+        sentinel = d_model // 2 if d_model % 2 == 0 else (d_model // 2) + 1
         out[:, 0:sentinel] = torch.FloatTensor(numpy.sin(position_enc[:, 0::2]))
         out[:, sentinel:] = torch.FloatTensor(numpy.cos(position_enc[:, 1::2]))
         return torch.nn.Parameter(out, requires_grad=False)

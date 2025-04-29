@@ -24,7 +24,7 @@ class SinusoidalPositionalEncoding(torch.nn.Module):
 
     Args:
         d_model (int): The dimensionality of the embeddings.
-        max_len (int, optional): The maximum sequence length. Defaults to 5000.
+        num_positions (int, optional): The maximum sequence length. Defaults to 5000.
 
     Methods:
         forward(x: torch.Tensor) -> torch.Tensor:
@@ -33,23 +33,23 @@ class SinusoidalPositionalEncoding(torch.nn.Module):
 
     name = "sinusoidal"
 
-    def __init__(self, d_model: int, max_len: int = 5000):
+    def __init__(self, d_model: int, num_positions: int = 5000):
         """Initializes the PositionalEncoding module.
 
         Args:
             d_model (int): The dimensionality of the embeddings.
-            max_len (int, optional): The maximum sequence length. Defaults to 5000.
+            num_positions (int, optional): The maximum sequence length. Defaults to 5000.
         """
         super(SinusoidalPositionalEncoding, self).__init__()
 
-        self.encoding = torch.zeros(max_len, d_model)
-        position = torch.arange(0, max_len).unsqueeze(1).float()
+        self.encoding = torch.zeros(num_positions, d_model, requires_grad=False)
+        position = torch.arange(0, num_positions).unsqueeze(1).float()
         div_term = torch.exp(torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model))
         self.encoding[:, 0::2] = torch.sin(position * div_term)
         self.encoding[:, 1::2] = torch.cos(position * div_term)
 
         # Add batch dimension
-        self.encoding = self.encoding.unsqueeze(0)
+        self.encoding = torch.nn.Parameter(self.encoding.unsqueeze(0), requires_grad=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Adds the positional encoding to the input tensor.
@@ -60,6 +60,4 @@ class SinusoidalPositionalEncoding(torch.nn.Module):
         Returns:
             torch.Tensor: The input tensor with the positional encoding added.
         """
-        if self.encoding.device.type != x.device.type:
-            self.encoding = self.encoding.to(x.device)
-        return x + self.encoding[:, : x.size(1)]
+        return self.encoding[:, : x.size(1)]
