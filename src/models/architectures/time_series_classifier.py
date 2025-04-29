@@ -45,7 +45,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         d_model (int): The dimensionality of the embeddings.
         num_heads (int): The number of attention heads.
         d_ff (int): The dimensionality of the inner layer of the feed-forward network.
-        input_size (int): The size of the input (number of variates in the time series).
+        in_features (int): The size of the input (number of variates in the time series).
         context_length (int): The length of the input sequence.
         dropout (float, optional): The dropout probability. Defaults to 0.1.
         learning_rate (float, optional): The learning rate. Defaults to 1e-3.
@@ -63,7 +63,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         d_model: int,
         num_heads: int,
         d_ff: int,
-        input_size: int,
+        in_features: int,
         context_length: int,
         positional_encoding: TSPositionalEncodingType,
         loss_fn: torch.nn.Module | torch.nn.CrossEntropyLoss | torch.nn.BCEWithLogitsLoss,
@@ -82,7 +82,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
             d_model (int): The dimensionality of the embeddings.
             num_heads (int): The number of attention heads.
             d_ff (int): The dimensionality of the inner layer of the feed-forward network.
-            input_size (int): The dimensionality of the input features.
+            in_features (int): The size of the input (number of variates/channels in the time series).
             context_length (int): The length of the input sequence.
             dropout (float, optional): The dropout probability. Defaults to 0.1.
             learning_rate (float, optional): The learning rate. Defaults to 1e-3.
@@ -104,7 +104,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         self.dropout = torch.nn.Dropout(dropout)
 
         # Hyperparameters
-        self.input_size = input_size
+        self.in_features = in_features
         self.context_length = context_length
         self.d_model = d_model
         self.learning_rate = learning_rate
@@ -123,7 +123,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         self.profiler = torch_profiling
 
         # Used by PyTorch Lightning for sanity checks
-        self._example_input_array = torch.zeros(size=(1, self.context_length, self.input_size))
+        self._example_input_array = torch.zeros(size=(1, self.context_length, self.in_features))
 
         self.save_hyperparameters(
             ignore=[
@@ -143,7 +143,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         """Performs a forward pass through the model.
 
         Args:
-            x (torch.Tensor): The input tensor of shape (batch_size, seq_len, input_size).
+            x (torch.Tensor): The input tensor of shape (batch_size, seq_len, in_features).
             mask (torch.Tensor): The attention mask of shape (batch_size, seq_len).
 
         Returns:
@@ -179,7 +179,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         """Evaluates the model on a batch of data.
 
         Args:
-            batch (tuple[torch.Tensor, torch.Tensor]): The batch of data (x,y) of shape (batch_size, seq_len, input_size)
+            batch (tuple[torch.Tensor, torch.Tensor]): The batch of data (x,y) of shape (batch_size, seq_len, in_features)
                 and (batch_size,).
             stage (str): The stage of the evaluation (train, val, test).
             progress_bar (bool): Whether to display the progress bar.

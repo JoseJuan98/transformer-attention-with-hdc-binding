@@ -81,7 +81,7 @@ class DataFactory:
         dataset_cfg = DatasetConfig(
             dataset_name=dataset_name,
             num_classes=data_module.num_classes,
-            input_size=data_module.num_dimensions,
+            num_channels=data_module.num_channels,
             context_length=data_module.max_len,
         )
 
@@ -91,7 +91,7 @@ class DataFactory:
         logger.info(f"  - Validation samples: {len(data_module.val_dataset)}")  # type: ignore [arg-type]
         logger.info(f"  - Test samples: {len(data_module.test_dataset)}")  # type: ignore [arg-type]
         logger.info(f"  - Number of classes: {data_module.num_classes}")
-        logger.info(f"  - Number of dimensions: {data_module.num_dimensions}")
+        logger.info(f"  - Number of channels: {data_module.num_channels}")
         logger.info(f"  - Maximum sequence length: {data_module.max_len}")
 
         return dataset_cfg, data_module

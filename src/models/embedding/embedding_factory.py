@@ -17,13 +17,13 @@ class EmbeddingFactory:
     """Factory class for creating embedding based on configuration."""
 
     @staticmethod
-    def get_embedding(embedding_type: EmbeddingTypeStr, num_dimensions: int, d_model: int) -> torch.nn.Module:
+    def get_embedding(embedding_type: EmbeddingTypeStr, num_channels: int, d_model: int) -> torch.nn.Module:
         """Get the embedding based on the configuration.
 
         Args:
             embedding_type (str): The type of the embedding. Valid options are "linear_projection", "1d_conv", and
                 "2d_conv".
-            num_dimensions (int): The number of input dimensions.
+            num_channels (int): The number of input channels.
             d_model (int): The dimension of the output embeddings.
 
         Returns:
@@ -31,12 +31,12 @@ class EmbeddingFactory:
         """
         if embedding_type == "linear_projection":
 
-            return torch.nn.Linear(in_features=num_dimensions, out_features=d_model, bias=False)
+            return torch.nn.Linear(in_features=num_channels, out_features=d_model, bias=False)
 
         elif embedding_type == "1d_conv":
 
             return TimeSeries1dConvEmbedding(
-                c_in=num_dimensions, d_model=d_model, kernel_size=3, padding_mode="circular", bias=False
+                c_in=num_channels, d_model=d_model, kernel_size=3, padding_mode="circular", bias=False
             )
 
         elif embedding_type == "2d_conv":

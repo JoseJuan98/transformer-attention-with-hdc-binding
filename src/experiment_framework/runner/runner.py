@@ -382,7 +382,7 @@ class ExperimentRunner:
                 run=run,
                 dataset=dataset_name,
                 model=model_name,
-                num_dimensions=dataset_cfg.input_size,
+                num_dimensions=dataset_cfg.num_channels,
                 num_classes=dataset_cfg.num_classes,
                 sequence_length=dataset_cfg.context_length,
                 train_samples=len(data_module.train_dataset),  # Use DataModule

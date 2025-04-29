@@ -16,12 +16,12 @@ class DatasetConfig(BaseConfig):
 
     Attributes:
         dataset_name (str): The name of the dataset.
-        input_size (int): The size of the input features or vocabulary in case of text.
+        num_channels (int): The number of input channels.
         context_length (int): The maximum sequence length.
         num_classes (int): The number of classes in the dataset.
     """
 
     dataset_name: str
-    input_size: int
+    num_channels: int
     context_length: int
     num_classes: int
