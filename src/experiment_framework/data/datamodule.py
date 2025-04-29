@@ -56,7 +56,7 @@ class UCRDataModule(lightning.LightningDataModule):
         self.test_dataset = None
         self.max_len = -1
         self.num_classes = -1
-        self.num_dimensions = -1
+        self.num_channels = -1
         self.logger = logger
         self.seed = seed
 
@@ -79,7 +79,7 @@ class UCRDataModule(lightning.LightningDataModule):
                 self.test_dataset,
                 self.max_len,
                 self.num_classes,
-                self.num_dimensions,
+                self.num_channels,
             ) = get_ucr_datasets(
                 dsid=self.dsid,
                 extract_path=self.extract_path,
