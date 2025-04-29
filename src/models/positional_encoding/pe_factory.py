@@ -18,11 +18,15 @@ class PositionalEncodingFactory:
     catalog = {"ts_sinusoidal": TimeSeriesSinusoidalPositionalEncoding, "sinusoidal": SinusoidalPositionalEncoding}
 
     @classmethod
-    def get_positional_encoding(cls, positional_encoding_type: str, **kwargs) -> TSPositionalEncodingType:
+    def get_positional_encoding(
+        cls, positional_encoding_type: str, d_model: int, num_positions: int, **kwargs
+    ) -> TSPositionalEncodingType:
         """Get the positional encoding based on the configuration.
 
         Args:
             positional_encoding_type (str): The type of the positional encoding.
+            d_model (int): The dimensionality of the embeddings.
+            num_positions (int): The maximum sequence length.
             **kwargs: Additional parameters for the positional encoding.
 
         Returns:
@@ -34,4 +38,4 @@ class PositionalEncodingFactory:
         # Get the positional encoding class based on the configuration and instantiate it
         positional_encoding_class = cls.catalog[positional_encoding_type]
 
-        return positional_encoding_class(**kwargs)
+        return positional_encoding_class(d_model=d_model, num_positions=num_positions, **kwargs)
