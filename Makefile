@@ -1,5 +1,5 @@
 .PHONY: init tensorboard kill-tensorboard clean-files help install install-dev install-poetry poetry-install \
-poetry-install-dev lint test run-ts clean-artifacts clean install-precommit clean-run-ts
+poetry-install-dev lint test run-ts clean install-precommit clean-run-ts
 
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
