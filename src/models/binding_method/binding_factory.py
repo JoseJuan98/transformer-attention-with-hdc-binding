@@ -5,7 +5,7 @@
 from typing import Literal, Union
 
 # First party imports
-from models.binding_method.basic import AdditiveBinding
+from models.binding_method.additive import AdditiveBinding
 from models.binding_method.convolutional import ConvolutionalBinding
 from models.binding_method.multiplicative import MultiplicativeBinding
 
@@ -38,8 +38,5 @@ class BindingMethodFactory:
             raise ValueError(
                 f"Binding method '{binding_method_name}' is not supported.\nSupported methods: {cls.catalog.keys()}"
             )
-
-        if binding_method_name == "additive":
-            return cls.catalog[binding_method_name]()
 
         return cls.catalog[binding_method_name](embedding_dim=embedding_dim)

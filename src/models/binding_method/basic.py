@@ -26,14 +26,3 @@ class EmbeddingBinding(torch.nn.Module):
             torch.Tensor: The combined tensor.
         """
         raise NotImplementedError("Subclasses must implement the forward method.")
-
-
-class AdditiveBinding(EmbeddingBinding):
-    """Binds embeddings and positional encodings by addition."""
-
-    name = "additive"
-
-    @torch.no_grad()
-    def forward(self, embeddings: torch.Tensor, positional_encodings: torch.Tensor) -> torch.Tensor:
-        """Applies the additive binding method."""
-        return embeddings + positional_encodings
