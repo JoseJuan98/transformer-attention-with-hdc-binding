@@ -178,7 +178,7 @@ class MetricsHandler:
             ["dataset", "model", "confidence_interval"]
         ].pivot(index="dataset", columns="model", values="confidence_interval")
 
-        agg_metrics.to_csv(path_or_buf=handler.metrics_path.parent / "dataset_results.csv", index=True, header=True)
+        agg_metrics.to_csv(path_or_buf=self.metrics_path.parent / "dataset_results.csv", index=True, header=True)
 
         return agg_metrics
 
