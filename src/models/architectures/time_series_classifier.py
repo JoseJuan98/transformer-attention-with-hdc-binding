@@ -172,8 +172,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
 
         # Global average pooling over the sequence length
         x = x.mean(dim=1)
-        x = self.fc(x)
-        return x
+        return self.fc(x)
 
     def evaluate(self, batch: tuple[torch.Tensor, torch.Tensor], stage: str, progress_bar: bool = True) -> dict:
         """Evaluates the model on a batch of data.
