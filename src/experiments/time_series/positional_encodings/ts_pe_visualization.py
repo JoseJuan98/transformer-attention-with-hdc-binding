@@ -11,24 +11,23 @@ from models.positional_encoding import PositionalEncodingFactory, TSPositionalEn
 from utils import Config
 
 
-def main(pe_type: TSPositionalEncodingTypeStr):
+def main(pe_type: TSPositionalEncodingTypeStr, num_positions: int = 100, embedding_dim: int = 128) -> None:
     """Main function to visualize the Time Series Sinusoidal Positional Encoding."""
-    # --- Experiment Setup ---
-    num_positions_to_visualize = 100  # How many sequence positions to show
-    embedding_dim = 128  # Embedding dimension (must match model)
+    dir_pe_type = Config.plot_dir / pe_type
+    dir_pe_type.mkdir(parents=True, exist_ok=True)
 
     # --- Instantiate the Encoder ---
     pos_encoder = PositionalEncodingFactory.get_positional_encoding(
-        positional_encoding_type=pe_type, d_model=embedding_dim, num_positions=num_positions_to_visualize
+        positional_encoding_type=pe_type, d_model=embedding_dim, num_positions=num_positions
     )
 
     # --- Get the Positional Encoding Weights ---
     # The .weight attribute holds the precomputed encodings
     # Shape: (num_positions, embedding_dim)
-    pe_weights = pos_encoder.encodings.detach().cpu().numpy()
+    pe_weights = pos_encoder.encodings.detach().cpu().numpy().squeeze()
 
     # Ensure we only plot up to num_positions_to_visualize if the encoder was initialized larger
-    pe_weights = pe_weights[:num_positions_to_visualize, :]
+    pe_weights = pe_weights[:num_positions, :]
 
     # --- Visualization 1: Heatmap of Positional Encodings ---
     print("Plotting Heatmap...")
@@ -49,7 +48,7 @@ def main(pe_type: TSPositionalEncodingTypeStr):
     )
     pyplot.legend(loc="upper right", framealpha=0.9)
     pyplot.tight_layout()
-    pyplot.savefig(Config.plot_dir / pe_type / f"{pe_type}_heatmap.png")
+    pyplot.savefig(dir_pe_type / f"{pe_type}_heatmap.png")
     pyplot.show()
 
     print("\nHeatmap Explanation:")
@@ -81,7 +80,7 @@ def main(pe_type: TSPositionalEncodingTypeStr):
     pyplot.legend()
     pyplot.grid(True, linestyle="--", alpha=0.6)
     pyplot.tight_layout()
-    pyplot.savefig(Config.plot_dir / pe_type / f"{pe_type}_encoding_vectors.png")
+    pyplot.savefig(dir_pe_type / f"{pe_type}_encoding_vectors.png")
     pyplot.show()
 
     print("\nSpecific Position Vectors Explanation:")
@@ -103,7 +102,7 @@ def main(pe_type: TSPositionalEncodingTypeStr):
         embedding_dim - 2,
         embedding_dim - 1,
     ]  # Select a few dimensions
-    positions = numpy.arange(num_positions_to_visualize)
+    positions = numpy.arange(num_positions)
 
     pyplot.figure(figsize=(12, 6))
     for dim in dimensions_to_plot:
@@ -122,7 +121,7 @@ def main(pe_type: TSPositionalEncodingTypeStr):
     pyplot.grid(True, linestyle="--", alpha=0.6)
     pyplot.tight_layout()
     pyplot.subplots_adjust(right=0.8)  # Adjust layout to make space for legend
-    pyplot.savefig(Config.plot_dir / pe_type / f"{pe_type}_encoding_values.png")
+    pyplot.savefig(dir_pe_type / f"{pe_type}_encoding_values.png")
     pyplot.show()
 
     print("\nSpecific Dimension Values Explanation:")
@@ -138,5 +137,9 @@ def main(pe_type: TSPositionalEncodingTypeStr):
 
 
 if __name__ == "__main__":
-    main(pe_type="sinusoidal")
-    main(pe_type="ts_sinusoidal")
+    # --- Experiment Setup ---
+    num_positions_to_visualize = 100  # How many sequence positions to show
+    embedding_dim = 128  # Embedding dimension (must match model)
+
+    main(pe_type="sinusoidal", embedding_dim=embedding_dim, num_positions=num_positions_to_visualize)
+    main(pe_type="ts_sinusoidal", embedding_dim=embedding_dim, num_positions=num_positions_to_visualize)
