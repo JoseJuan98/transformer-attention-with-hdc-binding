@@ -21,26 +21,29 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+Modifications:
+- Adapted with a common interface for positional encodings.
 """
 # Third party imports
 import numpy
 import torch
 
+# First party imports
+from models.positional_encoding.base import PositionalEncoding
 
-class TimeSeriesSinusoidalPositionalEncoding(torch.nn.Module):
+
+class TimeSeriesSinusoidalPositionalEncoding(PositionalEncoding):
     """This module produces sinusoidal positional embeddings of any length."""
 
     name = "ts_sinusoidal"
 
-    def __init__(self, num_positions: int, d_model: int, padding_idx: int | None = None) -> None:
-        super().__init__()
-        self.d_model = d_model
-        self.num_positions = num_positions  # max_len
+    def __init__(self, d_model: int, num_positions: int, padding_idx: int | None = None) -> None:
+        super().__init__(d_model=d_model, num_positions=num_positions)
         self.padding_idx = padding_idx
-        self.weight = self._init_weight(num_positions, d_model)
 
     @staticmethod
-    def _init_weight(num_positions: int, d_model: int) -> torch.nn.Parameter:
+    def _init_weight(d_model: int, num_positions: int) -> torch.nn.Parameter:
         """Initialize the sinusoidal positional embeddings.
 
         Identical to the XLM create_sinusoidal_embeddings except features are not interleaved. The cos features are in
@@ -58,9 +61,9 @@ class TimeSeriesSinusoidalPositionalEncoding(torch.nn.Module):
 
     @torch.no_grad()
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:
-        """`input_ids_shape` is expected to be [bsz x seqlen x input_size]."""
-        bsz, seq_len, _ = input_tensor.shape
-        # Use the maximum sequence length from input tensor
-        positions = torch.arange(0, seq_len, dtype=torch.long, device=self.weight.device)
-        positions = positions.unsqueeze(0).expand(bsz, seq_len)
-        return self.weight[positions]
+        """`input_ids_shape` is expected to be (batch_size, seq_len, d_model)."""
+        batch_size, seq_len, _ = input_tensor.shape
+        # Use the maximum sequence length from input tensor to broadcast the positional encodings
+        positions = torch.arange(0, seq_len, dtype=torch.long, device=self.encodings.device)
+        positions = positions.unsqueeze(0).expand(batch_size, seq_len)
+        return self.encodings[positions]

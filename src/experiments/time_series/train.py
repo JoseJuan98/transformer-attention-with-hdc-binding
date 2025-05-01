@@ -10,7 +10,7 @@ from experiment_framework import ExperimentConfigFactory, ExperimentRunner, Mode
 def run_time_series_experiments() -> None:
     """Run time series experiments for the Transformer model with different positional encodings."""
 
-    current_dir = pathlib.Path(__file__).resolve().parent
+    current_dir = pathlib.Path(__file__).resolve().parent / "binding_methods"
 
     model_configs = ModelConfigFactory().create_model_configs(model_cfg_path=current_dir / "models_cfg.json")
 

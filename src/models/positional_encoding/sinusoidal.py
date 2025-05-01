@@ -6,8 +6,11 @@ import math
 # Third party imports
 import torch
 
+# First party imports
+from models.positional_encoding.base import PositionalEncoding
 
-class SinusoidalPositionalEncoding(torch.nn.Module):
+
+class SinusoidalPositionalEncoding(PositionalEncoding):
     r"""Sinusoidal positional encoding module.
 
     This class implements sinusoidal positional encoding as described in the "Attention is All You Need" paper. It adds
@@ -40,16 +43,27 @@ class SinusoidalPositionalEncoding(torch.nn.Module):
             d_model (int): The dimensionality of the embeddings.
             num_positions (int, optional): The maximum sequence length. Defaults to 5000.
         """
-        super(SinusoidalPositionalEncoding, self).__init__()
+        super(SinusoidalPositionalEncoding, self).__init__(d_model=d_model, num_positions=num_positions)
 
-        self.encoding = torch.zeros(num_positions, d_model, requires_grad=False)
+    @staticmethod
+    def _init_weight(d_model: int, num_positions: int) -> torch.nn.Parameter:
+        """Initializes the positional encodings.
+
+        Args:
+            d_model (int): The dimensionality of the embeddings.
+            num_positions (int): The maximum sequence length.
+
+        Returns:
+            torch.nn.Parameter: The initialized positional encodings.
+        """
+        encodings = torch.zeros(num_positions, d_model, requires_grad=False)
         position = torch.arange(0, num_positions).unsqueeze(1).float()
         div_term = torch.exp(torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model))
-        self.encoding[:, 0::2] = torch.sin(position * div_term)
-        self.encoding[:, 1::2] = torch.cos(position * div_term)
+        encodings[:, 0::2] = torch.sin(position * div_term)
+        encodings[:, 1::2] = torch.cos(position * div_term)
 
         # Add batch dimension
-        self.encoding = torch.nn.Parameter(self.encoding.unsqueeze(0), requires_grad=False)
+        return torch.nn.Parameter(encodings.unsqueeze(0), requires_grad=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Adds the positional encoding to the input tensor.
@@ -60,4 +74,4 @@ class SinusoidalPositionalEncoding(torch.nn.Module):
         Returns:
             torch.Tensor: The input tensor with the positional encoding added.
         """
-        return self.encoding[:, : x.size(1)]
+        return self.encodings[:, : x.size(1)]

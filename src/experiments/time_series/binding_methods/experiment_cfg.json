@@ -42,7 +42,7 @@
   "swa_learning_rate": 0.0005,
   "use_lr_finder": true,
   "lr_finder_milestones": [0, 10, 20, 30, 50, 75],
-  "runs_per_experiment": 10,
+  "runs_per_experiment": 5,
   "default_batch_size": 64,
   "accelerator": "auto",
   "precision": "16-mixed",

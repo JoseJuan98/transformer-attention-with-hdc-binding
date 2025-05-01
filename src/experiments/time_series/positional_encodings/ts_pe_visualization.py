@@ -25,7 +25,7 @@ def main(pe_type: TSPositionalEncodingTypeStr):
     # --- Get the Positional Encoding Weights ---
     # The .weight attribute holds the precomputed encodings
     # Shape: (num_positions, embedding_dim)
-    pe_weights = pos_encoder.weight.detach().cpu().numpy()
+    pe_weights = pos_encoder.encodings.detach().cpu().numpy()
 
     # Ensure we only plot up to num_positions_to_visualize if the encoder was initialized larger
     pe_weights = pe_weights[:num_positions_to_visualize, :]
