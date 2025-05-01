@@ -4,24 +4,10 @@ This repository contains the code and resources for my Master's thesis, which ex
 binding methods to improve positional encoding in Transformer models. The project focuses primarily on time series classification,
 with a potential extension to natural language processing (NLP) tasks.
 
-Main experiments are:
+1. [Project Overview](#project-overview)
+2. [Setup Instructions](#setup)
 
-- Different HDC binding methods (additive, component-wise multiplication, circular convolution) for positional encoding and embeddings
-- Different similarity shapes for absolute position encoding
-
-## Setup
-
-For the detailed setup instructions for different PyTorch backends (CUDA, ROCM, XPU, MPS, CPU), please refer to the
-[SETUP.md](docs/SETUP.md) file in the `docs` directory.
-
-In short, the project uses [Poetry](https://python-poetry.org/) for dependency management and virtual environment,
-you can install the project dependencies by creating a virtualenv environment with Python 3.11 or higher and running:
-
-```bash
-make install
-```
-
-## Project Overview
+## Project Overview <p id="project-overview"></p>
 
 The standard approach to incorporating positional information in Transformers involves adding positional embeddings to token
 embeddings. This project investigates an alternative approach: using HDC *binding* operations to combine positional and token
@@ -62,6 +48,14 @@ datasets from the UCR/UEA archive.
 task (e.g., sentiment analysis, language modeling).
 5. **Experimental Evaluation of Different Similarity Shapes in Absolute Position Encoding**
 
+## Time Series Transformer Classifier Architecture
+
+<div style="text-align: center">
+<img src="docs/diagrams/Model_Blocks.png">
+<p style="text-align: center">A high-level design of the proposed time series transformer classifier architecture.</p>
+</div>
+
+
 ## Project Structure
 
 ```bash
@@ -101,6 +95,19 @@ task (e.g., sentiment analysis, language modeling).
 └── Makefile                # Makefile for automating tasks (e.g., installation, training, testing, cleaning)
 ```
 
+## Setup <p id="setup"></p>
+
+For the detailed setup instructions for different PyTorch backends (CUDA, ROCM, XPU, MPS, CPU), please refer to the
+[SETUP.md](docs/SETUP.md) file in the `docs` directory.
+
+In short, the project uses [Poetry](https://python-poetry.org/) for dependency management and virtual environment,
+you can install the project dependencies by creating a virtualenv environment with Python 3.11 or higher and running:
+
+```bash
+make install
+```
+
+
 # Experiments
 
 <div style="text-align: center">
@@ -112,3 +119,4 @@ Main experiments are:
 
 - Different HDC binding methods (additive, component-wise multiplication, circular convolution) for positional encoding and embeddings
 - Different similarity shapes for absolute position encoding
+- Different dimensionality of embeddings
