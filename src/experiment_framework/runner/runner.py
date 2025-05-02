@@ -306,6 +306,7 @@ class ExperimentRunner:
             model_config=model_cfg,
             dataset_cfg=dataset_cfg,
             profiler_path=(model_run_path / f"run_{run}").as_posix() if self.experiment_cfg.profiler else "",
+            seed=self.seed,
         )
 
         # Create trainer

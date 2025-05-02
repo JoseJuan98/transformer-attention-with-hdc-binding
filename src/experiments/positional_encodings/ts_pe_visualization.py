@@ -11,14 +11,16 @@ from models.positional_encoding import PositionalEncodingFactory, TSPositionalEn
 from utils import Config
 
 
-def main(pe_type: TSPositionalEncodingTypeStr, num_positions: int = 100, embedding_dim: int = 128) -> None:
+def main(  # noqa: C901
+    pe_type: TSPositionalEncodingTypeStr, num_positions: int = 100, embedding_dim: int = 128
+) -> None:
     """Main function to visualize the Time Series Sinusoidal Positional Encoding."""
     dir_pe_type = Config.plot_dir / pe_type
     dir_pe_type.mkdir(parents=True, exist_ok=True)
 
     # --- Instantiate the Encoder ---
     pos_encoder = PositionalEncodingFactory.get_positional_encoding(
-        positional_encoding_type=pe_type, d_model=embedding_dim, num_positions=num_positions
+        positional_encoding_type=pe_type, d_model=embedding_dim, num_positions=num_positions, seed=42
     )
 
     # --- Get the Positional Encoding Weights ---
@@ -42,11 +44,12 @@ def main(pe_type: TSPositionalEncodingTypeStr, num_positions: int = 100, embeddi
     pyplot.title(f"TimeSeriesSinusoidalPositionalEncoding (Dim={embedding_dim})")
 
     # Add a vertical line to show the split between sin and cos
-    sentinel = embedding_dim // 2 if embedding_dim % 2 == 0 else (embedding_dim // 2) + 1
-    pyplot.axvline(
-        x=sentinel - 0.5, color="black", linestyle="--", linewidth=1.5, label=f"Sin/Cos Split (Dim {sentinel})"
-    )
-    pyplot.legend(loc="upper right", framealpha=0.9)
+    if pe_type == "ts_sinusoidal":
+        sentinel = embedding_dim // 2 if embedding_dim % 2 == 0 else (embedding_dim // 2) + 1
+        pyplot.axvline(
+            x=sentinel - 0.5, color="black", linestyle="--", linewidth=1.5, label=f"Sin/Cos Split (Dim {sentinel})"
+        )
+        pyplot.legend(loc="upper right", framealpha=0.9)
     pyplot.tight_layout()
     pyplot.savefig(dir_pe_type / f"{pe_type}_heatmap.png")
     pyplot.show()
@@ -56,8 +59,9 @@ def main(pe_type: TSPositionalEncodingTypeStr, num_positions: int = 100, embeddi
     print("- Each column represents a specific dimension within the embedding vector.")
     print("- The color indicates the value of the encoding (-1 to 1).")
     print("- Notice the distinct pattern change at the dashed line: ")
-    print(f"  - Dimensions 0 to {sentinel-1} use SIN functions.")
-    print(f"  - Dimensions {sentinel} to {embedding_dim-1} use COS functions.")
+    if pe_type == "ts_sinusoidal":
+        print(f"  - Dimensions 0 to {sentinel-1} use SIN functions.")
+        print(f"  - Dimensions {sentinel} to {embedding_dim-1} use COS functions.")
     print("- Vertical stripes show how values change slowly across positions for low dimensions (low frequency).")
     print(
         "- Horizontal stripes (more frequent changes) show how values change rapidly across positions for high dimensions (high frequency)."
@@ -76,7 +80,8 @@ def main(pe_type: TSPositionalEncodingTypeStr, num_positions: int = 100, embeddi
     pyplot.xlabel("Embedding Dimension")
     pyplot.ylabel("Encoding Value")
     pyplot.title("Positional Encoding Vectors at Specific Positions")
-    pyplot.axvline(x=sentinel - 0.5, color="black", linestyle="--", linewidth=1, label="Sin/Cos Split")
+    if pe_type == "ts_sinusoidal":
+        pyplot.axvline(x=sentinel - 0.5, color="black", linestyle="--", linewidth=1, label="Sin/Cos Split")
     pyplot.legend()
     pyplot.grid(True, linestyle="--", alpha=0.6)
     pyplot.tight_layout()
@@ -96,22 +101,28 @@ def main(pe_type: TSPositionalEncodingTypeStr, num_positions: int = 100, embeddi
         1,
         2,
         3,
-        sentinel - 1,
-        sentinel,
-        sentinel + 1,
         embedding_dim - 2,
         embedding_dim - 1,
     ]  # Select a few dimensions
+    if pe_type == "ts_sinusoidal":
+        dimensions_to_plot = dimensions_to_plot + [sentinel - 1, sentinel, sentinel + 1]
     positions = numpy.arange(num_positions)
 
     pyplot.figure(figsize=(12, 6))
     for dim in dimensions_to_plot:
         if dim < embedding_dim:
             label = f"Dim {dim}"
-            if dim < sentinel:
-                label += " (Sin)"
-            else:
-                label += " (Cos)"
+            if pe_type == "ts_sinusoidal":
+                if dim < sentinel:
+                    label += " (Sin)"
+                else:
+                    label += " (Cos)"
+
+            if pe_type == "sinusoidal":
+                if dim % 2 == 0:
+                    label += " (Sin)"
+                else:
+                    label += " (Cos)"
             pyplot.plot(positions, pe_weights[:, dim], label=label, alpha=0.8)
 
     pyplot.xlabel("Position in Sequence")
@@ -141,5 +152,6 @@ if __name__ == "__main__":
     num_positions_to_visualize = 100  # How many sequence positions to show
     embedding_dim = 128  # Embedding dimension (must match model)
 
-    main(pe_type="sinusoidal", embedding_dim=embedding_dim, num_positions=num_positions_to_visualize)
-    main(pe_type="ts_sinusoidal", embedding_dim=embedding_dim, num_positions=num_positions_to_visualize)
+    # main(pe_type="sinusoidal", embedding_dim=embedding_dim, num_positions=num_positions_to_visualize)
+    # main(pe_type="ts_sinusoidal", embedding_dim=embedding_dim, num_positions=num_positions_to_visualize)
+    main(pe_type="random", embedding_dim=embedding_dim, num_positions=num_positions_to_visualize)

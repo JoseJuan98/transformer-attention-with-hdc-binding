@@ -38,12 +38,12 @@ class TimeSeriesSinusoidalPositionalEncoding(PositionalEncoding):
 
     name = "ts_sinusoidal"
 
-    def __init__(self, d_model: int, num_positions: int, padding_idx: int | None = None) -> None:
-        super().__init__(d_model=d_model, num_positions=num_positions)
+    def __init__(self, d_model: int, num_positions: int, padding_idx: int | None = None, **kwargs) -> None:
+        super().__init__(d_model=d_model, num_positions=num_positions, **kwargs)
         self.padding_idx = padding_idx
 
     @staticmethod
-    def _init_weight(d_model: int, num_positions: int) -> torch.nn.Parameter:
+    def _init_weight(d_model: int, num_positions: int, **kwargs) -> torch.nn.Parameter:
         """Initialize the sinusoidal positional embeddings.
 
         Identical to the XLM create_sinusoidal_embeddings except features are not interleaved. The cos features are in
@@ -60,9 +60,9 @@ class TimeSeriesSinusoidalPositionalEncoding(PositionalEncoding):
         return torch.nn.Parameter(out, requires_grad=False)
 
     @torch.no_grad()
-    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """`input_ids_shape` is expected to be (batch_size, seq_len, d_model)."""
-        batch_size, seq_len, _ = input_tensor.shape
+        batch_size, seq_len, _ = x.shape
         # Use the maximum sequence length from input tensor to broadcast the positional encodings
         positions = torch.arange(0, seq_len, dtype=torch.long, device=self.encodings.device)
         positions = positions.unsqueeze(0).expand(batch_size, seq_len)

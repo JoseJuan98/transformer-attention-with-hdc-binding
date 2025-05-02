@@ -11,7 +11,7 @@ import torch
 class PositionalEncoding(ABC, torch.nn.Module):
     """Base class for positional encoding modules."""
 
-    def __init__(self, d_model: int, num_positions: int = 5000):
+    def __init__(self, d_model: int, num_positions: int = 5000, **kwargs):
         """Initializes the PositionalEncoding module.
 
         Args:
@@ -22,11 +22,11 @@ class PositionalEncoding(ABC, torch.nn.Module):
 
         self.d_model = d_model
         self.num_positions = num_positions
-        self.encodings = self._init_weight(d_model=d_model, num_positions=num_positions)
+        self.encodings = self._init_weight(d_model=d_model, num_positions=num_positions, **kwargs)
 
     @staticmethod
     @abstractmethod
-    def _init_weight(d_model: int, num_positions: int) -> torch.nn.Parameter:
+    def _init_weight(d_model: int, num_positions: int, **kwargs) -> torch.nn.Parameter:
         """Initializes the positional encodings.
 
         Args:
@@ -39,5 +39,5 @@ class PositionalEncoding(ABC, torch.nn.Module):
         raise NotImplementedError("Subclasses must implement the `_init_weight` method.")
 
     @abstractmethod
-    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:
-        """`input_tensor` is the input tensor of shape (batch_size, seq_len, d_model)."""
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """`x` is the input tensor of shape (batch_size, seq_len, d_model)."""

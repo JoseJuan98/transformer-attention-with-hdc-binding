@@ -36,17 +36,17 @@ class SinusoidalPositionalEncoding(PositionalEncoding):
 
     name = "sinusoidal"
 
-    def __init__(self, d_model: int, num_positions: int = 5000):
+    def __init__(self, d_model: int, num_positions: int = 5000, **kwargs):
         """Initializes the PositionalEncoding module.
 
         Args:
             d_model (int): The dimensionality of the embeddings.
             num_positions (int, optional): The maximum sequence length. Defaults to 5000.
         """
-        super(SinusoidalPositionalEncoding, self).__init__(d_model=d_model, num_positions=num_positions)
+        super(SinusoidalPositionalEncoding, self).__init__(d_model=d_model, num_positions=num_positions, **kwargs)
 
     @staticmethod
-    def _init_weight(d_model: int, num_positions: int) -> torch.nn.Parameter:
+    def _init_weight(d_model: int, num_positions: int, **kwargs) -> torch.nn.Parameter:
         """Initializes the positional encodings.
 
         Args:
