@@ -1,8 +1,24 @@
 {
-  "Linear Additive Sinusoidal TS Transformer": {
-    "model_name": "linear_additive_random",
+    "Linear Additive Sinusoidal TS Transformer": {
+    "model_name": "linear_additive_null_pe",
     "model": "encoder-only-transformer",
     "desc": "Encoder Only Transformer with Linear Projection Embeddings, Random Positional Encoding and Additive Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "null",
+    "embedding": "linear_projection",
+    "embedding_binding": "additive"
+  },
+
+  "Linear Multiplicative Random PE TS Transformer": {
+    "model_name": "linear_component_wise_random_pe",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Random Positional Encoding and Multiplicative Binding for Time Series Classification",
     "num_epochs": 100,
     "learning_rate": 0.003,
     "d_model": 64,

@@ -4,15 +4,19 @@
 from typing import Literal, Union
 
 # First party imports
-from models.positional_encoding.random_pe import RandomPositionalEncoding
+from models.positional_encoding.null_pe import NullPositionalEncoding
+from models.positional_encoding.random import RandomPositionalEncoding
 from models.positional_encoding.sinusoidal import SinusoidalPositionalEncoding
 from models.positional_encoding.ts_sinusoidal import TimeSeriesSinusoidalPositionalEncoding
 
 TSPositionalEncodingType = Union[
-    TimeSeriesSinusoidalPositionalEncoding, SinusoidalPositionalEncoding, RandomPositionalEncoding
+    TimeSeriesSinusoidalPositionalEncoding,
+    SinusoidalPositionalEncoding,
+    RandomPositionalEncoding,
+    NullPositionalEncoding,
 ]
 
-TSPositionalEncodingTypeStr = Literal["ts_sinusoidal", "sinusoidal", "random"]
+TSPositionalEncodingTypeStr = Literal["ts_sinusoidal", "sinusoidal", "random", "null"]
 
 
 class PositionalEncodingFactory:
@@ -22,6 +26,7 @@ class PositionalEncodingFactory:
         "ts_sinusoidal": TimeSeriesSinusoidalPositionalEncoding,
         "sinusoidal": SinusoidalPositionalEncoding,
         "random": RandomPositionalEncoding,
+        "null": NullPositionalEncoding,
     }
 
     @classmethod
