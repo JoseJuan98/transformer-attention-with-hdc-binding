@@ -94,7 +94,10 @@ class ExperimentRunner:
 
         # Set up logger
         self.logger = get_logger(
-            name="lightning.pytorch.core", log_filename=self.experiment_logs_path / "main.log", propagate=False
+            name="lightning.pytorch.core",
+            log_filename=self.experiment_logs_path / "main.log",
+            propagate=False,
+            log_file_mode="a" if self.experiment_cfg.metrics_mode == "append" else "w",
         )
 
         self.logger.info(f"Starting experiment {self.exp_name_title} ...\n")
@@ -486,8 +489,6 @@ class ExperimentRunner:
                     f"Adjusted to nearest power of 2: {new_batch_size}"
                 )
 
-            new_batch_size = max(1, new_batch_size)  # Ensure batch size is at least 1, it some cases it can be 0
-
             self.logger.info(f"Optimal batch size found: {new_batch_size}")
 
         except Exception as e:
@@ -513,6 +514,9 @@ class ExperimentRunner:
                         os.environ["PYTORCH_CUDA_ALLOC_CONF"] = original_alloc_conf
 
                 self.logger.debug(f"Restored PYTORCH_CUDA_ALLOC_CONF to: {os.environ.get('PYTORCH_CUDA_ALLOC_CONF')}")
+
+        # Ensure batch size is at least 1, it some cases it can be 0
+        new_batch_size = max(1, new_batch_size)
 
         return new_batch_size
 
