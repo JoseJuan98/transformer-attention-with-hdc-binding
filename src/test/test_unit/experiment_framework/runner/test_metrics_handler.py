@@ -43,7 +43,9 @@ class TestGetTrainMetricsAndPlot(unittest.TestCase):
         df = pandas.DataFrame(df_data)
         df.to_csv(metrics_path, index=False)
 
-        result_df = MetricsHandler.get_train_metrics_and_plot(
+        handler = MetricsHandler(metrics_path=self.csv_dir)
+
+        result_df = handler.get_train_metrics_and_plot(
             csv_dir=self.csv_dir,
             experiment="test_exp",
             logger=logging.getLogger("TestLogger"),
