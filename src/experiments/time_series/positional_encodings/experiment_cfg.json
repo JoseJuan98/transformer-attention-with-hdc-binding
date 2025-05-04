@@ -2,7 +2,7 @@
   "experiment_name": "time_series_classification_positional_encoding",
   "task": "time series classification",
   "description": "Time Series Classification Positional Encodings Experiment. Different positional encodings with N_L=1, d_model=64, d_ff=256, num_heads=8, dropout=0.1",
-  "run_version": "version_3",
+  "run_version": "pe_version_1",
   "dataset_names": [
     "ArticularyWordRecognition",
     "FaceDetection",
@@ -51,5 +51,5 @@
   "profiler": false,
   "summary": false,
   "plots": true,
-  "development": true
+  "development": false
 }
