@@ -3,12 +3,16 @@
 
 # Standard imports
 import math
+from typing import Literal
 
 # Third party imports
 import torch
 import torch.fft
 
+FPEKernelStr = Literal["sinc", "gaussian", "triangular"]
 
+
+# TODO: inherit from PoisitionalEncoding
 class FPEOrigPositionalEncoding(torch.nn.Module):
     """Positional encoding using the original Fractional Power Encoding (FPE) via FFT.
 
@@ -24,7 +28,13 @@ class FPEOrigPositionalEncoding(torch.nn.Module):
     name = "fractional_power_encoding"
 
     def __init__(
-        self, d_model: int, num_positions: int = 5000, beta: float = 10.0, kernel: str = "sinc", seed: int = 0, **kwargs
+        self,
+        d_model: int,
+        num_positions: int = 5000,
+        beta: float = 10.0,
+        kernel: FPEKernelStr = "sinc",
+        seed: int = 0,
+        **kwargs,
     ):
         # Store specific args for _init_weight
         # init_args = {"beta": beta, "kernel": kernel, "seed": seed}
@@ -49,7 +59,7 @@ class FPEOrigPositionalEncoding(torch.nn.Module):
 
     @staticmethod
     def _init_weight(
-        d_model: int, num_positions: int, beta: float, kernel: str, seed: int, **kwargs
+        d_model: int, num_positions: int, beta: float, kernel: FPEKernelStr, seed: int, **kwargs
     ) -> torch.nn.Parameter:
         """Initializes positional encodings using the FPE-FFT method."""
         torch.manual_seed(seed)
@@ -77,7 +87,7 @@ class FPEOrigPositionalEncoding(torch.nn.Module):
             # Adjust scale as in original code
             beta *= 6
         else:
-            raise ValueError(f"Invalid kernel type: {kernel}")
+            raise ValueError(f"Invalid kernel type: {kernel}. Valid values are {FPEKernelStr}")
 
         # Prepare phase vector for Hermitian symmetry (ensures real ifft)
         D = d_model
