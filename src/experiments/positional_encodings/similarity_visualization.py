@@ -207,7 +207,7 @@ if __name__ == "__main__":
         "Sinusoidal": {"type": "sinusoidal"},
         "Fractional Power (β=0.8, Gauss)": {"type": "fractional_power", "params": {"beta": 0.8, "kernel": "gaussian"}},
         "Fractional Power (β=1, Sinc)": {"type": "fractional_power", "params": {"beta": 1, "kernel": "sinc"}},
-        # "Random": {"type": "random"},
+        "Random": {"type": "random"},
         # "Split Sinusoidal": {"type": "split_sinusoidal"} # Uncomment if available
     }
 
