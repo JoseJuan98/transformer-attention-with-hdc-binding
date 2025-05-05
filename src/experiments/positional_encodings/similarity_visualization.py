@@ -4,7 +4,7 @@
 # Standard imports
 import pathlib
 import warnings
-from typing import Dict, List, Tuple
+from typing import Dict, List, Literal, Tuple
 
 # Third party imports
 import numpy
@@ -16,8 +16,12 @@ from matplotlib import pyplot
 from models.positional_encoding.pe_factory import PositionalEncodingFactory, TSPositionalEncodingTypeStr
 from utils import Config
 
+MetricStr = Literal["cosine", "product"]
 
-def calculate_similarity_from_center(pe_weights: torch.Tensor, pos_ref: int) -> Tuple[numpy.ndarray, numpy.ndarray]:
+
+def calculate_similarity_from_center(
+    pe_weights: torch.Tensor, pos_ref: int, metric: MetricStr
+) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """Calculates the cosine similarity between the center position's encoding and all other positions' encodings.
 
     Args:
@@ -41,7 +45,13 @@ def calculate_similarity_from_center(pe_weights: torch.Tensor, pos_ref: int) -> 
 
     # Calculate cosine similarity between the reference vector and all vectors
     # Result shape: (num_positions,)
-    similarities = torch.nn.functional.cosine_similarity(vec_ref, pe_weights, dim=1)
+    if metric == "cosine":
+        similarities = torch.nn.functional.cosine_similarity(vec_ref, pe_weights, dim=1)
+    elif metric == "product":
+        # Dot product similarity
+        similarities = torch.matmul(pe_weights, vec_ref.T).squeeze(1)
+    else:
+        raise ValueError(f"Unknown metric: {metric}. Use {MetricStr}.")
 
     # Handle potential NaNs if vectors were zero
     if torch.isnan(similarities).any():
@@ -64,6 +74,7 @@ def plot_similarity_from_center(
     custom_args: Dict[str, Dict] | None = None,
     plot: bool = True,
     title: str | None = None,
+    metric: MetricStr = "cosine",
 ) -> None:
     """Generates and plots the cosine similarity relative to the center position for multiple PE types."""
     similarity_results = {}
@@ -89,7 +100,9 @@ def plot_similarity_from_center(
         pe_weights = pos_encoder.encodings.detach().squeeze(0)
 
         # Calculate Similarity Profile
-        relative_positions, similarities = calculate_similarity_from_center(pe_weights=pe_weights, pos_ref=pos_ref)
+        relative_positions, similarities = calculate_similarity_from_center(
+            pe_weights=pe_weights, pos_ref=pos_ref, metric=metric
+        )
         if relative_positions.size > 0:  # Only store if calculation was successful
             similarity_results[pe_type] = (relative_positions, similarities)
 
@@ -156,7 +169,7 @@ if __name__ == "__main__":
     # These will override the defaults defined in the PE classes
     # TODO: change to try several combinations of fractional_power
     custom_arguments: Dict[str, Dict] = {
-        "fractional_power": {"beta": 15, "kernel": "gaussian"},
+        "fractional_power": {"beta": 0.8, "kernel": "gaussian"},
     }
 
     # --- Define Output Directory using Config ---
@@ -164,15 +177,16 @@ if __name__ == "__main__":
     output_directory = Config.plot_dir / "similarity_center"  # Subdirectory for these plots
 
     # --- Run the plotting function ---
-    plot_similarity_from_center(
-        pe_types=types_to_plot,
-        num_positions=65,
-        d_model=d_model,
-        seed=seed,
-        plot_path=output_directory / f"similarity_d{d_model}_n{num_positions_for_sim}.png",
-        custom_args=custom_arguments,
-        plot=True,
-    )
+    for n_pos in [65, 251]:
+        plot_similarity_from_center(
+            pe_types=types_to_plot,
+            num_positions=n_pos,
+            d_model=d_model,
+            seed=seed,
+            plot_path=output_directory / f"similarity_d{d_model}_n{num_positions_for_sim}.png",
+            custom_args=custom_arguments,
+            plot=True,
+        )
 
     types_to_plot.remove("sinusoidal")
     for pe_type in types_to_plot + ["random", "split_sinusoidal"]:
@@ -204,4 +218,13 @@ if __name__ == "__main__":
             plot=True,
         )
 
-    # TODO: calculate with the dot product only
+    plot_similarity_from_center(
+        pe_types=types_to_plot,
+        num_positions=65,
+        d_model=d_model,
+        seed=seed,
+        plot_path=output_directory / f"similarity_dot_product_d{d_model}_n{num_positions_for_sim}.png",
+        custom_args=custom_arguments,
+        plot=True,
+        metric="product",
+    )
