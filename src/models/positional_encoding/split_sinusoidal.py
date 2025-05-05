@@ -33,10 +33,10 @@ import torch
 from models.positional_encoding.base import PositionalEncoding
 
 
-class TimeSeriesSinusoidalPositionalEncoding(PositionalEncoding):
+class SplitSinusoidalPositionalEncoding(PositionalEncoding):
     """This module produces sinusoidal positional embeddings of any length."""
 
-    name = "ts_sinusoidal"
+    name = "split_sinusoidal"
 
     def __init__(self, d_model: int, num_positions: int, padding_idx: int | None = None, **kwargs) -> None:
         super().__init__(d_model=d_model, num_positions=num_positions, **kwargs)

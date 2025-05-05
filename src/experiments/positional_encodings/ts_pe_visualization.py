@@ -44,7 +44,7 @@ def main(  # noqa: C901
     # Shape: (1, num_positions, embedding_dim) -> (num_positions, embedding_dim)
     pe_weights = pos_encoder.encodings.detach().cpu().numpy()
 
-    if pe_type not in ["random", "ts_sinusoidal"]:
+    if pe_type not in ["random", "split_sinusoidal"]:
         pe_weights = pe_weights.squeeze(0)
 
     # Ensure we only plot up to num_positions if the encoder was initialized larger
@@ -274,7 +274,7 @@ if __name__ == "__main__":
         "sinusoidal",  # Classic Vaswani et al.
         "fractional_power",
         "random",
-        "ts_sinusoidal",
+        "split_sinusoidal",
     ]
 
     for pe_type in all_types:

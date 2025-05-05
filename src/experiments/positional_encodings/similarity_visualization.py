@@ -105,7 +105,7 @@ def plot_similarity_from_center(
             label += f" ({', '.join(args_str_parts)})"
 
         # Add a shift to the y-axis for better visibility
-        if pe_type == "ts_sinusoidal":
+        if pe_type == "split_sinusoidal":
             similarities = similarities - 0.01
             label += " (shifted vertically by 0.01)"
 
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     # Specify which types to include in the plot (ensure these are valid in your factory)
     types_to_plot: List[TSPositionalEncodingTypeStr] = [
         "sinusoidal",
-        # "ts_sinusoidal",
+        # "split_sinusoidal",
         "fractional_power",
     ]
 
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     )
 
     types_to_plot.remove("sinusoidal")
-    for pe_type in types_to_plot + ["random", "ts_sinusoidal"]:
+    for pe_type in types_to_plot + ["random", "split_sinusoidal"]:
         pos_ref = num_positions_for_sim // 2
         title = f"{pe_type.title()} Similarity relative to pos={pos_ref} (Dim={d_model}"
         plot_similarity_from_center(
@@ -189,3 +189,6 @@ if __name__ == "__main__":
             plot=True,
             title=title,
         )
+
+    # TODO: calculate with the dot product only
+    # TODO: check other centers
