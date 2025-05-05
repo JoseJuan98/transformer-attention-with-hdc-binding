@@ -17,11 +17,12 @@ from models.positional_encoding.pe_factory import PositionalEncodingFactory, TSP
 from utils import Config
 
 
-def calculate_similarity_from_center(pe_weights: torch.Tensor) -> Tuple[numpy.ndarray, numpy.ndarray]:
+def calculate_similarity_from_center(pe_weights: torch.Tensor, pos_ref: int) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """Calculates the cosine similarity between the center position's encoding and all other positions' encodings.
 
     Args:
         pe_weights (torch.Tensor): The positional encoding matrix (num_positions, d_model).
+        pos_ref (int): The reference position (center) for similarity calculation.
 
     Returns:
         numpy.ndarray: Array of relative positions (p - p_ref).
@@ -30,14 +31,13 @@ def calculate_similarity_from_center(pe_weights: torch.Tensor) -> Tuple[numpy.nd
     num_positions, d_model = pe_weights.shape
 
     # Determine the reference position (center)
-    p_ref = num_positions // 2
-    print(f"Calculating similarities relative to center position p_ref={p_ref}...")
+    print(f"Calculating similarities relative to center position p_ref={pos_ref}...")
 
     # Ensure weights are on CPU and float
     pe_weights = pe_weights.cpu().float()
 
     # Get the reference vector, unsqueeze for broadcasting
-    vec_ref = pe_weights[p_ref, :].unsqueeze(0)  # Shape: (1, d_model)
+    vec_ref = pe_weights[pos_ref, :].unsqueeze(0)  # Shape: (1, d_model)
 
     # Calculate cosine similarity between the reference vector and all vectors
     # Result shape: (num_positions,)
@@ -49,7 +49,7 @@ def calculate_similarity_from_center(pe_weights: torch.Tensor) -> Tuple[numpy.nd
         similarities = torch.nan_to_num(similarities, nan=0.0)
 
     # Create relative positions
-    relative_positions = torch.arange(num_positions) - p_ref
+    relative_positions = torch.arange(num_positions) - pos_ref
 
     return relative_positions.numpy(), similarities.numpy()
 
@@ -57,6 +57,7 @@ def calculate_similarity_from_center(pe_weights: torch.Tensor) -> Tuple[numpy.nd
 def plot_similarity_from_center(
     pe_types: List[TSPositionalEncodingTypeStr],
     plot_path: pathlib.Path | None = None,
+    pos_ref: int | None = None,
     num_positions: int = 201,
     d_model: int = 128,
     seed: int = 42,
@@ -66,8 +67,9 @@ def plot_similarity_from_center(
 ) -> None:
     """Generates and plots the cosine similarity relative to the center position for multiple PE types."""
     similarity_results = {}
-    # Calculate center position for title
-    p_ref = num_positions // 2
+
+    # Calculate center position if not provided
+    pos_ref = pos_ref if pos_ref is not None else num_positions // 2
 
     print("--- Generating Encodings and Calculating Similarities from Center ---")
     for pe_type in pe_types:
@@ -87,7 +89,7 @@ def plot_similarity_from_center(
         pe_weights = pos_encoder.encodings.detach().squeeze(0)
 
         # Calculate Similarity Profile
-        relative_positions, similarities = calculate_similarity_from_center(pe_weights)
+        relative_positions, similarities = calculate_similarity_from_center(pe_weights=pe_weights, pos_ref=pos_ref)
         if relative_positions.size > 0:  # Only store if calculation was successful
             similarity_results[pe_type] = (relative_positions, similarities)
 
@@ -102,17 +104,22 @@ def plot_similarity_from_center(
         if args_str_parts:
             label += f" ({', '.join(args_str_parts)})"
 
+        # Add a shift to the y-axis for better visibility
+        if pe_type == "ts_sinusoidal":
+            similarities = similarities - 0.01
+            label += " (shifted vertically by 0.01)"
+
         pyplot.plot(relative_positions, similarities, label=label, alpha=0.8, linewidth=1.5)
 
     pyplot.xlabel("Relative Position (p - p_ref)")
     pyplot.ylabel("Cosine Similarity to Center Vector")
     title = (
-        f"Similarity relative to Center Position (p_ref={p_ref}, Dim={d_model}, pos={num_positions})"
+        f"Similarity relative to Center Position (p_ref={pos_ref}, Dim={d_model}, pos={num_positions})"
         if title is None
         else title
     )
     pyplot.title(title)
-    pyplot.axvline(0, color="red", linestyle=":", linewidth=1.5, label=f"Center (Ref Pos {p_ref})")
+    pyplot.axvline(0, color="red", linestyle=":", linewidth=1.5, label=f"Center (Ref Pos {pos_ref})")
     pyplot.legend(loc="lower right", fontsize="small")
     pyplot.grid(True, linestyle="--", alpha=0.6)
     # Set y-axis limits for cosine similarity
@@ -135,7 +142,7 @@ def plot_similarity_from_center(
 if __name__ == "__main__":
     # --- Experiment Setup ---
     # Use an odd number for a distinct center position
-    num_positions_for_sim = 65
+    num_positions_for_sim = 251
     d_model = 128
     seed = 42
 
@@ -144,16 +151,12 @@ if __name__ == "__main__":
         "sinusoidal",
         # "ts_sinusoidal",
         "fractional_power",
-        "random",
     ]
 
     # These will override the defaults defined in the PE classes
     # TODO: change to try several combinations of fractional_power
     custom_arguments: Dict[str, Dict] = {
         "fractional_power": {"beta": 15, "kernel": "gaussian"},
-        "1": {"beta": 30},
-        "2": {"beta": 7.5},
-        "3": {"beta": 20},
     }
 
     # --- Define Output Directory using Config ---
@@ -163,7 +166,7 @@ if __name__ == "__main__":
     # --- Run the plotting function ---
     plot_similarity_from_center(
         pe_types=types_to_plot,
-        num_positions=num_positions_for_sim,
+        num_positions=65,
         d_model=d_model,
         seed=seed,
         plot_path=output_directory / f"similarity_d{d_model}_n{num_positions_for_sim}.png",
@@ -172,14 +175,17 @@ if __name__ == "__main__":
     )
 
     types_to_plot.remove("sinusoidal")
-    for pe_type in types_to_plot:
+    for pe_type in types_to_plot + ["random", "ts_sinusoidal"]:
+        pos_ref = num_positions_for_sim // 2
+        title = f"{pe_type.title()} Similarity relative to pos={pos_ref} (Dim={d_model}"
         plot_similarity_from_center(
             pe_types=["sinusoidal", pe_type],
-            num_positions=251,
+            num_positions=num_positions_for_sim,
+            pos_ref=pos_ref,
             d_model=d_model,
             seed=seed,
             plot_path=output_directory / f"similarity_{pe_type}.png",
             custom_args=custom_arguments,
             plot=True,
-            title=f"{pe_type.title()} Similarity relative to Center Position (Dim={d_model}, pos={251})",
+            title=title,
         )
