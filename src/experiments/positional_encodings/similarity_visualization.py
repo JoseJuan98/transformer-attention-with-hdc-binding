@@ -190,5 +190,18 @@ if __name__ == "__main__":
             title=title,
         )
 
+    # Check other centers
+    types_to_plot.append("sinusoidal")
+    for pos_ref in [0, num_positions_for_sim // 4, num_positions_for_sim * 3 // 4]:
+        plot_similarity_from_center(
+            pe_types=types_to_plot,
+            num_positions=num_positions_for_sim,
+            pos_ref=pos_ref,
+            d_model=d_model,
+            seed=seed,
+            plot_path=output_directory / f"similarity_d{d_model}_pos_ref={pos_ref}.png",
+            custom_args=custom_arguments,
+            plot=True,
+        )
+
     # TODO: calculate with the dot product only
-    # TODO: check other centers
