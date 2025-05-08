@@ -1,5 +1,23 @@
 # -*- coding: utf-8 -*-
-"""FPE-based positional encoding modules."""
+"""FPE-based positional encoding modules.
+
+This code is based on an implementation provided by M.Sc. Kenny Schlegel, who shared their work with me.
+
+Individual's information:
+- GitHub: https://github.com/scken
+- Academic affiliation: Ph.D. student at Chemnitz University of Technology
+- University profile: https://www.tu-chemnitz.de/etit/proaut/en/team/kennySchlegel.html
+
+
+This implementation is based on the ideas and formulas presented in:
+
+E. Paxon Frady, Denis Kleyko, Christopher J. Kymn, Bruno A. Olshausen, Friedrich T. Sommer (2021).
+"Computing on Functions Using Randomized Vector Representations"
+arXiv:2109.03429 [cs.LG]
+URL: https://arxiv.org/abs/2109.03429
+
+The original authors retain all rights to their work. This implementation is for educational/research purposes.
+"""
 
 # Standard imports
 import math
@@ -70,8 +88,8 @@ class FPEOrigPositionalEncoding(torch.nn.Module):
             phases = (torch.rand(d_model) * 2 * math.pi) - math.pi
 
         elif kernel == "gaussian":
-            # Adjust scale as in original code
             phases = torch.randn(d_model)
+            # Adjust scale as in original code
             beta *= 3
 
         elif kernel == "triangular":

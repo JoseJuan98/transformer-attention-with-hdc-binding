@@ -209,7 +209,6 @@ class MetricsHandler:
             lambda x: x.quantile(1 - self.significance_level)
         )
 
-        # Define the filter mask
         # Keep row if:
         # 1. The group has fewer than min_runs_for_filter OR
         # 2. The group has enough runs AND the value is within [q05, q95]

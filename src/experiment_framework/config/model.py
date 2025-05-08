@@ -2,6 +2,7 @@
 """Model configuration module."""
 # Standard imports
 from dataclasses import dataclass
+from typing import Any, Dict, Union
 
 # First party imports
 from models import ModelTypeStr
@@ -28,7 +29,9 @@ class ModelConfig(BaseConfig):
         num_layers (int): The number of encoder layers.
         dropout (float): The dropout probability.
         learning_rate (float): The learning rate.
-        positional_encoding (str): The type of positional encoding. Values can be: "sinusoidal".
+        positional_encoding (str, Dict[str, Any]): The type of positional encoding. Values can be: "sinusoidal",
+            "split_sinusoidal", "random", "null", "fractional_power". If a dictionary is provided, it should contain the
+            key "type" with the positional encoding type and any additional parameters for the positional encoding.
         embedding_binding (str): The binding method for the embeddings. Values can be: "additive", "multiplicative",
             "circular_convolution".
         embedding (str): The type of embedding. Values can be: "1d_conv", "2d_conv", "linear_projection".
@@ -46,6 +49,6 @@ class ModelConfig(BaseConfig):
     d_ff: int
     num_layers: int
     dropout: float
-    positional_encoding: TSPositionalEncodingTypeStr
+    positional_encoding: Union[TSPositionalEncodingTypeStr, Dict[str, Union[Any, TSPositionalEncodingTypeStr]]]
     embedding_binding: BindingMethodTypeStr
     embedding: EmbeddingTypeStr

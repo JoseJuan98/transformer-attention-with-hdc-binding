@@ -60,7 +60,7 @@ class ModelFactory:
 
         # Get the positional encoding instance based on the configuration
         positional_encoding = PositionalEncodingFactory.get_positional_encoding(
-            positional_encoding_type=model_config.positional_encoding,
+            positional_encoding_arguments=model_config.positional_encoding,
             d_model=model_config.d_model,
             num_positions=dataset_cfg.context_length,
             seed=seed,

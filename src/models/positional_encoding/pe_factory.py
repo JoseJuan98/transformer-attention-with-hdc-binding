@@ -34,23 +34,36 @@ class PositionalEncodingFactory:
 
     @classmethod
     def get_positional_encoding(
-        cls, positional_encoding_type: str, d_model: int, num_positions: int, seed: int, **kwargs
+        cls,
+        positional_encoding_arguments: TSPositionalEncodingTypeStr | dict,
+        d_model: int,
+        num_positions: int,
+        seed: int,
     ) -> TSPositionalEncodingType:
         """Get the positional encoding based on the configuration.
 
         Args:
-            positional_encoding_type (str): The type of the positional encoding.
+            positional_encoding_arguments (str, Dict[str, Any]): The type of positional encoding if a string is
+                provided, or a dictionary with the key "type" and any additional parameters for the positional encoding.
             d_model (int): The dimensionality of the embeddings.
             num_positions (int): The maximum sequence length.
-            **kwargs: Additional parameters for the positional encoding.
 
         Returns:
             object: The positional encoding instance.
         """
+
+        if isinstance(positional_encoding_arguments, dict):
+            positional_encoding_type: TSPositionalEncodingTypeStr = positional_encoding_arguments.pop("type")
+        else:
+            positional_encoding_type = positional_encoding_arguments
+            positional_encoding_arguments = {}
+
         if positional_encoding_type not in cls.catalog:
             raise ValueError(f"Unknown positional encoding type: {positional_encoding_type}")
 
         # Get the positional encoding class based on the configuration and instantiate it
         positional_encoding_class = cls.catalog[positional_encoding_type]
 
-        return positional_encoding_class(d_model=d_model, num_positions=num_positions, seed=seed, **kwargs)
+        return positional_encoding_class(
+            d_model=d_model, num_positions=num_positions, seed=seed, **positional_encoding_arguments
+        )

@@ -44,6 +44,7 @@ class SinusoidalPositionalEncoding(PositionalEncoding):
             num_positions (int, optional): The maximum sequence length. Defaults to 5000.
         """
         super(SinusoidalPositionalEncoding, self).__init__(d_model=d_model, num_positions=num_positions, **kwargs)
+        self.learnable = kwargs.get("learnable", False)
 
     @staticmethod
     def _init_weight(d_model: int, num_positions: int, **kwargs) -> torch.nn.Parameter:
@@ -63,7 +64,8 @@ class SinusoidalPositionalEncoding(PositionalEncoding):
         encodings[:, 1::2] = torch.cos(position * div_term)
 
         # Add batch dimension
-        return torch.nn.Parameter(encodings.unsqueeze(0), requires_grad=False)
+        # By default, the positional encoding is not learnable unless specified
+        return torch.nn.Parameter(encodings.unsqueeze(0), requires_grad=kwargs.get("learnable", False))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Adds the positional encoding to the input tensor.

@@ -1,8 +1,8 @@
 {
-    "Linear Additive Sinusoidal TS Transformer": {
-    "model_name": "linear_additive_null_pe",
+    "Linear Additive Without PE TS Transformer": {
+    "model_name": "linear_no_pe",
     "model": "encoder-only-transformer",
-    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Random Positional Encoding and Additive Binding for Time Series Classification",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings without Positional Encoding for Time Series Classification",
     "num_epochs": 100,
     "learning_rate": 0.003,
     "d_model": 64,
@@ -15,8 +15,8 @@
     "embedding_binding": "additive"
   },
 
-  "Linear Multiplicative Random PE TS Transformer": {
-    "model_name": "linear_component_wise_random_pe",
+  "Linear Convolutional Random PE TS Transformer": {
+    "model_name": "linear_conv_random_pe",
     "model": "encoder-only-transformer",
     "desc": "Encoder Only Transformer with Linear Projection Embeddings, Random Positional Encoding and Multiplicative Binding for Time Series Classification",
     "num_epochs": 100,
@@ -28,6 +28,45 @@
     "dropout": 0.1,
     "positional_encoding" : "random",
     "embedding": "linear_projection",
-    "embedding_binding": "multiplicative"
+    "embedding_binding": "convolutional"
+  },
+
+  "Linear Convolutional Sinusoidal PE TS Transformer (Baseline)": {
+    "model_name": "linear_conv_sinusoidal",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Convolutional Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : {
+      "type": "sinusoidal",
+      "learnable": false
+    },
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  },
+
+  "Linear Convolutional Sinusoidal PE TS Transformer Learnable": {
+    "model_name": "linear_conv_leranable_sinusoidal",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings,Learnable Absolute Sinusoidal Positional Encoding and Convolutional Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : {
+      "type": "sinusoidal",
+      "learnable": true
+    },
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
   }
+
 }

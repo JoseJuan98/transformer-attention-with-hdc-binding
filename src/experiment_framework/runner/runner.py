@@ -261,8 +261,6 @@ class ExperimentRunner:
                         data_module=data_module,
                     )
 
-                    self.logger.info(f"Model {cfg_name} for {dataset} trained successfully")
-
                 except Exception as e:
                     self.error_handler.handle_error(
                         dataset=dataset, model_name=model_cfg.model_name, run=run, exception=e
@@ -366,8 +364,8 @@ class ExperimentRunner:
         if model_cfg.num_epochs > 0:
             metrics = self.metrics_handler.get_train_metrics_and_plot(
                 csv_dir=trainer.log_dir,
-                experiment=f"{model_name.replace('_', ' ').title()} for "
-                + f"{dataset_name.replace('_', ' ').title()} in {run_version}",
+                experiment=f"{model_name.replace('_', ' ').title()} for {dataset_name} for "
+                f"version={run_version} trained successfully!",
                 logger=self.logger,
                 plots_path=(
                     Config.plot_dir
