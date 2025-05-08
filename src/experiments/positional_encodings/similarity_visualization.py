@@ -4,7 +4,7 @@
 # Standard imports
 import pathlib
 import warnings
-from typing import Any, Dict, Literal, Tuple
+from typing import Literal, Tuple
 
 # Third party imports
 import numpy
@@ -17,9 +17,6 @@ from models.positional_encoding.pe_factory import PositionalEncodingFactory
 from utils import Config
 
 MetricStr = Literal["cosine", "product"]
-
-# Define a type hint for the configuration dictionary
-PlotConfiguration = Dict[str, Any]  # Inner dict should contain 'type' and optionally 'params'
 
 
 def calculate_similarity_from_center(
@@ -72,7 +69,7 @@ def calculate_similarity_from_center(
 
 
 def plot_similarity_from_center(
-    plot_configurations: Dict[str, PlotConfiguration],  # Changed input
+    plot_configurations: dict,
     plot_path: pathlib.Path | None = None,
     pos_ref: int | None = None,
     num_positions: int = 201,
@@ -111,18 +108,14 @@ def plot_similarity_from_center(
     for config_key, config in plot_configurations.items():
         print(f"\nProcessing configuration: {config_key}")
 
-        pe_type = config.get("type")
-
-        custom_params = config.get("params", {})
-        print(f"  Type: {pe_type}, Params: {custom_params}")
+        print(f"  Params: {config}")
 
         # Instantiate Encoder
         pos_encoder = PositionalEncodingFactory.get_positional_encoding(
-            positional_encoding_type=str(pe_type),
+            positional_encoding_arguments=config if isinstance(config, str) else config.copy(),  # type: ignore[arg-type]
             d_model=d_model,
             num_positions=num_positions,
             seed=seed,
-            **custom_params,
         )
 
         # Get Weights
@@ -148,8 +141,12 @@ def plot_similarity_from_center(
         relative_positions = result_data["positions"]
         similarities = result_data["similarities"]
         config = result_data["config"]
-        pe_type = config.get("type", "Unknown")  # Get type from stored config
-        params = config.get("params", {})
+        if not isinstance(config, dict):
+            pe_type = config
+            params = {}
+        else:
+            pe_type = config["type"]
+            params = config.get("params", {})
 
         # Create a descriptive label
         params_str_parts = [f"{k}={v}" for k, v in params.items()]
@@ -203,12 +200,12 @@ if __name__ == "__main__":
 
     # --- Plot Configurations ---
     # Example 1: different PE types
-    configs_compare_types: Dict[str, PlotConfiguration] = {
-        "Sinusoidal": {"type": "sinusoidal"},
-        "Fractional Power (β=0.8, Gauss)": {"type": "fractional_power", "params": {"beta": 0.8, "kernel": "gaussian"}},
-        "Fractional Power (β=1, Sinc)": {"type": "fractional_power", "params": {"beta": 1, "kernel": "sinc"}},
-        "Random": {"type": "random"},
-        # "Split Sinusoidal": {"type": "split_sinusoidal"} # Uncomment if available
+    configs_compare_types = {
+        "Sinusoidal": "sinusoidal",
+        "Fractional Power (β=0.8, Gauss)": {"type": "fractional_power", "beta": 0.8, "kernel": "gaussian"},
+        "Fractional Power (β=1, Sinc)": {"type": "fractional_power", "beta": 1, "kernel": "sinc"},
+        "Random": "random",
+        # "Split Sinusoidal": "split_sinusoidal"
     }
 
     print("\n=== Plotting Comparison of Different PE Types ===")
@@ -223,13 +220,13 @@ if __name__ == "__main__":
     )
 
     # Example 2: FPE with different parameters
-    configs_compare_params: Dict[str, PlotConfiguration] = {
+    configs_compare_params = {
         # Sinusoidal for reference
-        "Sinusoidal Ref": {"type": "sinusoidal"},
-        "FracPower (β=0.8, Gauss)": {"type": "fractional_power", "params": {"beta": 0.8, "kernel": "gaussian"}},
-        "FracPower (β=1, Sinc)": {"type": "fractional_power", "params": {"beta": 1, "kernel": "sinc"}},
-        "FracPower (β=2, Sinc)": {"type": "fractional_power", "params": {"beta": 2, "kernel": "sinc"}},
-        "FracPower (β=5, Sinc)": {"type": "fractional_power", "params": {"beta": 5, "kernel": "sinc"}},
+        "Sinusoidal Ref": "sinusoidal",
+        "FracPower (β=0.8, Gauss)": {"type": "fractional_power", "beta": 0.8, "kernel": "gaussian"},
+        "FracPower (β=1, Sinc)": {"type": "fractional_power", "beta": 1, "kernel": "sinc"},
+        "FracPower (β=2, Sinc)": {"type": "fractional_power", "beta": 2, "kernel": "sinc"},
+        "FracPower (β=5, Sinc)": {"type": "fractional_power", "beta": 5, "kernel": "sinc"},
     }
 
     print("\n=== Plotting Comparison of Fractional Power Parameters ===")
@@ -246,9 +243,9 @@ if __name__ == "__main__":
     )
 
     # Example 3: different reference positions
-    configs_for_pos_ref: Dict[str, PlotConfiguration] = {
-        "Sinusoidal": {"type": "sinusoidal"},
-        "FracPower (β=0.8)": {"type": "fractional_power", "params": {"beta": 0.8, "kernel": "gaussian"}},
+    configs_for_pos_ref = {
+        "Sinusoidal": "sinusoidal",
+        "FracPower (β=0.8)": {"type": "fractional_power", "beta": 0.8, "kernel": "gaussian"},
     }
     print("\n=== Plotting Comparison for Different Reference Positions ===")
     for pos_ref_test in [
