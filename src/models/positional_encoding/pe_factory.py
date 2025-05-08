@@ -53,7 +53,8 @@ class PositionalEncodingFactory:
         """
 
         if isinstance(positional_encoding_arguments, dict):
-            positional_encoding_type: TSPositionalEncodingTypeStr = positional_encoding_arguments.pop("type")
+            positional_encoding_type: TSPositionalEncodingTypeStr = positional_encoding_arguments["type"]
+            positional_encoding_arguments = {k: v for k, v in positional_encoding_arguments.items() if k != "type"}
         else:
             positional_encoding_type = positional_encoding_arguments
             positional_encoding_arguments = {}

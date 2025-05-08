@@ -105,11 +105,11 @@ class ExperimentRunner:
         # Development mode: reduce the number of epochs, number of runs and number of datasets for development purposes
         if self.experiment_cfg.development:
             self.logger.info("\t => Development mode is enabled.")
-            self.experiment_cfg.runs_per_experiment = 1
+            self.experiment_cfg.runs_per_experiment = 2
             for model_config in self.experiment_cfg.model_configs.values():
                 model_config.num_epochs = 2
-
-            self.experiment_cfg.dataset_names = self.experiment_cfg.dataset_names[:1]
+            # Use a lightweight dataset for development
+            self.experiment_cfg.dataset_names = ["ArticularyWordRecognition"]
 
     def _set_random_seed(self) -> None:
         """Sets the random seed for reproducibility."""
