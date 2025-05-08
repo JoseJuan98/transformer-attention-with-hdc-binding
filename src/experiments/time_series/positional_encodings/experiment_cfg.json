@@ -4,7 +4,6 @@
   "description": "Time Series Classification Positional Encodings Experiment. Different positional encodings with N_L=1, d_model=64, d_ff=256, num_heads=8, dropout=0.1",
   "run_version": "pe_version_1",
   "dataset_names": [
-    "ArticularyWordRecognition",
     "FaceDetection",
     "InsectWingbeat",
     "PenDigits",
@@ -50,6 +49,6 @@
   "metrics_mode": "append",
   "profiler": false,
   "summary": false,
-  "plots": false,
+  "plots": true,
   "development": false
 }
