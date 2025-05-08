@@ -27,12 +27,11 @@ def main(  # noqa: C901
     embedding_dim: int = 128,
     seed: int = 42,
     output_dir: Path = Path("plots"),
-    **kwargs,  # Allow overriding default args like beta, bandwidth, kernel
 ) -> None:
     """Main function to visualize the specified Positional Encoding."""
 
     pos_encoder = PositionalEncodingFactory.get_positional_encoding(
-        positional_encoding_type=pe_type, num_positions=num_positions, d_model=embedding_dim, seed=seed
+        positional_encoding_arguments=pe_type, num_positions=num_positions, d_model=embedding_dim, seed=seed
     )
 
     dir_pe_type = output_dir / pe_type
@@ -266,12 +265,14 @@ def main(  # noqa: C901
 
 if __name__ == "__main__":
     # --- Experiment Setup ---
-    num_positions_to_visualize = 100  # How many sequence positions to show
-    embedding_dim = 128  # Embedding dimension
+    # How many sequence positions to show
+    num_positions_to_visualize = 100
+    # Embedding dimension
+    embedding_dim = 128
 
     # --- Run Visualization for Each Type ---
     all_types: list[TSPositionalEncodingTypeStr] = [
-        "sinusoidal",  # Classic Vaswani et al.
+        "sinusoidal",
         "fractional_power",
         "random",
         "split_sinusoidal",
@@ -283,7 +284,7 @@ if __name__ == "__main__":
             embedding_dim=embedding_dim,
             num_positions=num_positions_to_visualize,
             output_dir=Config.plot_dir,
-            seed=42,  # Use same seed for comparability
+            seed=42,
         )
 
     print(f"All plots saved in '{Config.plot_dir.resolve()}'")
