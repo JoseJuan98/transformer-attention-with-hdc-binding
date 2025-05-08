@@ -25,8 +25,7 @@ class RandomPositionalEncoding(PositionalEncoding):
         super(RandomPositionalEncoding, self).__init__(
             d_model=d_model, num_positions=num_positions, seed=seed, **kwargs
         )
-        self.d_model = d_model
-        self.num_positions = num_positions
+        self.learnable = kwargs.get("learnable", False)
 
     @staticmethod
     def _init_weight(d_model: int, num_positions: int, **kwargs) -> torch.nn.Parameter:
@@ -46,7 +45,8 @@ class RandomPositionalEncoding(PositionalEncoding):
         # Normalize each position vector to have unit norm to add stability
         position_vectors = torch.nn.functional.normalize(position_vectors, p=2, dim=1)
 
-        return torch.nn.Parameter(position_vectors, requires_grad=False)
+        # By default, the positional encoding is not learnable unless specified
+        return torch.nn.Parameter(position_vectors, requires_grad=kwargs.get("learnable", False))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """`x` is the input tensor of shape (batch_size, seq_len, d_model)."""

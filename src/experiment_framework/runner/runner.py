@@ -249,7 +249,7 @@ class ExperimentRunner:
                 try:
                     # Train the model for the dataset
                     self.logger.info(
-                        f"Training {cfg_name} for {dataset} for {self.experiment_cfg.run_version} in run {run}"
+                        f"Training {model_cfg.desc} with {dataset} version {self.experiment_cfg.run_version} and run {run}"
                     )
                     self._train_model_for_dataset(
                         dataset_name=dataset,
