@@ -19,7 +19,8 @@ class ModelConfigFactory:
         # Check that `model_name` is not duplicated
         model_names = [model["model_name"] for model in config_dict.values()]
         if len(model_names) != len(set(model_names)):
-            raise ValueError(f"Duplicated model names found in the configuration file: {model_names}")
+            duplicates = set(name for name in model_names if model_names.count(name) > 1)
+            raise ValueError(f"Duplicated model names found in the configuration file: {duplicates}")
 
         cfg = {}
         for k, v in config_dict.items():
