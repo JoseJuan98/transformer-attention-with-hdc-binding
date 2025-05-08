@@ -146,7 +146,7 @@ def plot_similarity_from_center(
             params = {}
         else:
             pe_type = config["type"]
-            params = config.get("params", {})
+            params = {k: v for k, v in config.items() if k != "type"}
 
         # Create a descriptive label
         params_str_parts = [f"{k}={v}" for k, v in params.items()]
