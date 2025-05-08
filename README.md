@@ -88,6 +88,8 @@ task (e.g., sentiment analysis, language modeling).
 │     └── utils                 # Utility functions (e.g., logging, helper functions, experiment utilities)
 │
 ├── docs                    # Documentation files
+│     ├── metrics           # Experiment results and analysis
+│     ├── diagrams          # Diagrams and architectural visualizations
 │     └── SETUP.md          # Instructions for setting up the project environment
 │
 ├── pyproject.toml          # Project configuration and dependencies (using Poetry)
