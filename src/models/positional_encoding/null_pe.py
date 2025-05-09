@@ -23,8 +23,6 @@ class NullPositionalEncoding(PositionalEncoding):
             num_positions (int, optional): The maximum sequence length. Defaults to 5000.
         """
         super(NullPositionalEncoding, self).__init__(d_model=d_model, num_positions=num_positions, **kwargs)
-        self.d_model = d_model
-        self.num_positions = num_positions
 
     @staticmethod
     def _init_weight(d_model: int, num_positions: int, **kwargs) -> torch.nn.Parameter:
@@ -38,8 +36,11 @@ class NullPositionalEncoding(PositionalEncoding):
         Returns:
             torch.nn.Parameter: The initialized positional encodings.
         """
-        # Create a zero tensor for the positional encodings
-        return torch.nn.Parameter(torch.zeros(num_positions, d_model, requires_grad=False), requires_grad=False)
+        # Create a zero tensor for the null positional encodings
+        # Add batch dimension for broadcasting
+        return torch.nn.Parameter(
+            torch.zeros(num_positions, d_model, requires_grad=False).unsqueeze(0), requires_grad=False
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """`x` is the input tensor of shape (batch_size, seq_len, d_model)."""

@@ -45,8 +45,9 @@ class RandomPositionalEncoding(PositionalEncoding):
         # Normalize each position vector to have unit norm to add stability
         position_vectors = torch.nn.functional.normalize(position_vectors, p=2, dim=1)
 
+        # Add batch dimension for broadcasting
         # By default, the positional encoding is not learnable unless specified
-        return torch.nn.Parameter(position_vectors, requires_grad=kwargs.get("learnable", False))
+        return torch.nn.Parameter(position_vectors.unsqueeze(0), requires_grad=kwargs.get("learnable", False))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """`x` is the input tensor of shape (batch_size, seq_len, d_model)."""

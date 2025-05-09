@@ -63,7 +63,7 @@ class SinusoidalPositionalEncoding(PositionalEncoding):
         encodings[:, 0::2] = torch.sin(position * div_term)
         encodings[:, 1::2] = torch.cos(position * div_term)
 
-        # Add batch dimension
+        # Add batch dimension for broadcasting
         # By default, the positional encoding is not learnable unless specified
         return torch.nn.Parameter(encodings.unsqueeze(0), requires_grad=kwargs.get("learnable", False))
 

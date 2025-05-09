@@ -142,7 +142,7 @@ class FPEOrigPositionalEncoding(torch.nn.Module):
         # Add small epsilon to prevent division by zero
         fpe = (fpe - fpe_mean) / (fpe_std + 1e-8)
 
-        # Add batch dimension for compatibility with Transformer layers
+        # Add batch dimension for compatibility with broadcasting
         encodings = fpe.unsqueeze(0)  # Shape: (1, num_positions, d_model)
 
         return torch.nn.Parameter(encodings.float(), requires_grad=False)
