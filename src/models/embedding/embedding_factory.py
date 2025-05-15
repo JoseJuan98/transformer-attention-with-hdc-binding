@@ -7,9 +7,10 @@ from typing import Literal, Union
 import torch
 
 # First party imports
+from models.embedding.linear_projection import LinearProjection
 from models.embedding.ts_conv_embedding import TimeSeries1dConvEmbedding
 
-EmbeddingType = Union[torch.nn.Module, TimeSeries1dConvEmbedding]
+EmbeddingType = Union[torch.nn.Module, TimeSeries1dConvEmbedding, LinearProjection]
 EmbeddingTypeStr = Literal["1d_conv", "2d_conv", "linear_projection"]
 
 
@@ -31,7 +32,7 @@ class EmbeddingFactory:
         """
         if embedding_type == "linear_projection":
 
-            return torch.nn.Linear(in_features=num_channels, out_features=d_model, bias=False)
+            return LinearProjection(in_features=num_channels, out_features=d_model, bias=False)
 
         elif embedding_type == "1d_conv":
 
