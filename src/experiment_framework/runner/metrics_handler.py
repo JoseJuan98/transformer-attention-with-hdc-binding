@@ -152,14 +152,19 @@ class MetricsHandler:
         return self._aggregate_metrics(aggregate_by="model")
 
     def _calculate_moe(self, row):
+        """Calculate the margin of error (MOE) for the given row."""
         n = row["num_runs_filtered"]
         std = row["std_filtered"]
+
         if n > 1 and pandas.notna(std) and std > 0:
             t_score = stats.t.ppf((1 - self.significance_level * 2), n - 1)
             return t_score * std / numpy.sqrt(n)
-        elif n == 1:
-            return 0.0  # MOE is zero for n=1 (or could be NaN)
-        else:  # n=0 or std is NaN/0
+
+        elif n == 1 or std == 0:
+            return 0.0
+
+        # n=0 or std is NaN/0
+        else:
             return numpy.nan
 
     def _aggregate_metrics(self, aggregate_by: Literal["dataset_model", "model"]) -> pandas.DataFrame:
@@ -355,7 +360,7 @@ class MetricsHandler:
                 print(f"Error creating pivot_table: {e2}")
                 return pandas.DataFrame()
 
-        output_path = self.metrics_path.parent / "dataset_results_filtered.csv"  # Indicate filtered results
+        output_path = self.metrics_path.parent / "dataset_results.csv"
         try:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             pivot_table.to_csv(path_or_buf=output_path, index=True, header=True)
