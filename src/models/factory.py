@@ -169,9 +169,7 @@ class ModelFactory:
             logger.info(f"\t=> Using EarlyStopping with patience={experiment_cfg.early_stopping_patience}")
 
         # 2. Gradient Accumulation
-        if (
-            isinstance(experiment_cfg.accumulate_grad_batches, int) and experiment_cfg.accumulate_grad_batches > 1
-        ) or isinstance(experiment_cfg.accumulate_grad_batches, dict):
+        if isinstance(experiment_cfg.accumulate_grad_batches, dict):
             accumulator = GradientAccumulationScheduler(scheduling=experiment_cfg.accumulate_grad_batches)
             callbacks.append(accumulator)
             logger.info(

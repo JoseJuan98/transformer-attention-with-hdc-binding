@@ -340,6 +340,18 @@ class ExperimentRunner:
         # Update the datamodule with the new batch size
         data_module.batch_size = tuned_batch_size
 
+        # Default value
+        if (
+            isinstance(self.experiment_cfg.accumulate_grad_batches, int)
+            and self.experiment_cfg.accumulate_grad_batches > 1
+        ):
+            # Get the gradient accumulation value from the config or the tuned batch size if it's larger
+            # If the training samples are smaller than the selected size, set it to the number of training samples
+            trainer.accumulate_grad_batches = min(
+                max(self.experiment_cfg.accumulate_grad_batches, tuned_batch_size), len(data_module.train_dataset)
+            )
+            self.logger.info(f"\t=> Using Gradient Accumulation with {trainer.accumulate_grad_batches} batches")
+
         # --- Train and Test ---
         self.logger.info(f"=> Train and Test (Run {run})")
         self.logger.info(f"Training {model_name} for {model_cfg.num_epochs} epochs...")
