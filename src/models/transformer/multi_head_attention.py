@@ -54,6 +54,17 @@ class MultiHeadAttention(torch.nn.Module):
         # Linear transformation for the concatenated output.
         self.W_o = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
 
+        # Xavier Normal initialization as in the original paper.
+        self.init_weights()
+
+    def init_weights(self):
+        """Initializes the weights of the linear layers using the Xavier Normal initialization."""
+        torch.nn.init.xavier_normal_(self.W_o.weight, gain=1.0)
+
+        # Initialize bias to zero
+        if self.W_o.bias is not None:
+            torch.nn.init.zeros_(self.W_o.bias)
+
     def forward(
         self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, mask: torch.Tensor | None = None
     ) -> torch.Tensor:

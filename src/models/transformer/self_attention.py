@@ -48,6 +48,25 @@ class SelfAttention(torch.nn.Module):
         self.W_k = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
         self.W_v = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
 
+        # Xavier Normal initialization as in the original paper.
+        self.init_weights()
+
+    def init_weights(self):
+        """Initializes the weights of the linear layers using the Xavier Normal initialization."""
+        torch.nn.init.xavier_normal_(self.W_q.weight, gain=1.0)
+        torch.nn.init.xavier_normal_(self.W_k.weight, gain=1.0)
+        torch.nn.init.xavier_normal_(self.W_v.weight, gain=1.0)
+
+        # Initialize bias to zero
+        if self.W_q.bias is not None:
+            torch.nn.init.zeros_(self.W_q.bias)
+
+        if self.W_k.bias is not None:
+            torch.nn.init.zeros_(self.W_k.bias)
+
+        if self.W_v.bias is not None:
+            torch.nn.init.zeros_(self.W_v.bias)
+
     def forward(
         self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, mask: torch.Tensor | None = None
     ) -> torch.Tensor:

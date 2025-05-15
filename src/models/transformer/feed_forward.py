@@ -30,6 +30,20 @@ class FeedForward(torch.nn.Module):
         self.linear1 = torch.nn.Linear(in_features=d_model, out_features=d_ff)
         self.linear2 = torch.nn.Linear(in_features=d_ff, out_features=d_model)
         self.activation = torch.nn.GELU()
+        self.init_weights()
+
+    def init_weights(self):
+        """Initializes the weights of the feed-forward layers using the Xavier Normal initialization."""
+        torch.nn.init.xavier_normal_(self.linear1.weight, gain=1.0)
+        torch.nn.init.xavier_normal_(self.linear2.weight, gain=1.0)
+
+        # Initialize bias to zero
+        if self.linear1.bias is not None:
+
+            torch.nn.init.zeros_(self.linear1.bias)
+
+        if self.linear2.bias is not None:
+            torch.nn.init.zeros_(self.linear2.bias)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass of the feed-forward module.

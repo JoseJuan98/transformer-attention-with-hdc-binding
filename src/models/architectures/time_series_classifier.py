@@ -139,6 +139,13 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
             ]
         )
 
+        # Xavier Normal initialization for the linear layer
+        torch.nn.init.xavier_normal_(self.fc.weight, gain=1.0)
+
+        # Initialize bias of the linear layer to zero
+        if self.fc.bias is not None:
+            torch.nn.init.zeros_(self.fc.bias)
+
     def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
         """Performs a forward pass through the model.
 
