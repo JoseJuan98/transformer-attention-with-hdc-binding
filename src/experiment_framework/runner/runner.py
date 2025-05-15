@@ -2,6 +2,7 @@
 """This module is responsible for running the experiments."""
 # Standard imports
 import json
+import logging
 import os
 import pathlib
 import time
@@ -53,7 +54,7 @@ class ExperimentRunner:
         self._setup_paths_and_logging()
 
         # Set random seed for reproducibility
-        self._set_random_seed()
+        self._set_random_seed(seed=self.seed)
 
         # Initialize MetricsHandler
         self.metrics_handler = MetricsHandler(
@@ -98,6 +99,7 @@ class ExperimentRunner:
             log_filename=self.experiment_logs_path / "main.log",
             propagate=False,
             log_file_mode="a" if self.experiment_cfg.metrics_mode == "append" else "w",
+            level=logging.DEBUG,
         )
 
         self.logger.info(f"Starting experiment {self.exp_name_title} ...\n")
@@ -111,24 +113,26 @@ class ExperimentRunner:
             # Use a lightweight dataset for development
             self.experiment_cfg.dataset_names = ["ArticularyWordRecognition"]
 
-    def _set_random_seed(self) -> None:
+    def _set_random_seed(self, seed: int, log_msg: bool = True) -> None:
         """Sets the random seed for reproducibility."""
-        lightning.seed_everything(self.seed, workers=True, verbose=False)
+        lightning.seed_everything(seed, workers=True, verbose=False)
 
         # CUDA and ROCM: ROCM shows up as CUDA in PyTorch
         if torch.cuda.is_available():
-            torch.cuda.manual_seed(self.seed)
+            torch.cuda.manual_seed(seed)
 
         if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-            torch.mps.manual_seed(self.seed)
+            torch.mps.manual_seed(seed)
 
         if hasattr(torch, "xpu") and torch.xpu.is_available():
-            torch.xpu.manual_seed(self.seed)
+            torch.xpu.manual_seed(seed)
 
-        self.logger.info(
-            f"Seeds from Python's random module, NumPy, PyTorch, and any backend in used set to {self.seed} for "
-            "reproducibility."
-        )
+        if log_msg:
+            self.logger.info(
+                f"Initial seeds from Python's random module, NumPy, PyTorch, and any backend in used set to {seed}."
+                " Each run will have a different seed in a deterministic and reproducible (initial seed + run) way"
+                " to ensure independent trials and overall reproducibility."
+            )
 
     def run(self):
         """Run the experiment.
@@ -222,6 +226,10 @@ class ExperimentRunner:
         dataset_cfg = self.dataset_configs[dataset]
 
         for run in range(1, self.experiment_cfg.runs_per_experiment + 1):
+
+            # Independent trial with different random initializations. Still it's deterministic and reproducible
+            self._set_random_seed(seed=self.seed + run, log_msg=False)
+
             # Create the results directory if it doesn't exist
             self.results_path.mkdir(parents=True, exist_ok=True)
 
