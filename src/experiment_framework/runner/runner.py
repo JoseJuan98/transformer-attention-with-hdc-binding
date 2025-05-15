@@ -3,6 +3,7 @@
 # Standard imports
 import json
 import logging
+import math
 import os
 import pathlib
 import time
@@ -355,10 +356,16 @@ class ExperimentRunner:
         ):
             # Get the gradient accumulation value from the config or the tuned batch size if it's larger
             # If the training samples are smaller than the selected size, set it to the number of training samples
-            trainer.accumulate_grad_batches = min(
+            desired_batch_size = min(
                 max(self.experiment_cfg.accumulate_grad_batches, tuned_batch_size), len(data_module.train_dataset)
             )
-            self.logger.info(f"\t=> Using Gradient Accumulation with {trainer.accumulate_grad_batches} batches")
+
+            # Devide the desired batch size by the tuned batch size to get the number of batches
+            trainer.accumulate_grad_batches = math.ceil(desired_batch_size / tuned_batch_size)
+            self.logger.info(
+                f"\t=> Using Gradient Accumulation with {trainer.accumulate_grad_batches} batches for batch"
+                f" size {tuned_batch_size}."
+            )
 
         # --- Train and Test ---
         self.logger.info(f"=> Train and Test (Run {run})")
