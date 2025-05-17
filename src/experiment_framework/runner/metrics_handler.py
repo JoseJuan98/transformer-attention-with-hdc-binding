@@ -87,7 +87,7 @@ class MetricsHandler:
         train_samples: int,
         test_samples: int,
         validation_samples: int,
-        n_train_epochs: int,
+        best_train_epoch: int,
         training_time: float = 0.0,
     ) -> None:
         """Update the global metrics with the new metrics.
@@ -103,7 +103,7 @@ class MetricsHandler:
             train_samples (int): The number of training samples.
             test_samples (int): The number of testing samples.
             validation_samples (int): The number of validation samples.
-            n_train_epochs (int): The number of training epochs.
+            best_train_epoch (int): The best training epoch choosen by the Pocket Algorithm.
             training_time (float): The training time in seconds.
         """
         if metrics.empty:
@@ -119,7 +119,7 @@ class MetricsHandler:
         metrics_copy["train_samples"] = train_samples
         metrics_copy["test_samples"] = test_samples
         metrics_copy["validation_samples"] = validation_samples
-        metrics_copy["n_train_epochs"] = n_train_epochs
+        metrics_copy["best_train_epoch"] = best_train_epoch
         metrics_copy["training_time_seconds"] = round(training_time, 2)
 
         metric_cols = metrics_copy.columns.tolist()

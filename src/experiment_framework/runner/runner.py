@@ -420,7 +420,7 @@ class ExperimentRunner:
                 test_samples=len(data_module.test_dataset),  # Use DataModule
                 validation_samples=len(data_module.val_dataset),  # Use DataModule
                 training_time=training_time,
-                n_train_epochs=trainer.current_epoch,
+                best_train_epoch=trainer.current_epoch,
             )
 
         # --- Teardown ---
