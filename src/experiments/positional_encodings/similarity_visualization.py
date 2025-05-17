@@ -195,7 +195,7 @@ if __name__ == "__main__":
     d_model = 128
     seed = 42
     metric_to_use: MetricStr = "cosine"
-    output_directory = Config.plot_dir / "similarity_center"
+    output_directory = Config.plot_dir / "positional_encodings" / "similarity"
     output_directory.mkdir(parents=True, exist_ok=True)
 
     # --- Plot Configurations ---

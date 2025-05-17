@@ -101,6 +101,9 @@ def main(  # noqa: C901
             val_min, val_max = np.min(pe_weights), np.max(pe_weights)
             norm = mcolors.Normalize(vmin=val_min, vmax=val_max)
 
+    # Squeeze to remove extra dimensions if present
+    pe_weights = pe_weights.squeeze()
+
     im = pyplot.imshow(pe_weights, aspect="auto", cmap=cmap, norm=norm)
     pyplot.colorbar(im, label="Encoding Value")
     pyplot.xlabel("Embedding Dimension")
@@ -283,7 +286,7 @@ if __name__ == "__main__":
             pe_type=pe_type,
             embedding_dim=embedding_dim,
             num_positions=num_positions_to_visualize,
-            output_dir=Config.plot_dir,
+            output_dir=Config.plot_dir / "positional_encodings",
             seed=42,
         )
 
