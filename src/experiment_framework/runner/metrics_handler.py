@@ -346,7 +346,6 @@ class MetricsHandler:
             print(f"Error pivoting data: {e}")
             # Handle potential duplicate dataset/model entries if they weren't aggregated correctly
             # Or if the aggregation step failed silently.
-            # Let's try pivot_table instead which handles aggregation
             print("Attempting pivot_table with aggregation...")
             try:
                 pivot_table = pandas.pivot_table(
@@ -467,20 +466,3 @@ class MetricsHandler:
         metrics["size_MB"] = round(pathlib.Path(f"{csv_dir}/model.pth").stat().st_size / (1024**2), 4)
 
         return metrics.to_frame().T
-
-
-if __name__ == "__main__":
-    # Standard imports
-    import pathlib
-
-    metrics_path = (
-        pathlib.Path(__file__).parents[3]
-        / "artifacts/metrics/version_2/metrics_version_2_until_characters_trajectory.csv"
-    )
-
-    if not metrics_path.exists():
-        raise FileNotFoundError(metrics_path)
-
-    handler = MetricsHandler(metrics_path=metrics_path)
-    handler.aggregate_test_acc_per_model()
-    handler.aggregate_test_acc_per_dataset_and_model()
