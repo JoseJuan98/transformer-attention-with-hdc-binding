@@ -153,7 +153,7 @@ class MetricsHandler:
 
     def _calculate_moe(self, row):
         """Calculate the margin of error (MOE) for the given row."""
-        n = row["num_runs_filtered"]
+        n = row["num_runs"]
         std = row["std_filtered"]
 
         if n > 1 and pandas.notna(std) and std > 0:
@@ -249,11 +249,11 @@ class MetricsHandler:
         # Calculate statistics on the filtered data
         stats_filtered = grouped_filtered[metric_col].agg(["mean", "std", "count"]).reset_index()
         stats_filtered.rename(
-            columns={"count": "num_runs_filtered", "mean": "mean_filtered", "std": "std_filtered"}, inplace=True
+            columns={"count": "num_runs", "mean": "mean_filtered", "std": "std_filtered"}, inplace=True
         )
 
         # Calculate original counts for the same groups using the *unfiltered* data
-        original_counts = metrics.groupby(final_grouping_keys).size().reset_index(name="num_runs_original")
+        original_counts = metrics.groupby(final_grouping_keys).size().reset_index(name="num_runs_total")
 
         # Merge filtered stats and original counts
         result = pandas.merge(stats_filtered, original_counts, on=final_grouping_keys, how="left")
@@ -276,8 +276,8 @@ class MetricsHandler:
         )
 
         # Ensure integer types for counts
-        result["num_runs_filtered"] = result["num_runs_filtered"].astype(int)
-        result["num_runs_original"] = result["num_runs_original"].astype(int)
+        result["num_runs"] = result["num_runs"].astype(int)
+        result["num_runs_total"] = result["num_runs_total"].astype(int)
 
         # --- Select and Reorder Final Columns ---
         cols = [
@@ -286,8 +286,8 @@ class MetricsHandler:
             "mean_test_acc_filtered",
             "std_test_acc_filtered",
             "margin_of_error",
-            "num_runs_filtered",
-            "num_runs_original",
+            "num_runs",
+            "num_runs_total",
         ]
         if aggregate_by == "dataset_model":
             cols = ["dataset"] + cols
@@ -303,7 +303,6 @@ class MetricsHandler:
             columns={
                 "mean_test_acc_filtered": "mean_test_acc",
                 "std_test_acc_filtered": "std",
-                "num_runs_filtered": "num_runs",
                 "confidence_interval_filtered": "confidence_interval",
             }
         )
