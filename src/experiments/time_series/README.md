@@ -12,6 +12,7 @@ The experiments were conducted with the following parameters in the `epxeriment_
 - `"d_ff": 256`: dimension of the feedforward network (x4 expansion factor)
 - `"num_layers": 4`: number of encoder layers
 - `"dropout": 0.1`: dropout rate
+- `"num_layers": 1`: number of encoder layers ($N_L$). For all tests, the number of encoder layers is set to 1, except for the experiments with $N_L=4$.
 
 The paremeters above follows the parameters used for the experiments carried out in the ConvTran paper (Foumani et al., 2024) [2].
 
