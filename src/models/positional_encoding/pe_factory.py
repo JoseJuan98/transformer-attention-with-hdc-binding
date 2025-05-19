@@ -38,7 +38,6 @@ class PositionalEncodingFactory:
         positional_encoding_arguments: TSPositionalEncodingTypeStr | dict,
         d_model: int,
         num_positions: int,
-        seed: int,
     ) -> TSPositionalEncodingType:
         """Get the positional encoding based on the configuration.
 
@@ -65,6 +64,4 @@ class PositionalEncodingFactory:
         # Get the positional encoding class based on the configuration and instantiate it
         positional_encoding_class = cls.catalog[positional_encoding_type]
 
-        return positional_encoding_class(
-            d_model=d_model, num_positions=num_positions, seed=seed, **positional_encoding_arguments
-        )
+        return positional_encoding_class(d_model=d_model, num_positions=num_positions, **positional_encoding_arguments)

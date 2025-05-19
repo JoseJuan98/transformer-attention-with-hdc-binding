@@ -3,6 +3,7 @@
 
 # Standard imports
 import pathlib
+import random
 import warnings
 from typing import Literal, Tuple
 
@@ -99,6 +100,11 @@ def plot_similarity_from_center(
         title (str | None): Custom title for the plot. If None, a default title is generated.
         metric (MetricStr): Similarity metric ('cosine' or 'product'). Defaults to "cosine".
     """
+    # --- Set up the random seed for reproducibility ---
+    torch.manual_seed(seed)
+    numpy.random.seed(seed)
+    random.seed(seed)
+
     similarity_results = {}
 
     # Calculate reference position if not provided
@@ -115,7 +121,6 @@ def plot_similarity_from_center(
             positional_encoding_arguments=config if isinstance(config, str) else config.copy(),  # type: ignore[arg-type]
             d_model=d_model,
             num_positions=num_positions,
-            seed=seed,
         )
 
         # Get Weights

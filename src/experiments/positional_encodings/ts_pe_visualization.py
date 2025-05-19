@@ -3,12 +3,15 @@
 
 # Standard imports
 import math
+import random
 import warnings
 from pathlib import Path
 
 # Third party imports
 import matplotlib.colors as mcolors
+import numpy
 import numpy as np
+import torch
 from matplotlib import pyplot
 
 # First party imports
@@ -30,8 +33,14 @@ def main(  # noqa: C901
 ) -> None:
     """Main function to visualize the specified Positional Encoding."""
 
+    # --- Set up the random seed for reproducibility ---
+    torch.manual_seed(seed)
+    numpy.random.seed(seed)
+    random.seed(seed)
+
+    # --- Instantiate the Positional Encoding ---
     pos_encoder = PositionalEncodingFactory.get_positional_encoding(
-        positional_encoding_arguments=pe_type, num_positions=num_positions, d_model=embedding_dim, seed=seed
+        positional_encoding_arguments=pe_type, num_positions=num_positions, d_model=embedding_dim
     )
 
     dir_pe_type = output_dir / pe_type

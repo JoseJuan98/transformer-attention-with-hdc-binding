@@ -38,14 +38,13 @@ class ModelFactory:
 
     @classmethod
     def get_model(
-        cls, model_config: ModelConfig, dataset_cfg: DatasetConfig, seed: int, profiler_path: str = ""
+        cls, model_config: ModelConfig, dataset_cfg: DatasetConfig, profiler_path: str = ""
     ) -> EncoderOnlyTransformerTSClassifier:
         """Get the model based on the configuration.
 
         Args:
             model_config (ModelConfig): The model configuration.
             dataset_cfg (DatasetConfig): The dataset configuration.
-            seed (int): The random seed.
             profiler_path (str): [Optional] Path to save the profiler logs.
 
         Returns:
@@ -63,7 +62,6 @@ class ModelFactory:
             positional_encoding_arguments=model_config.positional_encoding,
             d_model=model_config.d_model,
             num_positions=dataset_cfg.context_length,
-            seed=seed,
         )
 
         # Get the embedding instance based on the configuration

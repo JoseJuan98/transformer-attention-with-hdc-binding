@@ -27,11 +27,13 @@ from typing import Literal
 import torch
 import torch.fft
 
+# First party imports
+from models.positional_encoding.base import PositionalEncoding
+
 FPEKernelStr = Literal["sinc", "gaussian", "triangular"]
 
 
-# TODO: inherit from PoisitionalEncoding
-class FPEOrigPositionalEncoding(torch.nn.Module):
+class FPEOrigPositionalEncoding(PositionalEncoding):
     """Positional encoding using the original Fractional Power Encoding (FPE) via FFT.
 
     Args:
@@ -40,7 +42,6 @@ class FPEOrigPositionalEncoding(torch.nn.Module):
         beta (float): Scaling factor for similarity (controls how fast similarity decays).
         kernel (str, optional): Method for initializing the base phase vector.
             Options: 'sinc', 'gaussian', 'triangular'. Defaults to 'sinc'.
-        seed (int, optional): Random seed for phase initialization. Defaults to 0.
     """
 
     name = "fractional_power_encoding"
@@ -48,26 +49,18 @@ class FPEOrigPositionalEncoding(torch.nn.Module):
     def __init__(
         self,
         d_model: int,
-        num_positions: int = 5000,
-        beta: float = 10.0,
-        kernel: FPEKernelStr = "sinc",
-        seed: int = 0,
+        num_positions: int,
         **kwargs,
     ):
         # Store specific args for _init_weight
-        # init_args = {"beta": beta, "kernel": kernel, "seed": seed}
-        # super(FPEOrigPositionalEncoding, self).__init__(d_model=d_model, num_positions=num_positions, **init_args)
-        super(FPEOrigPositionalEncoding, self).__init__()
+        super(FPEOrigPositionalEncoding, self).__init__(d_model=d_model, num_positions=num_positions, **kwargs)
 
-        self.d_model = d_model
-        self.num_positions = num_positions
-        self.beta = beta
-        self.kernel = kernel
-        self.seed = seed
+        # FPE specific args
+        self.beta = kwargs.get("beta", 1.0)
+        self.kernel = kwargs.get("kernel", "sinc")
+
         # Pass d_model, num_positions, and any other relevant args to _init_weight
-        self.encodings = self._init_weight(
-            d_model=d_model, num_positions=num_positions, beta=beta, kernel=kernel, seed=seed, **kwargs
-        )
+        self.encodings = self._init_weight(d_model=d_model, num_positions=num_positions, **kwargs)
 
         if not isinstance(self.encodings, torch.nn.Parameter):
             raise TypeError("_init_weight must return a torch.nn.Parameter")
@@ -76,11 +69,10 @@ class FPEOrigPositionalEncoding(torch.nn.Module):
             print(f"Warning: Positional encoding {self.__class__.__name__} is set to be learnable.")
 
     @staticmethod
-    def _init_weight(
-        d_model: int, num_positions: int, beta: float, kernel: FPEKernelStr, seed: int, **kwargs
-    ) -> torch.nn.Parameter:
+    def _init_weight(d_model: int, num_positions: int, **kwargs) -> torch.nn.Parameter:
         """Initializes positional encodings using the FPE-FFT method."""
-        torch.manual_seed(seed)
+        beta = kwargs.get("beta", 1.0)
+        kernel = kwargs.get("kernel", "sinc")
 
         # Initialize phase vector based on kernel type
         if kernel == "sinc":

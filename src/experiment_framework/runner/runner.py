@@ -37,7 +37,7 @@ class ExperimentRunner:
             seed (int): Random seed for reproducibility.
         """
         self.experiment_cfg = experiment_cfg
-        self.seed = seed
+        self.default_seed = seed
 
         # Initialize data structures for results
         self.results = pandas.DataFrame()
@@ -55,7 +55,7 @@ class ExperimentRunner:
         self._setup_paths_and_logging()
 
         # Set random seed for reproducibility
-        self._set_random_seed(seed=self.seed)
+        self._set_random_seed(seed=self.default_seed)
 
         # Initialize MetricsHandler
         self.metrics_handler = MetricsHandler(
@@ -194,7 +194,7 @@ class ExperimentRunner:
         dataset_cfg, data_module = self.data_factory.get_data_loaders_and_config(
             dataset_name=dataset_name,
             batch_size=self.experiment_cfg.default_batch_size,
-            seed=self.seed,
+            seed=self.default_seed,
             extract_path=self.data_dir,
             logger=self.logger,
             # If defined, it will plot the first sample of the dataset
@@ -229,7 +229,7 @@ class ExperimentRunner:
         for run in range(1, self.experiment_cfg.runs_per_experiment + 1):
 
             # Independent trial with different random initializations. Still it's deterministic and reproducible
-            self._set_random_seed(seed=self.seed + run, log_msg=False)
+            self._set_random_seed(seed=self.default_seed + run, log_msg=False)
 
             # Create the results directory if it doesn't exist
             self.results_path.mkdir(parents=True, exist_ok=True)
@@ -313,7 +313,6 @@ class ExperimentRunner:
             model_config=model_cfg,
             dataset_cfg=dataset_cfg,
             profiler_path=(model_run_path / f"run_{run}").as_posix() if self.experiment_cfg.profiler else "",
-            seed=self.seed,
         )
 
         # Create trainer
