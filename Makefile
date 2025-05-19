@@ -1,5 +1,5 @@
 .PHONY: init tensorboard kill-tensorboard clean-files help install install-dev install-poetry poetry-install \
-poetry-install-dev lint test run-ts clean install-precommit clean-run-ts
+poetry-install-dev lint test run-ts clean-dev install-precommit clean-run-ts
 
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
@@ -34,10 +34,10 @@ kill-tensorboard:
 	kill $(ps -e | grep 'tensorboard' | awk '{print $$1}')
 
 ## Clean logs
-clean:
-	@echo "Cleaning artifacts..."
-	@rm -rf $(ROOT_DIR)/artifacts/model/
-	@rm -rf $(ROOT_DIR)/artifacts/log/
+clean-dev:
+	@echo "Cleaning development artifacts..."
+	@rm -rf $(ROOT_DIR)/artifacts/model/*/dev/
+	@rm -rf $(ROOT_DIR)/artifacts/log/*/dev/
 
 ### Delete compiled Python files
 clean-files:
@@ -62,7 +62,7 @@ run-ts:
 	poetry run python src/experiments/time_series/run.py
 
 ## Alias for clean + run-ts
-clean-run-ts: clean run-ts
+clean-run-ts: clean-dev run-ts
 
 DEFAULT_GOAL := help
 .PHONY: help
