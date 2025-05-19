@@ -18,7 +18,7 @@ The paremeters above follows the parameters used for the experiments carried out
 
 Additionally, the experiments were conducted following effective training techniques, represented by the following parameters:
 
-- `"runs_per_experiment": 10`: each model is trained 10 times with different random seeds for each experiment and dataset.
+- `"trials_per_experiment": 10`: each model is trained 10 times with different random seeds for each experiment and dataset.
 This is to ensure that the results are not biased by a single run. Additionally, when calculating the metrics a confidence interval of 95% is used.
 - `"default_batch_size": 64`: default batch size. If `auto_scale_batch_size` is set to true, the batch size will be automatically scaled based on the available GPU memory,
 otherwise, the default batch size will be used. Also, it's used to calculate the minimum gradient accumulation steps.

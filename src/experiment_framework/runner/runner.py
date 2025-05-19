@@ -108,7 +108,7 @@ class ExperimentRunner:
         # Development mode: reduce the number of epochs, number of runs and number of datasets for development purposes
         if self.experiment_cfg.development:
             self.logger.info("\t => Development mode is enabled.")
-            self.experiment_cfg.runs_per_experiment = 2
+            self.experiment_cfg.trials_per_experiment = 2
             for model_config in self.experiment_cfg.model_configs.values():
                 model_config.num_epochs = 2
             # Use a lightweight dataset for development
@@ -226,7 +226,7 @@ class ExperimentRunner:
         data_module = self.dataset_cache[dataset]
         dataset_cfg = self.dataset_configs[dataset]
 
-        for run in range(1, self.experiment_cfg.runs_per_experiment + 1):
+        for run in range(1, self.experiment_cfg.trials_per_experiment + 1):
 
             # Independent trial with different random initializations. Still it's deterministic and reproducible
             self._set_random_seed(seed=self.default_seed + run, log_msg=False)

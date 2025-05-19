@@ -151,7 +151,7 @@
     ],
     "description": "Time Series Classification Positional Encodings Experiment. Different feature extractions and binding methods with N_L=1, d_model=64, d_ff=256, num_heads=8, dropout=0.1",
     "run_version": "version_3",
-    "runs_per_experiment": 5,
+    "trials_per_experiment": 5,
     "default_batch_size": 64,
     "accelerator": "auto",
     "precision": "16-mixed",

@@ -127,7 +127,7 @@
     ],
     "description": "Time Series Classification Positional Encodings Experiment",
     "run_version": "version_2",
-    "runs_per_experiment": 10,
+    "trials_per_experiment": 10,
     "default_batch_size": 64,
     "accelerator": "auto",
     "precision": "16-mixed",
