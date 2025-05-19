@@ -1,4 +1,4 @@
-dataset,model,test_acc,run,train_loss,train_acc,val_loss,val_acc,test_loss,size_MB,num_dimensions,num_classes,sequence_length,train_samples,test_samples,validation_samples,n_train_epochs,training_time_seconds
+dataset,model,test_acc,run,train_loss,train_acc,val_loss,val_acc,test_loss,size_MB,num_dimensions,num_classes,sequence_length,train_samples,test_samples,validation_samples,best_epoch,training_time_seconds
 FaceDetection,linear_additive_sinusoidal,0.4903,1,,,,,0.703,0.264,144,2,62,4712,3524,1178,1,44.22
 FaceDetection,linear_additive_isolated_sinusoidal,0.4957,1,,,,,0.6991,0.264,144,2,62,4712,3524,1178,1,44.4
 FaceDetection,1d_conv_additive_sinusoidal,0.5275,1,,,,,,0.3352,144,2,62,4712,3524,1178,1,45.29

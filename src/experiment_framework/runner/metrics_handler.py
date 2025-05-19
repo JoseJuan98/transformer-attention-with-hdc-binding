@@ -119,7 +119,7 @@ class MetricsHandler:
         metrics_copy["train_samples"] = train_samples
         metrics_copy["test_samples"] = test_samples
         metrics_copy["validation_samples"] = validation_samples
-        metrics_copy["best_train_epoch"] = best_train_epoch
+        metrics_copy["best_epoch"] = best_train_epoch
         metrics_copy["training_time_seconds"] = round(training_time, 2)
 
         metric_cols = metrics_copy.columns.tolist()
