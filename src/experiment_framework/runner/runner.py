@@ -175,8 +175,8 @@ class ExperimentRunner:
             )
 
         self.logger.info(
-            f"Experiment {self.exp_name_title} completed in {total_time // 60:.2f} minutes {total_time % 60:.2f} "
-            "seconds!"
+            f"Experiment {self.exp_name_title} completed in {total_time // 3600:.0f} hours "
+            f"{(total_time % 3600) // 60:.0f} minutes {total_time % 60:.2f} seconds!"
         )
 
     def _load_dataset(self, dataset_name: str) -> None:
