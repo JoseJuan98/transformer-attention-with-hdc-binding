@@ -91,8 +91,10 @@ class TimeSeries1dConvEmbedding(torch.nn.Module):
             torch.Tensor: Time series embeddings of shape (batch_size, seq_len, d_model).
         """
         # Transpose to (batch_size, c_in, seq_len) for Conv1d
-        x = x.transpose(1, 2)
+        x = x.transpose(dim0=1, dim1=2)
+
+        # Apply the 1D Convolution
         x = self.conv(x)
 
         # Transpose back to (batch_size, seq_len, d_model)
-        return x.transpose(1, 2)
+        return x.transpose(dim0=1, dim1=2)
