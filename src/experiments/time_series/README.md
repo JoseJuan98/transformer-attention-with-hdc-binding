@@ -103,11 +103,11 @@ These results in the following combinations:
 
 ### 1.1 - $N_L=4$
 
-Run with $N_L=4$ (4 encoder layers) a part from the base parameters, the metrics in the folder [version_2](../../../docs/experiment_metrics/binding_methods/version_2)
+Run with $N_L=4$ (4 encoder layers) a part from the base parameters, the metrics in the folder [version_2](../../../docs/experiment_metrics/binding_methods/vanishing_version_2)
 
 #### 1.2 - $N_L=1$
 
-Run with $N_L=1$ (1 encoder layers) a part from the base parameters, the metrics in the folder [version_3](../../../docs/experiment_metrics/binding_methods/version_3)
+Run with $N_L=1$ (1 encoder layers) a part from the base parameters, the metrics in the folder [version_3](../../../docs/experiment_metrics/binding_methods/vanishing_version_3)
 
 ## 2. Positional Encoding Experiments
 
@@ -126,4 +126,4 @@ embedding method, Circular Convolution Binding with Linear Projection Embeddings
   - Fractional Power Positional Encodings based in a Sinc function with $\beta=2$
   - Fractional Power Positional Encodings based in a Sinc function with $\beta=5$
 
-The results are in the folder [version_4](../../../docs/experiment_metrics/positional_encoding/pe_version_1)
+The results are in the folder [version_4](../../../docs/experiment_metrics/pe_version_1)
