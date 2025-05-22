@@ -53,6 +53,72 @@ def calculate_attention_manually(q, k, v, query_proj, key_proj, value_proj, mask
 @pytest.mark.parametrize("seq_len", [3, 5, 7])
 @pytest.mark.parametrize("embed_dim", [8, 16, 32])
 @pytest.mark.parametrize("use_mask", [True, False])
+def test_self_attention_vs_pytorch(batch_size, seq_len, embed_dim, use_mask):
+    """Tests the SelfAttention module against PyTorch's MultiheadAttention."""
+    torch.manual_seed(42)  # For reproducibility
+
+    # Create the SelfAttention module
+    custom_attention = SelfAttention(embed_dim)
+
+    # Create PyTorch's MultiheadAttention module with a single head
+    pytorch_attention = torch.nn.MultiheadAttention(
+        embed_dim=embed_dim,
+        num_heads=1,
+        batch_first=True,  # To match the [batch, seq, features] format
+        bias=True,  # Include bias to match the SelfAttention implementation
+    )
+
+    # Initialize PyTorch's attention with the same weights as the custom attention
+    # This ensures a fair comparison
+    with torch.no_grad():
+        # PyTorch combines Q, K, V projections into a single weight matrix
+        # First embed_dim rows are for query, next embed_dim for key, last embed_dim for value
+        pytorch_attention.in_proj_weight[:embed_dim].copy_(custom_attention.W_q.weight)
+        pytorch_attention.in_proj_weight[embed_dim : 2 * embed_dim].copy_(custom_attention.W_k.weight)
+        pytorch_attention.in_proj_weight[2 * embed_dim :].copy_(custom_attention.W_v.weight)
+
+        # Same for biases
+        pytorch_attention.in_proj_bias[:embed_dim].copy_(custom_attention.W_q.bias)
+        pytorch_attention.in_proj_bias[embed_dim : 2 * embed_dim].copy_(custom_attention.W_k.bias)
+        pytorch_attention.in_proj_bias[2 * embed_dim :].copy_(custom_attention.W_v.bias)
+
+        # Set output projection to identity
+        pytorch_attention.out_proj.weight.copy_(torch.eye(embed_dim))
+        pytorch_attention.out_proj.bias.zero_()
+
+    # Create a random input tensor
+    x = torch.randn(batch_size, seq_len, embed_dim)
+
+    # Create a mask if needed
+    mask = None
+    pytorch_mask = None
+    if use_mask:
+        # Create a causal mask (lower triangular)
+        mask = torch.tril(torch.ones(seq_len, seq_len)).bool().unsqueeze(0).repeat(batch_size, 1, 1)
+
+        # PyTorch's MultiheadAttention uses a different mask format
+        # It expects an additive mask of shape [seq_len, seq_len] or [batch_size, seq_len, seq_len]
+        # with -inf for masked positions and 0 for unmasked positions
+        pytorch_mask = torch.zeros(seq_len, seq_len)
+        pytorch_mask = pytorch_mask.masked_fill(~torch.tril(torch.ones(seq_len, seq_len)).bool(), float("-inf"))
+
+    # Calculate attention using our custom module
+    output_custom = custom_attention(q=x, k=x, v=x, mask=mask)
+
+    # Calculate attention using PyTorch's module
+    # PyTorch returns (output, attention_weights)
+    output_pytorch, _ = pytorch_attention(x, x, x, attn_mask=pytorch_mask)
+
+    # Check if the outputs are close
+    assert torch.allclose(
+        output_custom, output_pytorch, atol=1e-5
+    ), f"Outputs differ:\nCustom: {output_custom}\nPyTorch: {output_pytorch}"
+
+
+@pytest.mark.parametrize("batch_size", [1, 2, 4])
+@pytest.mark.parametrize("seq_len", [3, 5, 7])
+@pytest.mark.parametrize("embed_dim", [8, 16, 32])
+@pytest.mark.parametrize("use_mask", [True, False])
 def test_self_attention(batch_size, seq_len, embed_dim, use_mask):
     """
     Tests the SelfAttention module against a manual calculation.
