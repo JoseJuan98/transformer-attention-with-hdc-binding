@@ -1,6 +1,8 @@
 # Enhancing Transformer Attention with HDC Binding for Positional Encodings
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) <!-- Example Badge - Add relevant ones -->
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-green.svg)](https://www.python.org/downloads/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.6+-orange.svg)](https://pytorch.org/)
 <!-- Add other badges: e.g., build status, Python version, etc. -->
 
 <!-- #TODO: add somewhere that to check the experiments carry out check the [experiments doc](src/experiments/README.md) -->
