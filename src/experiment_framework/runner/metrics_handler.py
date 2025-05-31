@@ -61,7 +61,7 @@ class MetricsHandler:
         self.aggregated_metrics_path = (
             aggregated_metrics_path
             if aggregated_metrics_path
-            else self.metrics_path.parent / f"aggregated_{self.metrics_path.name}"
+            else self.metrics_path.parent / f"trial_{self.metrics_path.name}"
         )
         self.model_metrics_path = (
             model_metrics_path if model_metrics_path else self.metrics_path.parent / f"model_{self.metrics_path.name}"
