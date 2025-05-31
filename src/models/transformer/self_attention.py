@@ -44,6 +44,8 @@ class SelfAttention(torch.nn.Module):
         self.sqrt_d_k = self.d_k**0.5
 
         # Linear transformations for queries, keys, and values.
+        # Some implementations use a single linear layer for all three transformations or not biases, but state-of-the-
+        # art performance is not pursued here and the original paper uses biases.
         self.W_q = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
         self.W_k = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
         self.W_v = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
