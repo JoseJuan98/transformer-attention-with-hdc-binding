@@ -473,10 +473,13 @@ class ExperimentRunner:
             # it will use the batch size in the datamodule as initial value
             data_module.batch_size = initial_batch_size
 
-            # TODO: only works for GPUs with 11 Gb of VRAM, modify for other GPUs
             # |Bug fix| for the dataset SelfRegulationSCP1 and model linear_component_wise_sinusoidal it will not
             #   select the proper batch size
-            if model_name == "linear_component_wise_sinusoidal" and dataset_name == "SelfRegulationSCP1":
+            #   * Only works for GPUs with 11 Gb of VRAM, modify for other GPUs
+            if (
+                model_name in ["linear_component_wise_sinusoidal", "linear_component_wise_isolated_sinusoidal"]
+                and dataset_name == "SelfRegulationSCP1"
+            ):
                 self.logger.warning(
                     f"Applying specific fix for {model_name} on {dataset_name}. Overriding tuned batch size "
                     f"{new_batch_size} with 32."
