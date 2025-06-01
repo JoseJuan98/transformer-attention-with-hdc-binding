@@ -222,9 +222,9 @@ class MetricsHandler:
             (metrics[metric_col] >= metrics["q05"]) & (metrics[metric_col] <= metrics["q95"])
         )
 
-        filtered_metrics = metrics[filter_mask].copy()  # Create the filtered DataFrame
+        filtered_metrics = metrics[filter_mask].copy()
 
-        # Optional: Report how many rows were filtered out
+        # Report how many rows were filtered out
         rows_filtered_out = len(metrics) - len(filtered_metrics)
         if rows_filtered_out > 0:
             print(
@@ -236,7 +236,7 @@ class MetricsHandler:
             print("No runs were filtered out (or all groups were too small to filter).")
 
         # Drop temporary columns
-        filtered_metrics = filtered_metrics.drop(columns=["group_count", "q05", "q95"])
+        filtered_metrics = filtered_metrics.drop(columns=["group_count", "q05", "q95"], errors="ignore")
 
         if filtered_metrics.empty:
             print("Warning: All rows were filtered out. No data left for aggregation.")
