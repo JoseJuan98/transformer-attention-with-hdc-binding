@@ -205,6 +205,7 @@ class MetricsHandler:
         filter_group_keys = ["dataset", "model"]
         metric_col = "test_acc"
 
+        # Remove outliers based on percentiles
         # Calculate group size, q05, q95 using transform to broadcast results back to the original DataFrame shape
         metrics["group_count"] = metrics.groupby(filter_group_keys)[metric_col].transform("count")
         metrics["q05"] = metrics.groupby(filter_group_keys)[metric_col].transform(
