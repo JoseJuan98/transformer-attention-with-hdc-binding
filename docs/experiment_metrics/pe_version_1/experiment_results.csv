@@ -1,0 +1,16 @@
+model,confidence_interval,mean_test_acc,std,margin_of_error,num_runs,num_runs_total
+linear_conv_0_8_gaussian_fpe,0.6306 ± 0.0294,0.6306,0.2668,0.0294,224,270
+linear_conv_1_sinc_fpe,0.6289 ± 0.0297,0.6289,0.2684,0.0297,223,270
+linear_conv_2_sinc_fpe,0.6271 ± 0.0293,0.6271,0.2635,0.0293,220,270
+linear_conv_5_sinc_fpe,0.6464 ± 0.0289,0.6464,0.2605,0.0289,221,270
+linear_conv_learnable_random_pe,0.5908 ± 0.0294,0.5908,0.2643,0.0294,221,270
+linear_conv_learnable_sinusoidal,0.6261 ± 0.0299,0.6261,0.2703,0.0299,223,270
+linear_conv_random_pe,0.5883 ± 0.0285,0.5883,0.2572,0.0285,222,270
+linear_conv_sinusoidal,0.6273 ± 0.0299,0.6273,0.27,0.0299,223,270
+linear_no_pe,0.4782 ± 0.0312,0.4782,0.2825,0.0312,224,270
+ConvTran,0.7250 ± 0,0.725,0.0,0.0,27,27
+TST,0.6643 ± 0,0.6643,0.0,0.0,27,27
+IT,0.6741 ± 0,0.6741,0.0,0.0,27,27
+Disjoint-CNN,0.6887 ± 0,0.6887,0.0,0.0,27,27
+FCN,0.6641 ± 0,0.6641,0.0,0.0,27,27
+ResNet,0.6605 ± 0,0.6605,0.0,0.0,27,27

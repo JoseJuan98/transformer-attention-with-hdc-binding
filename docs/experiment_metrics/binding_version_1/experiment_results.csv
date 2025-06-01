@@ -1,0 +1,15 @@
+model,confidence_interval,mean_test_acc,std,margin_of_error,num_runs,num_runs_total
+1d_conv_additive_sinusoidal,0.3152 ± 0.0276,0.3152,0.2495,0.0276,223,270
+1d_conv_circular_conv_isolated_sinusoidal,0.6390 ± 0.0286,0.639,0.2587,0.0286,223,270
+1d_conv_circular_conv_sinusoidal,0.6358 ± 0.0286,0.6358,0.2603,0.0286,226,270
+1d_conv_component_wise_sinusoidal,0.5949 ± 0.0305,0.5949,0.2753,0.0305,222,270
+linear_additive_isolated_sinusoidal,0.5073 ± 0.0338,0.5073,0.302,0.0338,218,270
+linear_additive_sinusoidal,0.5190 ± 0.0342,0.519,0.3078,0.0342,221,270
+linear_circular_conv_sinusoidal,0.6273 ± 0.0299,0.6273,0.27,0.0299,223,270
+linear_component_wise_sinusoidal,0.6146 ± 0.0303,0.6146,0.2745,0.0303,224,270
+ConvTran,0.7250 ± 0,0.725,0.0,0.0,27,27
+TST,0.6643 ± 0,0.6643,0.0,0.0,27,27
+IT,0.6741 ± 0,0.6741,0.0,0.0,27,27
+Disjoint-CNN,0.6887 ± 0,0.6887,0.0,0.0,27,27
+FCN,0.6641 ± 0,0.6641,0.0,0.0,27,27
+ResNet,0.6605 ± 0,0.6605,0.0,0.0,27,27
