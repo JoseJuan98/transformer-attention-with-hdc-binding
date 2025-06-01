@@ -11,7 +11,10 @@ from models.positional_encoding.base import PositionalEncoding
 
 
 class NullPositionalEncoding(PositionalEncoding):
-    """Creates a random positional encoding using the uniform distribution."""
+    """Creates a null (zero) positional encoding.
+
+    This module initializes positional encodings as a zero tensor, effectively disabling positional information.
+    """
 
     name = "none"
 
