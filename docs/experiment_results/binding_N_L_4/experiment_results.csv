@@ -6,7 +6,7 @@ model,confidence_interval,mean_test_acc,std,margin_of_error,num_runs,num_runs_to
 linear_additive_isolated_sinusoidal,0.5467 ± 0.0327,0.5467,0.2947,0.0327,222,270
 linear_additive_sinusoidal,0.5170 ± 0.0333,0.517,0.3015,0.0333,224,270
 linear_circular_conv_sinusoidal,0.6242 ± 0.0289,0.6242,0.2603,0.0289,222,270
-linear_component_wise_isolated_sinusoidal,0.6024 ± 0.0311,0.6024,0.2753,0.0311,214,260
+linear_component_wise_isolated_sinusoidal,0.6088 ± 0.0302,0.6088,0.2724,0.0302,222,270
 linear_component_wise_sinusoidal,0.6009 ± 0.0296,0.6009,0.269,0.0296,225,270
 ConvTran,0.7250 ± 0,0.725,0.0,0.0,27,27
 TST,0.6643 ± 0,0.6643,0.0,0.0,27,27

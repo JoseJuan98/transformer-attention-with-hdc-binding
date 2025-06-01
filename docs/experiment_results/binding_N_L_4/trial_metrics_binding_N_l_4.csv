@@ -204,6 +204,7 @@ SelfRegulationSCP1,1d_conv_component_wise_sinusoidal,0.7986 ± 0.0181,0.7986,0.0
 SelfRegulationSCP1,linear_additive_isolated_sinusoidal,0.7782 ± 0.0400,0.7782,0.0597,0.0400,8,10
 SelfRegulationSCP1,linear_additive_sinusoidal,0.8033 ± 0.0356,0.8033,0.0531,0.0356,8,10
 SelfRegulationSCP1,linear_circular_conv_sinusoidal,0.7935 ± 0.0319,0.7935,0.0476,0.0319,8,10
+SelfRegulationSCP1,linear_component_wise_isolated_sinusoidal,0.7811 ± 0.0266,0.7811,0.0397,0.0266,8,10
 SelfRegulationSCP1,linear_component_wise_sinusoidal,0.7794 ± 0.0169,0.7794,0.0252,0.0169,8,10
 SelfRegulationSCP2,1d_conv_additive_sinusoidal,0.5167 ± 0.0195,0.5167,0.0291,0.0195,8,10
 SelfRegulationSCP2,1d_conv_circular_conv_isolated_sinusoidal,0.5346 ± 0.0115,0.5346,0.0186,0.0115,9,10

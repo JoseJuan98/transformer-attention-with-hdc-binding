@@ -5,7 +5,7 @@
 
 ### Face Detection
 
-It seems a hard dataset to learn from, with high dimensions.
+It seems a hard dataset to learn from, with 144 dimensions.
 
 - `overfitting_1d_conv_circular_conv_isolated_sinusoidal_run_1_binding_version_1.png` and `overfitting_1d_conv_circular_conv_sinusoidal_run_1_binding_version_1.png` show clear signs of overfitting.
 

@@ -2419,3 +2419,13 @@ StandWalkJump,linear_circular_conv_sinusoidal,10,0.7995,0.5556,1.6794,0.6667,3.3
 StandWalkJump,1d_conv_circular_conv_sinusoidal,10,0.0012,1.0,0.2611,1.0,4.6046,0.2667,1.3518,4,3,2500,9,15,3,26,89.02
 StandWalkJump,1d_conv_circular_conv_isolated_sinusoidal,10,4.1491,0.3333,1.004,0.6667,1.1962,0.2667,1.3516,4,3,2500,9,15,3,14,127.07
 StandWalkJump,linear_component_wise_isolated_sinusoidal,10,1.0856,0.4444,2.9814,0.3333,1.3199,0.4,1.3484,4,3,2500,9,15,3,11,51.62
+SelfRegulationSCP1,linear_component_wise_isolated_sinusoidal,1,0.374,0.8505,0.5016,0.7778,0.4791,0.8396,0.9394,6,2,896,214,293,54,21,99.91
+SelfRegulationSCP1,linear_component_wise_isolated_sinusoidal,2,0.4819,0.7897,0.4774,0.7778,0.5034,0.8089,0.9406,6,2,896,214,293,54,19,94.33
+SelfRegulationSCP1,linear_component_wise_isolated_sinusoidal,3,0.4514,0.785,0.4039,0.8518,0.6524,0.7713,0.9394,6,2,896,214,293,54,23,101.84
+SelfRegulationSCP1,linear_component_wise_isolated_sinusoidal,4,0.4392,0.8131,0.4834,0.8148,0.4181,0.8259,0.9394,6,2,896,214,293,54,21,100.64
+SelfRegulationSCP1,linear_component_wise_isolated_sinusoidal,5,0.197,0.9065,0.3987,0.8704,1.433,0.6962,0.9394,6,2,896,214,293,54,26,109.01
+SelfRegulationSCP1,linear_component_wise_isolated_sinusoidal,6,,,,,0.6847,0.6451,0.9391,6,2,896,214,293,54,1,71.21
+SelfRegulationSCP1,linear_component_wise_isolated_sinusoidal,7,0.4503,0.7944,0.4359,0.7963,0.4883,0.7713,0.9394,6,2,896,214,293,54,22,101.23
+SelfRegulationSCP1,linear_component_wise_isolated_sinusoidal,8,0.3882,0.8318,0.3558,0.8704,0.624,0.7747,0.9394,6,2,896,214,293,54,23,103.22
+SelfRegulationSCP1,linear_component_wise_isolated_sinusoidal,9,0.4733,0.785,0.391,0.8148,0.4618,0.7952,0.9394,6,2,896,214,293,54,24,104.03
+SelfRegulationSCP1,linear_component_wise_isolated_sinusoidal,10,0.4628,0.799,0.4211,0.8519,0.4584,0.8055,0.9394,6,2,896,214,293,54,28,110.61
