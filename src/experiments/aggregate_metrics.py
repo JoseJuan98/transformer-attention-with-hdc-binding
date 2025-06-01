@@ -16,9 +16,8 @@ if __name__ == "__main__":
     # Get the metrics from the ConvTran experiments and append them to the metrics file
     file_path = (
         pathlib.Path(__file__).parents[2]
-        # / "docs/experiment_results/binding_version_1/metrics_binding_version_1.csv"
-        / "docs/experiment_results/binding_N_L_4/metrics_binding_N_l_4.csv"
-        # / "docs/experiment_results/pe_version_1/metrics_pe_version_1.csv"
+        / "docs/experiment_results/binding_version_1/metrics_binding_version_1.csv"
+        # / "docs/experiment_results/binding_N_L_4/metrics_binding_N_l_4.csv"
     )
 
     if not file_path.exists():
