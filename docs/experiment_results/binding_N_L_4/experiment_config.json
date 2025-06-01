@@ -17,9 +17,9 @@
             "embedding_binding": "additive",
             "embedding": "linear_projection"
         },
-        "Linear Additive Isolated Sinusoidal TS Transformer": {
-            "model_name": "linear_additive_isolated_sinusoidal",
-            "desc": "Encoder Only Transformer with Linear Projection Embeddings, Isolated Sinusoidal Positional Encoding and Additive Binding for Time Series Classification",
+        "Linear Additive Split Sinusoidal TS Transformer": {
+            "model_name": "linear_additive_split_sinusoidal",
+            "desc": "Encoder Only Transformer with Linear Projection Embeddings, Split Sinusoidal Positional Encoding and Additive Binding for Time Series Classification",
             "model": "encoder-only-transformer",
             "num_epochs": 100,
             "learning_rate": 0.003,
@@ -107,9 +107,9 @@
             "embedding_binding": "convolutional",
             "embedding": "1d_conv"
         },
-        "1D Conv Circular Convolution Isolated Sinusoidal TS Transformer": {
-            "model_name": "1d_conv_circular_conv_isolated_sinusoidal",
-            "desc": "Encoder Only Transformer with 1D Convolutional Embeddings, Isolated Sinusoidal Positional Encoding and Circular Convolutional Binding for Time Series Classification",
+        "1D Conv Circular Convolution Split Sinusoidal TS Transformer": {
+            "model_name": "1d_conv_circular_conv_split_sinusoidal",
+            "desc": "Encoder Only Transformer with 1D Convolutional Embeddings, Split Sinusoidal Positional Encoding and Circular Convolutional Binding for Time Series Classification",
             "model": "encoder-only-transformer",
             "num_epochs": 100,
             "learning_rate": 0.003,
@@ -122,9 +122,9 @@
             "embedding_binding": "convolutional",
             "embedding": "1d_conv"
         },
-        "Linear Component-wise Isolated Sinusoidal TS Transformer": {
-            "model_name": "linear_component_wise_isolated_sinusoidal",
-            "desc": "Encoder Only Transformer with Linear Projection Embeddings, Isolated Sinusoidal Positional Encoding and Component-wise Binding for Time Series Classification",
+        "Linear Component-wise Split Sinusoidal TS Transformer": {
+            "model_name": "linear_component_wise_split_sinusoidal",
+            "desc": "Encoder Only Transformer with Linear Projection Embeddings, Split Sinusoidal Positional Encoding and Component-wise Binding for Time Series Classification",
             "model": "encoder-only-transformer",
             "num_epochs": 100,
             "learning_rate": 0.003,
