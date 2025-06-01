@@ -18,8 +18,8 @@ URL: https://arxiv.org/abs/2109.03429
 
 The original authors retain all rights to their work. This implementation is for educational/research purposes.
 """
-
 # Standard imports
+import logging
 import math
 from typing import Literal
 
@@ -66,7 +66,7 @@ class FPEOrigPositionalEncoding(PositionalEncoding):
             raise TypeError("_init_weight must return a torch.nn.Parameter")
 
         if self.encodings.requires_grad:
-            print(f"Warning: Positional encoding {self.__class__.__name__} is set to be learnable.")
+            logging.warning(f"Positional encoding {self.__class__.__name__} is set to be learnable.")
 
     @staticmethod
     def _init_weight(d_model: int, num_positions: int, **kwargs) -> torch.nn.Parameter:
