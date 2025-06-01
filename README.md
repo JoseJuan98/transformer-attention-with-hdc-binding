@@ -12,20 +12,20 @@ with potential extensions to natural language processing (NLP) tasks.
 
 ## Table of Contents
 
-1.  [Introduction](#introduction)
-2.  [Core Idea: HDC for Positional Encoding](#core-idea-hdc-for-positional-encoding)
-3.  [Key Research Questions](#key-research-questions)
-4.  [Project Goals](#project-goals)
-5.  [Theoretical Background](#theoretical-background)
-6.  [Proposed Architecture](#proposed-architecture)
-7.  [Project Structure](#project-structure)
-8.  [Getting Started](#getting-started)
-    *   [Prerequisites](#prerequisites)
-    *   [Installation](#installation)
-9.  [Running Experiments](#running-experiments)
-    *   [Experiment Framework Overview](#experiment-framework-overview)
-    *   [Executing Experiments](#executing-experiments)
-    *   [Main Experiments Conducted](#main-experiments-conducted)
+1. [Introduction](#introduction)
+2. [Core Idea: HDC for Positional Encoding](#core-idea-hdc-for-positional-encoding)
+3. [Key Research Questions](#key-research-questions)
+4. [Project Goals](#project-goals)
+5. [Theoretical Background](#theoretical-background)
+6. [Proposed Architecture](#proposed-architecture)
+7. [Project Structure](#project-structure)
+8. [Getting Started](#getting-started)
+   * [Prerequisites](#prerequisites)
+   * [Installation](#installation)
+9. [Running Experiments](#running-experiments)
+   * [Experiment Framework Overview](#experiment-framework-overview)
+   * [Executing Experiments](#executing-experiments)
+   * [Main Experiments Conducted](#main-experiments-conducted)
 10. [Results](#results)
 11. [References](#references)
 12. [License](#license)
@@ -123,33 +123,42 @@ The core model is a Transformer-based classifier adapted for time series classif
 
 ### Prerequisites
 
-*   Python 3.11 or higher
-*   [Poetry](https://python-poetry.org/) for dependency management
-*   (Optional but Recommended) NVIDIA GPU with CUDA, AMD GPU with ROCm, or Intel GPU with XPU for hardware acceleration. CPU-only execution is also supported.
+* Python 3.11 or higher
+* [Poetry](https://python-poetry.org/) for dependency management
+* (Optional but Recommended) Hardware acceleration support:
+  * NVIDIA GPU with CUDA
+  * AMD GPU with ROCm
+  * Intel GPU with XPU
+  * Apple Silicon with MPS
+  * CPU-only execution is also supported.
 
 ### Installation
 
-1.  **Clone the repository:**
+1. Create virtual environment with Python 3.11 or higher (python 3.12 has been tested):
     ```bash
-    git clone <repository-url>
-    cd <repository-name>
+    python -m venv venv
+    source venv/bin/activate  # On Windows use: venv\Scripts\activate
     ```
 
-2.  **Set up the environment and install dependencies:**
-    The project uses Poetry. To install dependencies into a virtual environment:
+2. **Set up the environment and install dependencies.** The project uses Poetry. To install dependencies into a virtual environment:
     ```bash
     make install
     ```
-    This command typically creates a virtual environment (if one doesn't exist) and installs all dependencies listed in `pyproject.toml`.
 
-3.  **Detailed Backend Setup:**
-    For specific instructions on setting up PyTorch with different hardware backends (CUDA, ROCm, XPU, MPS, CPU), please refer to the [SETUP.md](docs/SETUP.md) file.
+3. **Detailed Backend Setup:** For specific instructions on setting up PyTorch with different hardware backends (CUDA, ROCm, XPU, MPS, CPU), please refer to the [SETUP.md](docs/SETUP.md) file.
 
 ## Running Experiments
 
 ### Experiment Framework Overview
 
 The project includes a framework designed to streamline the process of data preparation, model training, and results evaluation.
+Key features include:
+
+* Configuration-driven experiment definition
+* Automated logging and metrics collection
+* Reproducibility through fixed random seeds
+* Efficient data handling and hardware utilization
+* Support for multiple hardware backends
 
 <div style="text-align: center">
     <img src="docs/diagrams/Experiment_System.png" alt="High-level design of the experiment framework"/>
@@ -158,30 +167,36 @@ The project includes a framework designed to streamline the process of data prep
 
 ### Executing Experiments
 
-Experiments are managed via the `Makefile` and/or scripts within the `src/experiments/` directory.
+Experiments are managed via the `Makefile` and configuration files within the `src/experiments/` directory.
 
-*   **To select and run an experiment:**
+To select and run an time series classification experiment:
     ```bash
     make run-ts
     ```
 
-Please refer to `src/experiments/README.md` or the individual script files for detailed instructions on available arguments and configurations.
+Please refer to `src/experiments/README.md` or the individual script files for detailed instructions on available arguments and configurations options.
 
 ### Main Experiments Conducted
 
-The primary experiments focus on:
+The research is structured around five main experimental investigations:
 
-*   Comparing different HDC binding methods (additive, component-wise multiplication, circular convolution) for positional encoding.
-*   Evaluating different similarity shapes for absolute position encoding.
-*   Analyzing the impact of varying embedding dimensionalities.
-*   Benchmarking against traditional Transformers and ConvTran on UCR/UEA datasets.
+* Impact of Binding Methods and Input Embeddings: Comparing different binding methods (additive, multiplicative, circular convolution) with different input embedding types (linear projection, 1D convolution).
+* Impact of Model Depth: Investigating how the effectiveness of different binding methods changes with increased model depth.
+* Impact of Diverse Positional Encoding Schemes: Evaluating various positional encoding schemes with different similarity shapes (sinusoidal, split sinusoidal, random, fractional power encoding).
+* Comparison with State-of-the-Art: Benchmarking the best configurations against established models like ConvTran.
+* Impact of Model Capacity: Analyzing how the benefits of HDC binding scale with increasing model capacity.
 
 ## Results
 
 Detailed experimental results, including performance metrics, comparisons, and analyses, can be found in the `docs/metrics/` directory.
-*(Consider linking directly to key result files or a summary document if available, e.g., `docs/metrics/summary.md` or a PDF report.)*
+The results include:
 
-A summary of key findings will be updated here upon completion of major experimental phases.
+* Performance comparisons accross different binding methods
+* Analysis of positional encoding schemes and their similarity shapes
+* Abalation studies on model depth and capacity
+* Statistical significance testing with condifence intervals
+
+A summary of key findings will be updated here upon completion of all experimental phases.
 
 ## References
 
@@ -198,6 +213,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 *   This work was conducted as part of my Master's thesis at [Luleå University of Technology](https://www.ltu.se/en).
 
 [//]: # (#TODO:)
-[//]: # (*   Thanks to [Advisor Name&#40;s&#41;] for their guidance.)
+[//]: # (*   Thanks to [Advisor Name] for their guidance.)
 
 [//]: # (*   ... any other acknowledgements ...)
