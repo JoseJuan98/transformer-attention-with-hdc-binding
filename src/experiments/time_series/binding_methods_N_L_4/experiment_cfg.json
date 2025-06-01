@@ -1,8 +1,8 @@
 {
-  "experiment_name": "time_series_classification_binding_methods",
+  "experiment_name": "time_series_classification_binding_N_L_4",
   "task": "time series classification",
-  "description": "Time Series Classification Positional Encodings Experiment. Different feature extractions and binding methods with N_L=1, d_model=64, d_ff=256, num_heads=8, dropout=0.1",
-  "run_version": "binding_version_1",
+  "description": "Time Series Classification Positional Encodings Experiment. Different feature extractions and binding methods with N_L=4, d_model=64, d_ff=256, num_heads=8, dropout=0.1",
+  "run_version": "binding_N_l_4",
   "dataset_names": [
     "FaceDetection",
     "InsectWingbeat",
