@@ -11,11 +11,13 @@ def choose_experiment_to_run() -> str:
     """Prompt the user to choose an experiment to run."""
     print("Choose an experiment to run:")
     print("1. TS Classification with different binding methods")
-    print("2. TS Classification with different positional encodings")
+    print("2. TS Classification with different binding methods with N_L=4")
+    print("3. TS Classification with different positional encodings")
 
     experiments = {
         1: "binding_methods",
-        2: "positional_encodings",
+        2: "binding_methods_N_L_4",
+        3: "positional_encodings",
     }
 
     choice_msg = "> Enter the number of the experiment you want to run: "
