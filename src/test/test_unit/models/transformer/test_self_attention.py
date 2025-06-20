@@ -7,7 +7,7 @@ import pytest
 import torch
 
 # First party imports
-from models.transformer.self_attention import SelfAttention
+from models.transformer.attention.self_attention import SelfAttention
 
 
 def calculate_attention_manually(q, k, v, query_proj, key_proj, value_proj, mask=None):

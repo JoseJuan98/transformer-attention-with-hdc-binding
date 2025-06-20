@@ -8,6 +8,7 @@ from models.positional_encoding.adatative_sinusoidal import AdaptiveSinusoidalPo
 from models.positional_encoding.fractional import FPEOrigPositionalEncoding
 from models.positional_encoding.null_pe import NullPositionalEncoding
 from models.positional_encoding.random import RandomPositionalEncoding
+from models.positional_encoding.rotary import RotaryPositionalEncoding
 from models.positional_encoding.sinusoidal import SinusoidalPositionalEncoding
 from models.positional_encoding.split_sinusoidal import SplitSinusoidalPositionalEncoding
 
@@ -18,10 +19,11 @@ TSPositionalEncodingType = Union[
     NullPositionalEncoding,
     FPEOrigPositionalEncoding,
     AdaptiveSinusoidalPositionalEncoding,
+    RotaryPositionalEncoding,
 ]
 
 TSPositionalEncodingTypeStr = Literal[
-    "split_sinusoidal", "sinusoidal", "random", "null", "fractional_power", "adaptive_sinusoidal"
+    "split_sinusoidal", "sinusoidal", "random", "null", "fractional_power", "adaptive_sinusoidal", "rotary"
 ]
 
 
@@ -35,6 +37,7 @@ class PositionalEncodingFactory:
         "null": NullPositionalEncoding,
         "fractional_power": FPEOrigPositionalEncoding,
         "adaptive_sinusoidal": AdaptiveSinusoidalPositionalEncoding,
+        "rotary": RotaryPositionalEncoding,
     }
 
     @classmethod

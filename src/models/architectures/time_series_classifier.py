@@ -27,6 +27,7 @@ from models.base_model import BaseModel
 from models.binding_method import BindingMethodType
 from models.embedding.embedding_factory import EmbeddingType
 from models.positional_encoding import TSPositionalEncodingType
+from models.transformer.attention.factory import AttentionTypeStr
 from models.transformer.encoder import Encoder
 
 
@@ -74,6 +75,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         learning_rate: float = 1e-3,
         mask_input: bool = False,
         torch_profiling: torch.profiler.profile | None = None,
+        mhsa_type: AttentionTypeStr = "standard",
     ):
         """Initializes the EncoderOnlyTransformerClassifier model.
 
@@ -92,13 +94,18 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
             positional_encoding (TSPositionalEncodingType): The positional encoding layer.
             embedding_binding (BindingMethodType): The binding method for the embeddings.
             torch_profiling (torch.profiler.profile | None): The PyTorch profiler for performance profiling.
+            mhsa_type (str): The type of multi-head self-attention to use. Defaults to "standard". Options are
+                "standard" or "rotary".
         """
         super(EncoderOnlyTransformerTSClassifier, self).__init__()
         # Layers
         self.embedding = embedding
         self.positional_encoding = positional_encoding
         self.embedding_binding = embedding_binding
-        self.encoder = Encoder(num_layers=num_layers, d_model=d_model, num_heads=num_heads, d_ff=d_ff, dropout=dropout)
+        self.encoder = Encoder(
+            num_layers=num_layers, d_model=d_model, num_heads=num_heads, d_ff=d_ff, dropout=dropout, mhsa_type=mhsa_type
+        )
+
         # Classification head
         self.fc = torch.nn.Linear(in_features=d_model, out_features=num_classes if num_classes > 2 else 1)
         self.dropout = torch.nn.Dropout(dropout)
@@ -110,13 +117,14 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         self.learning_rate = learning_rate
         self.num_heads = num_heads
         self.mask_input = mask_input
+        self.mhsa_type = mhsa_type
 
         # Others
         self.loss_fn = loss_fn
         self.sqrt_d_model = math.sqrt(d_model)
         self.num_classes = num_classes
         self.positional_encoding_name = positional_encoding.name
-        self.embedding_binding_name = embedding_binding.name
+        self.embedding_binding_name = embedding_binding.name if embedding_binding else "identity"
         self.classification_task: Literal["binary", "multiclass", "multilabel"] = (
             "multiclass" if num_classes > 2 else "binary"
         )
@@ -170,12 +178,20 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         # Positional Encoding
         x_pos_enc = self.positional_encoding(x)
 
-        # Binding
-        x = self.embedding_binding(x_embed, x_pos_enc)
-        x = self.dropout(x)
+        if self.mhsa_type == "standard":
+            # Binding
+            x = self.embedding_binding(x_embed, x_pos_enc)  # type: ignore [misc]
+            x = self.dropout(x)
 
-        # Encoder
-        x = self.encoder(x, mask)
+            # Encoder
+            x = self.encoder(x, mask)
+        # RoPE Attention
+        elif self.mhsa_type == "rotary":
+            # For RoPE, there is no binding at the input level. The embeddings are passed directly to the encoder.
+            x = self.dropout(x_embed)
+
+            # Encoder: The encoder is called with the positional encodings passed as an argument.
+            x = self.encoder(x, mask, positional_encodings=x_pos_enc)
 
         # Global average pooling over the sequence length
         x = x.mean(dim=1)
@@ -194,8 +210,6 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
 
         # Get logits from the model
         logits = self(x)  # Shape: (batch_size (N), 1) for binary, (batch_size (N), num_classes (C)) for multiclass
-
-        # TODO: for the future avoid if statements during training
 
         # Squeeze the *last* dimension ONLY if it's 1 (i.e., binary classification).
         # This converts (N, 1) -> (N,) for BCEWithLogitsLoss compatibility, including the case (1, 1) -> (1,).

@@ -9,8 +9,8 @@ from models.binding_method.additive import AdditiveBinding
 from models.binding_method.convolutional import ConvolutionalBinding
 from models.binding_method.multiplicative import MultiplicativeBinding
 
-BindingMethodType = Union[AdditiveBinding, MultiplicativeBinding]
-BindingMethodTypeStr = Literal["additive", "multiplicative", "convolutional"]
+BindingMethodType = Union[AdditiveBinding, MultiplicativeBinding, None]
+BindingMethodTypeStr = Literal["additive", "multiplicative", "convolutional", "identity"]
 
 
 class BindingMethodFactory:
@@ -20,6 +20,8 @@ class BindingMethodFactory:
         "additive": AdditiveBinding,
         "multiplicative": MultiplicativeBinding,
         "convolutional": ConvolutionalBinding,
+        # Created for the RoPE positional embeddings, which does not require a binding method
+        "identity": None,
     }
 
     @classmethod
@@ -39,4 +41,8 @@ class BindingMethodFactory:
                 f"Binding method '{binding_method_name}' is not supported.\nSupported methods: {cls.catalog.keys()}"
             )
 
-        return cls.catalog[binding_method_name](embedding_dim=embedding_dim)
+        if binding_method_name == "identity":
+            # Return None for identity binding method, which means no binding is applied
+            return None
+
+        return cls.catalog[binding_method_name](embedding_dim=embedding_dim)  # type: ignore [misc]

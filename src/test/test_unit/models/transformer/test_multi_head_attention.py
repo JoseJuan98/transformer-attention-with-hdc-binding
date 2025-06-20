@@ -7,8 +7,8 @@ import pytest
 import torch
 
 # First party imports
-from models.transformer.multi_head_attention import MultiHeadAttention
-from models.transformer.self_attention import SelfAttention
+from models.transformer.attention.multi_head_attention import MultiHeadAttention
+from models.transformer.attention.self_attention import SelfAttention
 
 
 # Fixture for creating a MultiHeadAttention instance
