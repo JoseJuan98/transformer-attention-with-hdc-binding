@@ -14,7 +14,7 @@ import torch.nn.functional
 from matplotlib import pyplot
 
 # First party imports
-from models.positional_encoding.pe_factory import PositionalEncodingFactory
+from models.positional_encoding.factory import PositionalEncodingFactory
 from utils import Config
 
 MetricStr = Literal["cosine", "product"]

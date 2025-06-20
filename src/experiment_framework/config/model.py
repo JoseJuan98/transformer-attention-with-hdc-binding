@@ -8,7 +8,7 @@ from typing import Any, Dict, Union
 from models import ModelTypeStr
 from models.binding_method.binding_factory import BindingMethodTypeStr
 from models.embedding.embedding_factory import EmbeddingTypeStr
-from models.positional_encoding.pe_factory import TSPositionalEncodingTypeStr
+from models.positional_encoding.factory import TSPositionalEncodingTypeStr
 from utils.base_config import BaseConfig
 
 

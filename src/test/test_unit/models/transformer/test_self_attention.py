@@ -378,7 +378,7 @@ def test_attention_weights_sum_to_one():
     # Restore torch.matmul
     torch.matmul = original_matmul
 
-    # Check that we captured the attention weights
+    # Check that the attention weights were captured
     assert len(attention_weights_list) == 1, "Expected to capture attention weights"
     attention_weights = attention_weights_list[0]
 

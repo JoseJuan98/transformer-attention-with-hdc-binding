@@ -52,8 +52,7 @@ class TimeSeriesMeanScaler(torch.nn.Module):
 
         scale = ts_sum / torch.clamp(num_observed, min=1)
 
-        # If `default_scale` is provided, we use it, otherwise we use the scale
-        # of the batch.
+        # If `default_scale` is provided, use it, otherwise use the scale of the batch.
         if self.default_scale is None:
             batch_sum = ts_sum.sum(dim=0)
             batch_observations = torch.clamp(num_observed.sum(0), min=1)

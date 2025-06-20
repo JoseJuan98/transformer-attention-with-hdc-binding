@@ -4,7 +4,7 @@
 from typing import Literal, Union
 
 # First party imports
-from models.positional_encoding.fractional_pe import FPEOrigPositionalEncoding
+from models.positional_encoding.fractional import FPEOrigPositionalEncoding
 from models.positional_encoding.null_pe import NullPositionalEncoding
 from models.positional_encoding.random import RandomPositionalEncoding
 from models.positional_encoding.sinusoidal import SinusoidalPositionalEncoding
