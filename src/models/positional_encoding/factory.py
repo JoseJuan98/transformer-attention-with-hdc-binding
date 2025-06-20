@@ -4,6 +4,7 @@
 from typing import Literal, Union
 
 # First party imports
+from models.positional_encoding.adatative_sinusoidal import AdaptiveSinusoidalPositionalEncoding
 from models.positional_encoding.fractional import FPEOrigPositionalEncoding
 from models.positional_encoding.null_pe import NullPositionalEncoding
 from models.positional_encoding.random import RandomPositionalEncoding
@@ -16,9 +17,12 @@ TSPositionalEncodingType = Union[
     RandomPositionalEncoding,
     NullPositionalEncoding,
     FPEOrigPositionalEncoding,
+    AdaptiveSinusoidalPositionalEncoding,
 ]
 
-TSPositionalEncodingTypeStr = Literal["split_sinusoidal", "sinusoidal", "random", "null", "fractional_power"]
+TSPositionalEncodingTypeStr = Literal[
+    "split_sinusoidal", "sinusoidal", "random", "null", "fractional_power", "adaptive_sinusoidal"
+]
 
 
 class PositionalEncodingFactory:
@@ -30,6 +34,7 @@ class PositionalEncodingFactory:
         "random": RandomPositionalEncoding,
         "null": NullPositionalEncoding,
         "fractional_power": FPEOrigPositionalEncoding,
+        "adaptive_sinusoidal": AdaptiveSinusoidalPositionalEncoding,
     }
 
     @classmethod
