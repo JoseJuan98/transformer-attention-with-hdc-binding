@@ -17,7 +17,7 @@ def choose_experiment_to_run() -> str:
     experiments = {
         1: "binding_methods",
         2: "binding_methods_N_L_4",
-        3: "pe_visualization",
+        3: "positional_encodings",
     }
 
     choice_msg = "> Enter the number of the experiment you want to run: "
