@@ -48,10 +48,7 @@ class AdaptiveSinusoidalPositionalEncoding(PositionalEncoding):
             num_positions (int, optional): The maximum sequence length. Defaults to 5000.
         """
         # PositionalEncoding's __init__ which calls _init_weight.
-        super(PositionalEncoding, self).__init__()
-
-        self.d_model = d_model
-        self.num_positions = num_positions
+        super(AdaptiveSinusoidalPositionalEncoding, self).__init__(d_model=d_model, num_positions=num_positions)
 
         # Instantiate a base, non-learnable sinusoidal PE generator.
         self.base_pe_generator = SinusoidalPositionalEncoding(

@@ -42,10 +42,10 @@ References:
 import torch
 
 # First party imports
-from models.transformer.attention.multi_head_attention import MultiHeadAttention
+from models.transformer.attention.base_multihead_attention import BaseMultiHeadAttention
 
 
-class RotaryMultiHeadAttention(MultiHeadAttention):
+class RotaryMultiHeadAttention(BaseMultiHeadAttention):
     """Multi-Head Attention with Rotary Positional Embeddings (RoPE).
 
     Attributes:
@@ -66,13 +66,6 @@ class RotaryMultiHeadAttention(MultiHeadAttention):
         # Overrides __init__ to create the specific layers needed for this attention type
         super(RotaryMultiHeadAttention, self).__init__(embed_dim=embed_dim, num_heads=num_heads)
 
-        if embed_dim % num_heads != 0:
-            raise ValueError(
-                f"Embedding dimension ({embed_dim}) must be divisible by the number of heads ({num_heads})."
-            )
-        self.embed_dim = embed_dim
-        self.num_heads = num_heads
-        self.head_dim = embed_dim // num_heads
         self.sqrt_head_dim = self.head_dim**0.5
 
         # Q, K, V projection layers
@@ -155,7 +148,7 @@ class RotaryMultiHeadAttention(MultiHeadAttention):
         """
         return tensor.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
 
-    def forward(
+    def forward(  # type: ignore[override]
         self,
         q: torch.Tensor,
         k: torch.Tensor,

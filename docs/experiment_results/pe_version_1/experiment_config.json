@@ -180,7 +180,7 @@
         "Linear Rotary Positional Embeddings (RoPE) TS Transformer": {
             "model_name": "linear_rope",
             "model": "encoder-only-transformer",
-            "desc": "Encoder Only Transformer with Linear Projection Embeddings and Rotary Positional Emebedding (RoPE) for Time Series Classification",
+            "desc": "Encoder Only Transformer with Linear Projection Embeddings and Rotary Positional Embeddings (RoPE) for Time Series Classification",
             "num_epochs": 100,
             "learning_rate": 0.003,
             "d_model": 64,
