@@ -8,7 +8,8 @@ from typing import Any, Dict, Union
 from models import ModelTypeStr
 from models.binding_method.binding_factory import BindingMethodTypeStr
 from models.embedding.embedding_factory import EmbeddingTypeStr
-from models.positional_encoding.pe_factory import TSPositionalEncodingTypeStr
+from models.positional_encoding.factory import TSPositionalEncodingTypeStr
+from models.transformer.attention.factory import AttentionTypeStr
 from utils.base_config import BaseConfig
 
 
@@ -52,3 +53,4 @@ class ModelConfig(BaseConfig):
     positional_encoding: Union[TSPositionalEncodingTypeStr, Dict[str, Union[Any, TSPositionalEncodingTypeStr]]]
     embedding_binding: BindingMethodTypeStr
     embedding: EmbeddingTypeStr
+    multihead_attention: AttentionTypeStr = "standard"

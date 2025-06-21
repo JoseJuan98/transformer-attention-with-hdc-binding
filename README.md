@@ -39,7 +39,7 @@ This project investigates an alternative approach: using Hyperdimensional Comput
 
 ## Core Idea: HDC for Positional Encoding
 
-Instead of simple addition, this work explores using HDC binding operations (e.g., element-wise multiplication, circular convolution) to integrate positional vectors with token embeddings. The hypothesis is that these operations can create richer, more discriminative representations of position-aware tokens, potentially addressing limitations of traditional positional encoding methods such as anisotropy in similarity spaces.
+Instead of simple addition, this work explores using HDC binding operations (e.g., component-wise multiplication, circular convolution) to integrate positional vectors with token embeddings. The hypothesis is that these operations can create richer, more discriminative representations of position-aware tokens, potentially addressing limitations of traditional positional encoding methods such as anisotropy in similarity spaces.
 
 ## Key Research Questions
 

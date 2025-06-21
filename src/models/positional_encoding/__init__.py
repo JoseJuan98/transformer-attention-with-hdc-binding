@@ -2,7 +2,7 @@
 """Positiona encoding shortcuts."""
 
 # First party imports
-from models.positional_encoding.pe_factory import (
+from models.positional_encoding.factory import (
     PositionalEncodingFactory,
     TSPositionalEncodingType,
     TSPositionalEncodingTypeStr,

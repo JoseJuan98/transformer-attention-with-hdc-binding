@@ -15,7 +15,7 @@ import torch
 from matplotlib import pyplot
 
 # First party imports
-from models.positional_encoding.pe_factory import PositionalEncodingFactory, TSPositionalEncodingTypeStr
+from models.positional_encoding.factory import PositionalEncodingFactory, TSPositionalEncodingTypeStr
 from utils import Config
 
 DEFAULT_ARGS = {
@@ -55,7 +55,7 @@ def main(  # noqa: C901
     if pe_type not in ["random", "split_sinusoidal"]:
         pe_weights = pe_weights.squeeze(0)
 
-    # Ensure we only plot up to num_positions if the encoder was initialized larger
+    # Ensure plotting only up to num_positions if the encoder was initialized larger
     # (Shouldn't happen with current setup but good practice)
     pe_weights = pe_weights[:num_positions, :]
 

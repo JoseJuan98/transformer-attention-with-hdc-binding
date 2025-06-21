@@ -118,9 +118,10 @@ class SelfAttention(torch.nn.Module):
             if mask.dim() == 2:
                 mask = mask.unsqueeze(1)
 
-            attention_scores = attention_scores.masked_fill_(
-                mask=mask.logical_not(), value=float("-inf")
-            )  # or value=-1e9
+            mask = mask.logical_not()
+            # Get the minimum value for the data type used
+            fill_value = torch.finfo(attention_scores.dtype).min
+            attention_scores = attention_scores.masked_fill_(mask=mask, value=fill_value)
 
         # Apply softmax to get attention scores.
         # Z = softmax(Z)
