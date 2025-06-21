@@ -64,7 +64,7 @@ class RotaryMultiHeadAttention(MultiHeadAttention):
 
     def __init__(self, embed_dim: int, num_heads: int):
         # Overrides __init__ to create the specific layers needed for this attention type
-        super(MultiHeadAttention, self).__init__()
+        super(RotaryMultiHeadAttention, self).__init__(embed_dim=embed_dim, num_heads=num_heads)
 
         if embed_dim % num_heads != 0:
             raise ValueError(

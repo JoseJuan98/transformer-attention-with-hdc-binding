@@ -9,7 +9,7 @@ from models.binding_method.additive import AdditiveBinding
 from models.binding_method.convolutional import ConvolutionalBinding
 from models.binding_method.multiplicative import MultiplicativeBinding
 
-BindingMethodType = Union[AdditiveBinding, MultiplicativeBinding, None]
+BindingMethodType = Union[AdditiveBinding, ConvolutionalBinding, MultiplicativeBinding, None]
 BindingMethodTypeStr = Literal["additive", "multiplicative", "convolutional", "identity"]
 
 
