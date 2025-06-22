@@ -73,20 +73,15 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
         self.W_k = torch.nn.Linear(embed_dim, embed_dim, bias=False)
         self.W_v = torch.nn.Linear(embed_dim, embed_dim, bias=False)
 
-        # Output projection layer
-        self.W_o = torch.nn.Linear(embed_dim, embed_dim)
-
         # Initialize weights
         self.init_weights()
 
     def init_weights(self):
         """Initializes the weights of the linear layers using the Xavier Normal initialization."""
+        super(RotaryMultiHeadAttention, self).init_weights()
         torch.nn.init.xavier_normal_(self.W_q.weight, gain=1.0)
         torch.nn.init.xavier_normal_(self.W_k.weight, gain=1.0)
         torch.nn.init.xavier_normal_(self.W_v.weight, gain=1.0)
-        torch.nn.init.xavier_normal_(self.W_o.weight, gain=1.0)
-        if self.W_o.bias is not None:
-            torch.nn.init.zeros_(self.W_o.bias)
 
     @staticmethod
     def _rotate_half(x: torch.Tensor) -> torch.Tensor:
@@ -128,8 +123,9 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
         cos = torch.stack([cos, cos], dim=-1).reshape_as(positional_encodings)
 
         # Reshape and transpose to match the expected shape for multi-head attention
-        cos = cos.view(1, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
-        sin = sin.view(1, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
+        # Shape: (1, seq_len, embed_dim) -> (1, num_heads, seq_len, head_dim)
+        cos = self._split_for_attention_heads(tensor=cos, batch_size=1, seq_len=seq_len)
+        sin = self._split_for_attention_heads(tensor=sin, batch_size=1, seq_len=seq_len)
 
         # Apply rotation
         q_rotated = (q * cos) + (self._rotate_half(q) * sin)
