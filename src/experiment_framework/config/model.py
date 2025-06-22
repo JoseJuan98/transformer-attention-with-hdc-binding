@@ -52,5 +52,5 @@ class ModelConfig(BaseConfig):
     dropout: float
     positional_encoding: Union[TSPositionalEncodingTypeStr, Dict[str, Union[Any, TSPositionalEncodingTypeStr]]]
     embedding_binding: BindingMethodTypeStr
-    embedding: EmbeddingTypeStr
+    embedding: Union[EmbeddingTypeStr, Dict[str, Union[Any, EmbeddingTypeStr]]]
     multihead_attention: AttentionTypeStr = "standard"

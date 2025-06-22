@@ -40,8 +40,8 @@ class TimeSeries1dConvEmbedding(torch.nn.Module):
      points) as a d_model-dimensional vector. This embedding is designed to capture local temporal dependencies.
 
     Args:
-        c_in (int): Number of input channels (features) in the time series.
-        d_model (int): Dimension of the output embeddings.
+        in_features (int): Number of input channels (features) in the time series.
+        out_features (int): Dimension of the output embeddings.
         kernel_size (int): Size of the convolutional kernel (window).
         padding_mode (str): Padding mode for the convolution ('circular', 'zeros', etc.).
         bias (bool): Whether to include a bias term in the convolutional layer.
@@ -51,8 +51,8 @@ class TimeSeries1dConvEmbedding(torch.nn.Module):
 
     def __init__(
         self,
-        c_in: int,
-        d_model: int,
+        in_features: int,
+        out_features: int,
         kernel_size: int = 3,
         padding_mode: str = "circular",
         bias: bool = False,
@@ -63,8 +63,8 @@ class TimeSeries1dConvEmbedding(torch.nn.Module):
         # Calculate padding to maintain sequence length
         padding = (kernel_size - 1) // 2
         self.conv = torch.nn.Conv1d(
-            in_channels=c_in,
-            out_channels=d_model,
+            in_channels=in_features,
+            out_channels=out_features,
             kernel_size=kernel_size,
             padding=padding,
             stride=stride,

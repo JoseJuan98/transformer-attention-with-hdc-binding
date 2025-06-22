@@ -70,7 +70,7 @@ class ModelFactory:
 
         # Get the embedding instance based on the configuration
         embedding = EmbeddingFactory.get_embedding(
-            embedding_type=model_config.embedding, num_channels=dataset_cfg.num_channels, d_model=model_config.d_model
+            embedding_args=model_config.embedding, num_channels=dataset_cfg.num_channels, d_model=model_config.d_model
         )
 
         # Get the Embedding Binding Method instance based on the configuration
