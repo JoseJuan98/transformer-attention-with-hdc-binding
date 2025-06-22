@@ -36,7 +36,7 @@ class FineTuneLearningRateFinder(LearningRateFinder):
         self.milestones = milestones
 
     def on_train_epoch_start(self, trainer: lightning.Trainer, pl_module: lightning.LightningModule):
-        """On train epoch start, check if we need to run the LR finder."""
+        """On train epoch start, check if the LR finder is needed to run."""
         if trainer.current_epoch in self.milestones:
             self.lr_find(trainer=trainer, pl_module=pl_module)
             pl_module.learning_rate = self.optimal_lr

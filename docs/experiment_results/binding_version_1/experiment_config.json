@@ -173,7 +173,6 @@
     "swa_learning_rate": 0.0005,
     "use_lr_finder": true,
     "lr_finder_milestones": [
-        0,
         10,
         20,
         30,

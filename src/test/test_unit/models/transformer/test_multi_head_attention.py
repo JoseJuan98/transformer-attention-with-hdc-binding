@@ -7,8 +7,8 @@ import pytest
 import torch
 
 # First party imports
-from models.transformer.multi_head_attention import MultiHeadAttention
-from models.transformer.self_attention import SelfAttention
+from models.transformer.attention.multi_head_attention import MultiHeadAttention
+from models.transformer.attention.self_attention import SelfAttention
 
 
 # Fixture for creating a MultiHeadAttention instance
@@ -144,9 +144,9 @@ def test_multihead_attention_forward_all_zeros_mask(multihead_attention):
 
     output_with_mask = multihead_attention(q=x, k=x, v=x, mask=all_zeros_mask)
     assert output_with_mask.shape == (batch_size, seq_len, embed_dim)
-    # We don't check for specific values, as the behavior with an all-zeros mask
+    # Don't check for specific values, as the behavior with an all-zeros mask
     # might be implementation-dependent (e.g., might still attend to a special token).
-    # We just ensure it doesn't crash and produces the correct shape.
+    # Just ensure it doesn't crash and produces the correct shape.
 
 
 # Test on CPU and, if available, GPU

@@ -3,6 +3,7 @@
 # Standard imports
 import logging
 import pathlib
+from typing import Dict, Type
 
 # Third party imports
 import lightning
@@ -28,11 +29,14 @@ from models.embedding.embedding_factory import EmbeddingFactory
 from models.positional_encoding import PositionalEncodingFactory
 from utils import Config
 
+ModelType = EncoderOnlyTransformerTSClassifier
+ModelTypeStr = "encoder-only-transformer"
+
 
 class ModelFactory:
     """Factory class for creating models based on configuration."""
 
-    model_catalog: dict = {
+    model_catalog: Dict[str, Type[ModelType]] = {
         "encoder-only-transformer": EncoderOnlyTransformerTSClassifier,
     }
 
@@ -84,6 +88,7 @@ class ModelFactory:
             embedding=embedding,
             embedding_binding=embedding_binding,
             positional_encoding=positional_encoding,
+            mhsa_type=model_config.multihead_attention,
             num_classes=dataset_cfg.num_classes,
             dropout=model_config.dropout,
             learning_rate=model_config.learning_rate,
