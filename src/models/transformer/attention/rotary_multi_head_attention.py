@@ -29,7 +29,7 @@ Modifications:
 - The core rotation logic was extracted from the original `RoFormerSelfAttention` class into the method
 `apply_rotary_pos_emb`.
 
-- Created a `RotaryMultiHeadAttention` class that inherits from the project's `MultiHeadAttention` class to ensure
+- Created a `RotaryMultiHeadAttention` class that inherits from the project's `BaseMultiHeadAttention` class to ensure
 architectural consistency.
 
 - The `forward` method was adapted to accept rotary embeddings as a separate argument.

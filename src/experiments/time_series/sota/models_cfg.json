@@ -1,0 +1,52 @@
+{
+
+  "Linear Convolutional Adaptive Sinusoidal PE TS Transformer": {
+    "model_name": "linear_conv_adaptive_sin_pe",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Adaptive Sinusoidal PE and Convolutional Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "adaptive_sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  },
+
+  "Linear Rotary Positional Embeddings (RoPE) TS Transformer": {
+    "model_name": "linear_rope",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings and Rotary Positional Embeddings (RoPE) for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "rotary",
+    "embedding": "linear_projection",
+    "embedding_binding": "identity",
+    "multihead_attention": "rotary"
+  },
+
+  "ConvTran Adapted": {
+    "model_name": "convtran",
+    "model": "encoder-only-transformer",
+    "desc": "ConvTran from Fouami et al. adapted for architectural consistency.",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "tape",
+    "embedding": "spatial_temporal",
+    "embedding_binding": "additive",
+    "multihead_attention": "erpe"
+  }
+}
