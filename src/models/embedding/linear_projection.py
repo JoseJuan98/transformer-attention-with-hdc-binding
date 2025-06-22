@@ -20,7 +20,7 @@ class LinearProjection(BaseEmbedding):
 
     name = "linear_projection"
 
-    def __init__(self, in_features: int, out_features: int, bias: bool = False):
+    def __init__(self, in_features: int, out_features: int, bias: bool = False, **kwargs):
         """Initializes the LinearProjection class.
 
         Args:
@@ -30,16 +30,32 @@ class LinearProjection(BaseEmbedding):
         """
         super(LinearProjection, self).__init__(in_features=in_features, out_features=out_features, bias=bias)
 
-        self.linear = torch.nn.Linear(in_features=self.in_features, out_features=self.out_features, bias=self.bias)
+        self.normalization = kwargs.get("normalization", True)
+
+        if self.normalization:
+            self.linear = torch.nn.Sequential(
+                torch.nn.Linear(in_features=self.in_features, out_features=self.out_features, bias=self.bias),
+                torch.nn.LayerNorm(normalized_shape=self.out_features, eps=1e-5),
+            )
+        else:
+            self.linear = torch.nn.Linear(in_features=self.in_features, out_features=self.out_features, bias=self.bias)
+
         self.init_weights()
 
     def init_weights(self):
         """Initializes the weights of the linear layer using the Xavier Normal initialization."""
-        torch.nn.init.xavier_normal_(self.linear.weight, gain=1.0)
+        if self.normalization:
+            torch.nn.init.xavier_normal_(self.linear[0].weight, gain=1.0)
 
-        # Initialize bias to zero
-        if self.linear.bias is not None:
-            torch.nn.init.zeros_(self.linear.bias)
+            # Initialize bias to zero
+            if self.linear[0].bias is not None:
+                torch.nn.init.zeros_(self.linear[0].bias)
+        else:
+            torch.nn.init.xavier_normal_(self.linear.weight, gain=1.0)
+
+            # Initialize bias to zero
+            if self.linear.bias is not None:
+                torch.nn.init.zeros_(self.linear.bias)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Applies the linear projection to the input data.

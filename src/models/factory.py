@@ -25,7 +25,7 @@ from models import EncoderOnlyTransformerTSClassifier
 from models.binding_method import BindingMethodFactory
 from models.callbacks.fine_tune_lr_finder import FineTuneLearningRateFinder
 from models.callbacks.pocket_algorithm import PocketAlgorithm
-from models.embedding.embedding_factory import EmbeddingFactory
+from models.embedding.factory import EmbeddingFactory
 from models.positional_encoding import PositionalEncodingFactory
 from utils import Config
 

@@ -25,7 +25,7 @@ import torchmetrics
 # First party imports
 from models.base_model import BaseModel
 from models.binding_method import BindingMethodType
-from models.embedding.embedding_factory import EmbeddingType
+from models.embedding.factory import EmbeddingType
 from models.positional_encoding import TSPositionalEncodingType
 from models.transformer.attention.factory import AttentionTypeStr
 from models.transformer.encoder import Encoder

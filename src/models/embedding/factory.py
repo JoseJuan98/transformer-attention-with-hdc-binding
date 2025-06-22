@@ -5,10 +5,11 @@ from typing import Literal, Union
 
 # First party imports
 from models.embedding.linear_projection import LinearProjection
-from models.embedding.ts_conv_embedding import TimeSeries1dConvEmbedding
+from models.embedding.temporal_spatial import SpatialTemporalEmbedding
+from models.embedding.ts_convolutional import TimeSeries1dConvEmbedding
 
-EmbeddingType = Union[TimeSeries1dConvEmbedding, LinearProjection]
-EmbeddingTypeStr = Literal["1d_conv", "2d_conv", "linear_projection"]
+EmbeddingType = Union[TimeSeries1dConvEmbedding, LinearProjection, SpatialTemporalEmbedding]
+EmbeddingTypeStr = Literal["1d_conv", "2d_conv", "linear_projection", "spatial_temporal"]
 
 
 class EmbeddingFactory:
@@ -17,7 +18,7 @@ class EmbeddingFactory:
     catalog = {
         "linear_projection": LinearProjection,
         "1d_conv": TimeSeries1dConvEmbedding,
-        # "2d_conv": NotImplemented,
+        "spatial_temporal": SpatialTemporalEmbedding,
     }
 
     @classmethod
