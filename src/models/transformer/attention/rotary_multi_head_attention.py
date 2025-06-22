@@ -69,9 +69,9 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
         self.sqrt_head_dim = self.head_dim**0.5
 
         # Q, K, V projection layers
-        self.W_q = torch.nn.Linear(embed_dim, embed_dim, bias=False)
-        self.W_k = torch.nn.Linear(embed_dim, embed_dim, bias=False)
-        self.W_v = torch.nn.Linear(embed_dim, embed_dim, bias=False)
+        self.W_q = torch.nn.Linear(embed_dim, embed_dim)
+        self.W_k = torch.nn.Linear(embed_dim, embed_dim)
+        self.W_v = torch.nn.Linear(embed_dim, embed_dim)
 
         # Initialize weights
         self.init_weights()
@@ -101,24 +101,25 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
         return torch.stack([-x_odd, x_even], dim=-1).reshape_as(x)
 
     def _apply_rotary_pos_emb(
-        self, q: torch.Tensor, k: torch.Tensor, positional_encodings: torch.Tensor, seq_len: int | None = None
+        self, q: torch.Tensor, k: torch.Tensor, positional_encodings: torch.Tensor, seq_len: int
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Applies rotary positional embedding to the query and key tensors.
 
         Args:
             q (torch.Tensor): Query tensor of shape (batch_size, num_heads, seq_len, head_dim).
             k (torch.Tensor): Key tensor of shape (batch_size, num_heads, seq_len, head_dim).
-            cos (torch.Tensor): Cosine component of the rotary embeddings.
-            sin (torch.Tensor): Sine component of the rotary embeddings.
+            positional_encodings (torch.Tensor): Rotary positional encodings of shape (1, seq_len, embed_dim).
+            seq_len (int): The sequence length of the input tensors.
 
         Returns:
             tuple[torch.Tensor, torch.Tensor]: The rotated query and key tensors.
         """
-        if seq_len is None:
-            seq_len = q.size(2)
 
         # The positional encodings are prepared for rotation.
+        # Shape: (1, seq_len, embed_dim // 2)
         sin, cos = positional_encodings.chunk(2, dim=-1)
+
+        # Shape: (1, seq_len, embed_dim // 2) -> (1, seq_len, embed_dim)
         sin = torch.stack([sin, sin], dim=-1).reshape_as(positional_encodings)
         cos = torch.stack([cos, cos], dim=-1).reshape_as(positional_encodings)
 

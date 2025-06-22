@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 import torch
 
 
-class BaseMultiHeadAttention(torch.nn.Module, ABC):
+class BaseMultiHeadAttention(ABC, torch.nn.Module):
     """Abstract base class for attention mechanisms.
 
     This class defines the common interface that all attention mechanisms should implement.
@@ -46,7 +46,11 @@ class BaseMultiHeadAttention(torch.nn.Module, ABC):
 
         This method must be implemented by subclasses to initialize their specific weights.
         """
-        pass
+        torch.nn.init.xavier_normal_(self.W_o.weight, gain=1.0)
+
+        # Initialize bias to zero
+        if self.W_o.bias is not None:
+            torch.nn.init.zeros_(self.W_o.bias)
 
     @abstractmethod
     def forward(
