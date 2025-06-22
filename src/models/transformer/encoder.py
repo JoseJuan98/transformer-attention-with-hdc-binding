@@ -132,6 +132,7 @@ class Encoder(torch.nn.Module):
         Args:
             x (torch.Tensor): The input tensor of shape (batch_size, seq_len, d_model).
             mask (torch.Tensor): The attention mask of shape (batch_size, seq_len).
+            positional_encodings (torch.Tensor, optional): Positional encodings for rotary attention. Defaults to None.
 
         Returns:
             torch.Tensor: The output tensor of shape (batch_size, seq_len, d_model).

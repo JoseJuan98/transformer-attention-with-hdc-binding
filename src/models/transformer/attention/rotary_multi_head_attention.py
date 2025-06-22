@@ -42,10 +42,10 @@ References:
 import torch
 
 # First party imports
-from models.transformer.attention.multi_head_attention import MultiHeadAttention
+from models.transformer.attention.base_multihead_attention import BaseMultiHeadAttention
 
 
-class RotaryMultiHeadAttention(MultiHeadAttention):
+class RotaryMultiHeadAttention(BaseMultiHeadAttention):
     """Multi-Head Attention with Rotary Positional Embeddings (RoPE).
 
     Attributes:
@@ -64,36 +64,24 @@ class RotaryMultiHeadAttention(MultiHeadAttention):
 
     def __init__(self, embed_dim: int, num_heads: int):
         # Overrides __init__ to create the specific layers needed for this attention type
-        super(MultiHeadAttention, self).__init__()
+        super(RotaryMultiHeadAttention, self).__init__(embed_dim=embed_dim, num_heads=num_heads)
 
-        if embed_dim % num_heads != 0:
-            raise ValueError(
-                f"Embedding dimension ({embed_dim}) must be divisible by the number of heads ({num_heads})."
-            )
-        self.embed_dim = embed_dim
-        self.num_heads = num_heads
-        self.head_dim = embed_dim // num_heads
         self.sqrt_head_dim = self.head_dim**0.5
 
         # Q, K, V projection layers
-        self.W_q = torch.nn.Linear(embed_dim, embed_dim, bias=False)
-        self.W_k = torch.nn.Linear(embed_dim, embed_dim, bias=False)
-        self.W_v = torch.nn.Linear(embed_dim, embed_dim, bias=False)
-
-        # Output projection layer
-        self.W_o = torch.nn.Linear(embed_dim, embed_dim)
+        self.W_q = torch.nn.Linear(embed_dim, embed_dim)
+        self.W_k = torch.nn.Linear(embed_dim, embed_dim)
+        self.W_v = torch.nn.Linear(embed_dim, embed_dim)
 
         # Initialize weights
         self.init_weights()
 
     def init_weights(self):
         """Initializes the weights of the linear layers using the Xavier Normal initialization."""
+        super(RotaryMultiHeadAttention, self).init_weights()
         torch.nn.init.xavier_normal_(self.W_q.weight, gain=1.0)
         torch.nn.init.xavier_normal_(self.W_k.weight, gain=1.0)
         torch.nn.init.xavier_normal_(self.W_v.weight, gain=1.0)
-        torch.nn.init.xavier_normal_(self.W_o.weight, gain=1.0)
-        if self.W_o.bias is not None:
-            torch.nn.init.zeros_(self.W_o.bias)
 
     @staticmethod
     def _rotate_half(x: torch.Tensor) -> torch.Tensor:
@@ -113,30 +101,32 @@ class RotaryMultiHeadAttention(MultiHeadAttention):
         return torch.stack([-x_odd, x_even], dim=-1).reshape_as(x)
 
     def _apply_rotary_pos_emb(
-        self, q: torch.Tensor, k: torch.Tensor, positional_encodings: torch.Tensor, seq_len: int | None = None
+        self, q: torch.Tensor, k: torch.Tensor, positional_encodings: torch.Tensor, seq_len: int
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Applies rotary positional embedding to the query and key tensors.
 
         Args:
             q (torch.Tensor): Query tensor of shape (batch_size, num_heads, seq_len, head_dim).
             k (torch.Tensor): Key tensor of shape (batch_size, num_heads, seq_len, head_dim).
-            cos (torch.Tensor): Cosine component of the rotary embeddings.
-            sin (torch.Tensor): Sine component of the rotary embeddings.
+            positional_encodings (torch.Tensor): Rotary positional encodings of shape (1, seq_len, embed_dim).
+            seq_len (int): The sequence length of the input tensors.
 
         Returns:
             tuple[torch.Tensor, torch.Tensor]: The rotated query and key tensors.
         """
-        if seq_len is None:
-            seq_len = q.size(2)
 
         # The positional encodings are prepared for rotation.
+        # Shape: (1, seq_len, embed_dim // 2)
         sin, cos = positional_encodings.chunk(2, dim=-1)
+
+        # Shape: (1, seq_len, embed_dim // 2) -> (1, seq_len, embed_dim)
         sin = torch.stack([sin, sin], dim=-1).reshape_as(positional_encodings)
         cos = torch.stack([cos, cos], dim=-1).reshape_as(positional_encodings)
 
         # Reshape and transpose to match the expected shape for multi-head attention
-        cos = cos.view(1, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
-        sin = sin.view(1, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
+        # Shape: (1, seq_len, embed_dim) -> (1, num_heads, seq_len, head_dim)
+        cos = self._split_for_attention_heads(tensor=cos, batch_size=1, seq_len=seq_len)
+        sin = self._split_for_attention_heads(tensor=sin, batch_size=1, seq_len=seq_len)
 
         # Apply rotation
         q_rotated = (q * cos) + (self._rotate_half(q) * sin)
@@ -155,7 +145,7 @@ class RotaryMultiHeadAttention(MultiHeadAttention):
         """
         return tensor.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
 
-    def forward(
+    def forward(  # type: ignore[override]
         self,
         q: torch.Tensor,
         k: torch.Tensor,

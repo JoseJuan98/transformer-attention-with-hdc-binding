@@ -4,10 +4,11 @@
 import torch
 
 # Local imports
+from .base_multihead_attention import BaseMultiHeadAttention
 from .self_attention import SelfAttention
 
 
-class MultiHeadAttention(torch.nn.Module):
+class MultiHeadAttention(BaseMultiHeadAttention):
     r"""Multi-Head Attention module.
 
     This module implements multi-head attention by composing multiple SelfAttention modules.
@@ -38,35 +39,20 @@ class MultiHeadAttention(torch.nn.Module):
             embed_dim (int): The dimensionality of the input embeddings.
             num_heads (int): The number of attention heads.
         """
-        super(MultiHeadAttention, self).__init__()
-        if embed_dim % num_heads != 0:
-            raise ValueError(
-                f"Embedding dimension ({embed_dim}) must be divisible by the number of heads ({num_heads})."
-            )
-
-        self.embed_dim = embed_dim
-        self.num_heads = num_heads
-        self.head_dim = embed_dim // num_heads
+        super(MultiHeadAttention, self).__init__(embed_dim=embed_dim, num_heads=num_heads)
 
         # Create multiple SelfAttention heads.
         self.attention_heads = torch.nn.ModuleList([SelfAttention(embed_dim=self.head_dim) for _ in range(num_heads)])
-
-        # Linear transformation for the concatenated output.
-        self.W_o = torch.nn.Linear(in_features=embed_dim, out_features=embed_dim)
 
         # Xavier Normal initialization as in the original paper.
         self.init_weights()
 
     def init_weights(self):
         """Initializes the weights of the linear layers using the Xavier Normal initialization."""
-        torch.nn.init.xavier_normal_(self.W_o.weight, gain=1.0)
-
-        # Initialize bias to zero
-        if self.W_o.bias is not None:
-            torch.nn.init.zeros_(self.W_o.bias)
+        super(MultiHeadAttention, self).init_weights()
 
     def forward(
-        self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, mask: torch.Tensor | None = None
+        self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, mask: torch.Tensor | None = None, **kwargs
     ) -> torch.Tensor:
         """Performs the forward pass of the multi-head attention mechanism.
 
