@@ -32,8 +32,11 @@ SOFTWARE.
 # Third party imports
 import torch
 
+# First party imports
+from models.embedding.base import BaseEmbedding
 
-class TimeSeries1dConvEmbedding(torch.nn.Module):
+
+class TimeSeries1dConvEmbedding(BaseEmbedding):
     """Embeds time series data using a 1D convolutional layer.
 
     This layer learns to extract features from the time series and represent each time point (or a small window of time
@@ -58,18 +61,18 @@ class TimeSeries1dConvEmbedding(torch.nn.Module):
         bias: bool = False,
         stride: int = 1,
     ):
-        super(TimeSeries1dConvEmbedding, self).__init__()
+        super(TimeSeries1dConvEmbedding, self).__init__(in_features=in_features, out_features=out_features, bias=bias)
 
         # Calculate padding to maintain sequence length
         padding = (kernel_size - 1) // 2
         self.conv = torch.nn.Conv1d(
-            in_channels=in_features,
-            out_channels=out_features,
+            in_channels=self.in_features,
+            out_channels=self.out_features,
             kernel_size=kernel_size,
             padding=padding,
             stride=stride,
             padding_mode=padding_mode,
-            bias=bias,
+            bias=self.bias,
         )
         self.init_weights()
 
@@ -81,7 +84,7 @@ class TimeSeries1dConvEmbedding(torch.nn.Module):
             # Initialize bias to zero
             torch.nn.init.zeros_(self.conv.bias)
 
-    def forward(self, x) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Applies the convolutional embedding to the input time series.
 
         Args:

@@ -3,8 +3,11 @@
 # Third party imports
 import torch
 
+# First party imports
+from models.embedding.base import BaseEmbedding
 
-class LinearProjection(torch.nn.Module):
+
+class LinearProjection(BaseEmbedding):
     """Linear projection layer for time series data.
 
     This layer projects the input features to a specified output dimension using a linear transformation.
@@ -25,9 +28,9 @@ class LinearProjection(torch.nn.Module):
             out_features (int): Number of output features.
             bias (bool): Whether to include a bias term in the linear layer.
         """
-        super(LinearProjection, self).__init__()
+        super(LinearProjection, self).__init__(in_features=in_features, out_features=out_features, bias=bias)
 
-        self.linear = torch.nn.Linear(in_features=in_features, out_features=out_features, bias=bias)
+        self.linear = torch.nn.Linear(in_features=self.in_features, out_features=self.out_features, bias=self.bias)
         self.init_weights()
 
     def init_weights(self):
