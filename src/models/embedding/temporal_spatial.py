@@ -85,13 +85,13 @@ class SpatialTemporalEmbedding(BaseEmbedding):
         # Initialize the weights of the temporal convolution
         torch.nn.init.kaiming_normal_(self.temporal_conv[0].weight, mode="fan_in", nonlinearity="leaky_relu")
 
-        if self.temporal_conv.bias is not None:
+        if self.temporal_conv[0].bias is not None:
             torch.nn.init.zeros_(self.temporal_conv[0].bias)
 
         # Initialize the weights of the spatial convolution
         torch.nn.init.kaiming_normal_(self.spatial_conv[0].weight, mode="fan_in", nonlinearity="leaky_relu")
 
-        if self.spatial_conv.bias is not None:
+        if self.spatial_conv[0].bias is not None:
             torch.nn.init.zeros_(self.spatial_conv[0].bias)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

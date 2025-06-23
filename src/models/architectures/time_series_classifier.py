@@ -184,7 +184,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         # Positional Encoding
         x_pos_enc = self.positional_encoding(x)
 
-        if self.mhsa_type == "standard":
+        if self.mhsa_type in ["standard", "erpe"]:
             # Binding
             x = self.embedding_binding(x_embed, x_pos_enc)  # type: ignore [misc]
             x = self.dropout(x)
