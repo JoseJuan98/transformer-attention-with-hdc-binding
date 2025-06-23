@@ -103,7 +103,13 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         self.positional_encoding = positional_encoding
         self.embedding_binding = embedding_binding
         self.encoder = Encoder(
-            num_layers=num_layers, d_model=d_model, num_heads=num_heads, d_ff=d_ff, dropout=dropout, mhsa_type=mhsa_type
+            num_layers=num_layers,
+            d_model=d_model,
+            num_heads=num_heads,
+            d_ff=d_ff,
+            dropout=dropout,
+            mhsa_type=mhsa_type,
+            seq_len=context_length,
         )
 
         # Classification head

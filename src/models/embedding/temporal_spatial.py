@@ -5,8 +5,9 @@ This module implements the embedding layer used in the ConvTran model, which con
 convolutional layers designed to capture temporal and spatial features from multivariate time series data.
 
 References:
-    [1] Foumani, N. M., et al. (2023). "Improving position encoding of transformers for multivariate time series
-    classification."
+    [1] Foumani, N. M., Tan, C. W., Webb, G. I., & Salehi, M. (2023). "Improving position encoding of transformers for
+    multivariate time series classification." Data Mining and Knowledge Discovery.
+    https://link.springer.com/content/pdf/10.1007/s10618-023-00948-2.pdf
 """
 
 # Third party imports
@@ -57,7 +58,7 @@ class SpatialTemporalEmbedding(BaseEmbedding):
                 out_channels=out_features * 4,
                 kernel_size=(1, temporal_kernel_size),
                 padding="same",
-                bias=False,
+                bias=self.bias,
             ),
             torch.nn.BatchNorm2d(num_features=out_features * 4),
             torch.nn.GELU(),
@@ -71,7 +72,7 @@ class SpatialTemporalEmbedding(BaseEmbedding):
                 out_channels=out_features,
                 kernel_size=(in_features, 1),
                 padding="valid",
-                bias=False,
+                bias=self.bias,
             ),
             torch.nn.BatchNorm2d(num_features=out_features),
             torch.nn.GELU(),

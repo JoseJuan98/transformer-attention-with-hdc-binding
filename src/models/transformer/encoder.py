@@ -29,7 +29,13 @@ class EncoderLayer(torch.nn.Module):
     """
 
     def __init__(
-        self, d_model: int, num_heads: int, d_ff: int, dropout: float = 0.1, mhsa_type: AttentionTypeStr = "standard"
+        self,
+        d_model: int,
+        num_heads: int,
+        d_ff: int,
+        seq_len: int,
+        dropout: float = 0.1,
+        mhsa_type: AttentionTypeStr = "standard",
     ):
         """Initializes the EncoderLayer module.
 
@@ -37,12 +43,13 @@ class EncoderLayer(torch.nn.Module):
             d_model (int): The dimensionality of the input and output embeddings.
             num_heads (int): The number of attention heads.
             d_ff (int): The dimensionality of the inner layer of the feed-forward network.
+            seq_len (int): The maximum sequence length of the input.
             dropout (float, optional): The dropout probability. Defaults to 0.1.
             mhsa_type (AttentionTypeStr, optional): The type of multi-head self-attention to use. Defaults to "standard".
         """
         super(EncoderLayer, self).__init__()
         self.self_attention = MultiHeadAttentionFactory.get_attention_module(
-            attention_type=mhsa_type, embed_dim=d_model, num_heads=num_heads
+            attention_type=mhsa_type, embed_dim=d_model, num_heads=num_heads, seq_len=seq_len
         )
         self.mhsa_type = mhsa_type
         self.norm1 = torch.nn.LayerNorm(d_model)
@@ -102,7 +109,8 @@ class Encoder(torch.nn.Module):
         d_model: int,
         num_heads: int,
         d_ff: int,
-        dropout=0.1,
+        seq_len: int,
+        dropout: float = 0.1,
         mhsa_type: AttentionTypeStr = "standard",
     ):
         """Initializes the Encoder module.
@@ -113,12 +121,20 @@ class Encoder(torch.nn.Module):
             num_heads (int): The number of attention heads.
             d_ff (int): The dimensionality of the inner layer of the feed-forward network.
             dropout (float, optional): The dropout probability. Defaults to 0.1.
+            seq_len (int): The maximum sequence length of the input.
             mhsa_type (AttentionTypeStr, optional): The type of multi-head self-attention to use. Defaults to "standard".
         """
         super(Encoder, self).__init__()
         self.layers = torch.nn.ModuleList(
             [
-                EncoderLayer(d_model=d_model, num_heads=num_heads, d_ff=d_ff, dropout=dropout, mhsa_type=mhsa_type)
+                EncoderLayer(
+                    d_model=d_model,
+                    num_heads=num_heads,
+                    d_ff=d_ff,
+                    dropout=dropout,
+                    mhsa_type=mhsa_type,
+                    seq_len=seq_len,
+                )
                 for _ in range(num_layers)
             ]
         )

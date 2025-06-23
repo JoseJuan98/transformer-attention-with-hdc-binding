@@ -16,10 +16,11 @@ class BaseMultiHeadAttention(ABC, torch.nn.Module):
         embed_dim (int): The dimensionality of the input embeddings.
         num_heads (int): The number of attention heads.
         head_dim (int): The dimensionality of each attention head.
+        seq_len (int): The maximum sequence length of the input.
         W_o (torch.nn.Linear): Linear transformation for the output.
     """
 
-    def __init__(self, embed_dim: int, num_heads: int):
+    def __init__(self, embed_dim: int, num_heads: int, seq_len: int, **kwargs):
         """Initializes the base attention module.
 
         Args:
@@ -35,6 +36,7 @@ class BaseMultiHeadAttention(ABC, torch.nn.Module):
 
         self.embed_dim = embed_dim
         self.num_heads = num_heads
+        self.seq_len = seq_len
         self.head_dim: int = embed_dim // num_heads
 
         # Linear transformation for the concatenated output.

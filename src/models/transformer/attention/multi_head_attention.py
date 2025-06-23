@@ -28,18 +28,20 @@ class MultiHeadAttention(BaseMultiHeadAttention):
         embed_dim (int): The dimensionality of the input embeddings.
         num_heads (int): The number of attention heads.
         head_dim (int): The dimensionality of each attention head.
+        seq_len (int): The maximum sequence length of the input.
         attention_heads (torch.nn.ModuleList): A list of SelfAttention modules.
         W_o (torch.nn.Linear): Linear transformation for the concatenated output.
     """
 
-    def __init__(self, embed_dim: int, num_heads: int):
+    def __init__(self, embed_dim: int, num_heads: int, seq_len: int, **kwargs):
         """Initializes the MultiHeadAttention module.
 
         Args:
             embed_dim (int): The dimensionality of the input embeddings.
             num_heads (int): The number of attention heads.
         """
-        super(MultiHeadAttention, self).__init__(embed_dim=embed_dim, num_heads=num_heads)
+        # W_o is defined in BaseMultiHeadAttention
+        super(MultiHeadAttention, self).__init__(embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len, **kwargs)
 
         # Create multiple SelfAttention heads.
         self.attention_heads = torch.nn.ModuleList([SelfAttention(embed_dim=self.head_dim) for _ in range(num_heads)])
