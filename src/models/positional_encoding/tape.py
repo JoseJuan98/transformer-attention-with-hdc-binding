@@ -5,7 +5,10 @@ This module implements the Time Absolute Position Encoding (tAPE) as proposed in
 standard sinusoidal positional encoding for time series data by incorporating the model's embedding dimension (d_model)
 and the sequence length (L) into the frequency calculation.
 
-Original code: https://github.com/Navidfoumani/ConvTran/blob/148afb6ca549915b7e78b05e2ec3b4ba6e052341/Models/AbsolutePositionalEncoding.py#L8-L44
+Original code:
+https://github.com/Navidfoumani/ConvTran/blob/148afb6ca549915b7e78b05e2ec3b4ba6e052341/Models/AbsolutePositionalEncoding.py#L8-L44
+
+MIT License:
 
 Copyright (c) 2022 Department of Data Science and Artificial Intelligence @Monash University
 

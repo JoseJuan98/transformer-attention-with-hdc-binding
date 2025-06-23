@@ -4,6 +4,39 @@
 This module implements the embedding layer used in the ConvTran model, which consists of two sequential 2D
 convolutional layers designed to capture temporal and spatial features from multivariate time series data.
 
+Original code:
+https://github.com/Navidfoumani/ConvTran/blob/148afb6ca549915b7e78b05e2ec3b4ba6e052341/Models/model.py#L86-L150
+
+MIT License:
+
+Copyright (c) 2022 Department of Data Science and Artificial Intelligence @Monash University
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONN
+
+Modifications:
+
+- The original code was adapted to fit the project's architecture, including the use of a base class for embeddings.
+
+- The biases in the convolutional layers are disabled by default. In the original implementation they are enabled, but
+  the effect of the bias is completely cancelled out by the Batch Normalization process, making it a redundant
+  parameter.
+
 References:
     [1] Foumani, N. M., Tan, C. W., Webb, G. I., & Salehi, M. (2023). "Improving position encoding of transformers for
     multivariate time series classification." Data Mining and Knowledge Discovery.
