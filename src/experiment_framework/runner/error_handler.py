@@ -44,14 +44,17 @@ class ErrorHandler:
             Exception: Re-raises the original exception if development_mode is True.
         """
         # Determine context and create a unique key for the error
+        symbol_banner = "x" * 24
         if model_name:
-            err_banner = f"t{f'{"x" * 24}'f' {dataset} | {model_name} | Run {run} 'f'{"x" * 24}': ^100}"
+            err_banner = symbol_banner + f" {dataset} | {model_name} | Run {run} " + symbol_banner
+            err_banner = f"{err_banner: ^100}"
             err_context = f"Error for {dataset} training {model_name} in run {run}"
             # Use a more structured key
             err_key = model_name
 
         else:
-            err_banner = f"{f'{"x" * 24}'f' {dataset} 'f'{"x" * 24}': ^100}"
+            err_banner = symbol_banner + f" {dataset} " + symbol_banner
+            err_banner = f"{err_banner: ^100}"
             err_context = f"Error loading or preparing {dataset}"
             # Dataset name as key for dataset-level errors
             err_key = dataset

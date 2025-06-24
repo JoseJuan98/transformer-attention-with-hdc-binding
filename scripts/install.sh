@@ -107,7 +107,7 @@ fi
 DEV=""
 if $INSTALL_DEV; then
   print_message "$BLUE" "Installing dev dependencies"
-  DEV="--with dev"
+  DEV="--with=dev,lint"
 fi
 
 # Determine installation command based on backend

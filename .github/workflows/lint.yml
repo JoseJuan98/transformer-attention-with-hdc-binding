@@ -48,8 +48,8 @@ jobs:
         restore-keys: |
           pre-commit-${{ runner.os }}-
 
-    - name: Install dependencies
-      run: make install-dev
+    - name: Install lint dependencies
+      run: make install-lint
 
     - name: Run linting
       run: make lint
