@@ -54,7 +54,7 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
         num_heads (int): The number of attention heads.
         seq_len (int): The maximum sequence length of the input.
         head_dim (int): The dimensionality of each attention head, calculated as embed_dim // num_heads.
-        sqrt_head_dim (float): The square root of the head dimension, used for scaling attention scores.
+        inv_sqrt_head_dim (float): The square root of the head dimension, used for scaling attention scores.
         W_q (torch.nn.Linear): Linear layer for projecting queries.
         W_k (torch.nn.Linear): Linear layer for projecting keys.
         W_v (torch.nn.Linear): Linear layer for projecting values.
@@ -69,7 +69,7 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
             embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len, **kwargs
         )
 
-        self.sqrt_head_dim = self.head_dim**-0.5
+        self.inv_sqrt_head_dim = self.head_dim**-0.5
 
         # Q, K, V projection layers
         self.W_q = torch.nn.Linear(embed_dim, embed_dim)
@@ -184,7 +184,7 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
 
         # Compute attention scores
         # Z = Q @ K^T / sqrt(head_dim)
-        attention_scores = torch.matmul(q_rot, k_rot.transpose(-1, -2)) * self.sqrt_head_dim
+        attention_scores = torch.matmul(q_rot, k_rot.transpose(-1, -2)) * self.inv_sqrt_head_dim
 
         # Z = Z + mask
         if mask is not None:

@@ -41,7 +41,7 @@ class SelfAttention(torch.nn.Module):
         """
         super(SelfAttention, self).__init__()
         self.d_k = embed_dim
-        self.sqrt_d_k = self.d_k**0.5
+        self.inv_sqrt_d_k = self.d_k**-0.5
 
         # Linear transformations for queries, keys, and values.
         # Some implementations use a single linear layer for all three transformations or not biases, but state-of-the-
@@ -102,7 +102,7 @@ class SelfAttention(torch.nn.Module):
 
         # Scale by the square root of the embedding dimension.
         # Z = Z / sqrt(embed_dim)
-        attention_scores = attention_scores / self.sqrt_d_k
+        attention_scores = attention_scores * self.inv_sqrt_d_k
 
         # Apply mask (if provided). Mask should be of shape (batch_size, seq_len), (batch_size, 1, seq_len)
         # or (batch_size, seq_len, seq_len).

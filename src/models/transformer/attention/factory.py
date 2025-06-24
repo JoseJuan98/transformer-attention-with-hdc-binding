@@ -30,7 +30,7 @@ class MultiHeadAttentionFactory:
         """Returns the attention module class based on the given name.
 
         Args:
-            attention_args (str, dict): The type of attention module to create. If a string is provided, it should be
+            attention_args (str | dict): The type of attention module to create. If a string is provided, it should be
                 one of the keys in the catalog. If a dictionary is provided, it should contain the key "type" with the
                 attention type.
             embed_dim (int): The dimensionality of the input embeddings.
