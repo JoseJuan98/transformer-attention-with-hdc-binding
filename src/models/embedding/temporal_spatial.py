@@ -51,7 +51,7 @@ from models.embedding.base import BaseEmbedding
 
 
 class SpatialTemporalEmbedding(BaseEmbedding):
-    """Implements the factored Sptial Temporal embedding layer, found in the ConvTran architecture [1].
+    """Implements the factored Spatial Temporal embedding layer, found in the ConvTran architecture [1].
 
     This layer processes multivariate time series input through two main steps as described in the paper [1]:
 
