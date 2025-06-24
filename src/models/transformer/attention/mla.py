@@ -133,7 +133,6 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         for layer in [self.q_a_proj, self.q_b_proj, self.kv_a_proj_with_mqa, self.kv_b_proj]:
             torch.nn.init.xavier_normal_(layer.weight, gain=1.0)
 
-    # TODO: make it a trait to be reused her and in RotaryMultiHeadAttention
     @staticmethod
     def _rotate_half(x: torch.Tensor) -> torch.Tensor:
         """Rotates the second half of the last dimension of the input tensor."""
@@ -141,7 +140,6 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         x_odd = x[..., 1::2]
         return torch.stack([-x_odd, x_even], dim=-1).reshape_as(x)
 
-    # TODO: make it a trait to be reused her and in RotaryMultiHeadAttention
     def _apply_rotary_pos_emb(
         self, q: torch.Tensor, k: torch.Tensor, positional_encodings: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
@@ -153,7 +151,6 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         sin = torch.stack([sin, sin], dim=-1).reshape_as(positional_encodings)
         cos = torch.stack([cos, cos], dim=-1).reshape_as(positional_encodings)
 
-        # TODO: make it a trait to be reused her and in RotaryMultiHeadAttention: use _split_for_attention_heads
         # The sin and cos tensors are reshaped to match the multi-head attention format.
         cos = cos.repeat(1, 1, self.num_heads).view(1, -1, self.num_heads, self.qk_rope_head_dim).transpose(1, 2)
         sin = sin.repeat(1, 1, self.num_heads).view(1, -1, self.num_heads, self.qk_rope_head_dim).transpose(1, 2)
