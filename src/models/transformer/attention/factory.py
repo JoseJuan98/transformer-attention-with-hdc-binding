@@ -26,7 +26,7 @@ class MultiHeadAttentionFactory:
     @classmethod
     def get_attention_module(
         cls, attention_args: AttentionTypeStr | dict, embed_dim: int, num_heads: int, seq_len: int
-    ) -> AttentionType:
+    ) -> tuple[AttentionType, AttentionTypeStr]:
         """Returns the attention module class based on the given name.
 
         Args:
@@ -46,10 +46,13 @@ class MultiHeadAttentionFactory:
             attention_type = attention_args
             attention_args = {}
 
-        if attention_args not in cls.catalog:
+        if attention_type not in cls.catalog:
             raise ValueError(
-                f"Attention type '{attention_args}' is not supported.\nSupported types: {list(cls.catalog.keys())}"
+                f"Attention type '{attention_type}' is not supported.\nSupported types: {list(cls.catalog.keys())}"
             )
 
         attention_class = cls.catalog[attention_type]
-        return attention_class(embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len, **attention_args)
+        return (
+            attention_class(embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len, **attention_args),
+            attention_type,
+        )

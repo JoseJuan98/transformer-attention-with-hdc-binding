@@ -35,7 +35,7 @@ class EncoderLayer(torch.nn.Module):
         d_ff: int,
         seq_len: int,
         dropout: float = 0.1,
-        mhsa_type: AttentionTypeStr = "standard",
+        mhsa_type: AttentionTypeStr | dict = "standard",
     ):
         """Initializes the EncoderLayer module.
 
@@ -48,10 +48,10 @@ class EncoderLayer(torch.nn.Module):
             mhsa_type (AttentionTypeStr, optional): The type of multi-head self-attention to use. Defaults to "standard".
         """
         super(EncoderLayer, self).__init__()
-        self.self_attention = MultiHeadAttentionFactory.get_attention_module(
+        self.self_attention, self.mhsa_type = MultiHeadAttentionFactory.get_attention_module(
             attention_args=mhsa_type, embed_dim=d_model, num_heads=num_heads, seq_len=seq_len
         )
-        self.mhsa_type = mhsa_type
+
         self.norm1 = torch.nn.LayerNorm(d_model)
         self.dropout1 = torch.nn.Dropout(dropout)
 
@@ -111,7 +111,7 @@ class Encoder(torch.nn.Module):
         d_ff: int,
         seq_len: int,
         dropout: float = 0.1,
-        mhsa_type: AttentionTypeStr = "standard",
+        mhsa_type: AttentionTypeStr | dict = "standard",
     ):
         """Initializes the Encoder module.
 
@@ -139,6 +139,7 @@ class Encoder(torch.nn.Module):
             ]
         )
         self.norm = torch.nn.LayerNorm(d_model)
+        self.mhsa_type = self.layers[0].mhsa_type
 
     def forward(
         self, x: torch.Tensor, mask: torch.Tensor, positional_encodings: torch.Tensor | None = None

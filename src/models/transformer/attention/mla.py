@@ -99,6 +99,8 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         self.qk_rope_head_dim = qk_rope_head_dim if qk_rope_head_dim is not None else self.head_dim // 2
         self.qk_nope_head_dim = self.head_dim - self.qk_rope_head_dim
         self.q_head_dim = self.head_dim
+        # The total dimension required for the rotary encodings
+        self.total_rope_dim = self.num_heads * self.qk_rope_head_dim
 
         self.v_head_dim = v_head_dim if v_head_dim is not None else self.head_dim
         self.kv_lora_rank = kv_lora_rank if kv_lora_rank is not None else 4 * self.head_dim
@@ -133,6 +135,21 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         for layer in [self.q_a_proj, self.q_b_proj, self.kv_a_proj_with_mqa, self.kv_b_proj]:
             torch.nn.init.xavier_normal_(layer.weight, gain=1.0)
 
+    # TODO: make it a trait to be reused her and in RotaryMultiHeadAttention: use _split_for_attention_heads
+    def _split_for_attention_heads(
+        self, tensor: torch.Tensor, batch_size: int, seq_len: int, head_dim: int
+    ) -> torch.Tensor:
+        """Reshapes and transposes the input tensor to split it into multiple heads.
+
+        Args:
+            tensor (torch.Tensor): The input tensor to be transposed of shape (batch_size, seq_len, embed_dim).
+
+        Returns:
+            torch.Tensor: The reshaped tensor of shape (batch_size, num_heads, seq_len, head_dim).
+        """
+        return tensor.view(batch_size, seq_len, self.num_heads, head_dim).transpose(1, 2)
+
+    # TODO: make it a trait to be reused her and in RotaryMultiHeadAttention
     @staticmethod
     def _rotate_half(x: torch.Tensor) -> torch.Tensor:
         """Rotates the second half of the last dimension of the input tensor."""
@@ -141,19 +158,22 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         return torch.stack([-x_odd, x_even], dim=-1).reshape_as(x)
 
     def _apply_rotary_pos_emb(
-        self, q: torch.Tensor, k: torch.Tensor, positional_encodings: torch.Tensor
+        self, q: torch.Tensor, k: torch.Tensor, positional_encodings: torch.Tensor, seq_len: int
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Applies rotary positional embedding to the query and key tensors."""
+        # The incoming positional_encodings (shape: 1, seq_len, d_model) are sliced to get only the part needed
+        rope_encodings = positional_encodings[:, :seq_len, : self.total_rope_dim]
+
         # The positional encodings are split into sin and cos components.
-        sin, cos = positional_encodings.chunk(2, dim=-1)
+        sin, cos = rope_encodings.chunk(2, dim=-1)
 
         # The sin and cos components are duplicated and reshaped to match the full embedding dimension.
-        sin = torch.stack([sin, sin], dim=-1).reshape_as(positional_encodings)
-        cos = torch.stack([cos, cos], dim=-1).reshape_as(positional_encodings)
+        sin = torch.stack([sin, sin], dim=-1).reshape_as(rope_encodings)
+        cos = torch.stack([cos, cos], dim=-1).reshape_as(rope_encodings)
 
         # The sin and cos tensors are reshaped to match the multi-head attention format.
-        cos = cos.repeat(1, 1, self.num_heads).view(1, -1, self.num_heads, self.qk_rope_head_dim).transpose(1, 2)
-        sin = sin.repeat(1, 1, self.num_heads).view(1, -1, self.num_heads, self.qk_rope_head_dim).transpose(1, 2)
+        sin = self._split_for_attention_heads(tensor=sin, batch_size=1, seq_len=seq_len, head_dim=self.qk_rope_head_dim)
+        cos = self._split_for_attention_heads(tensor=cos, batch_size=1, seq_len=seq_len, head_dim=self.qk_rope_head_dim)
 
         # The rotation is applied to the query and key tensors.
         q_rotated = (q * cos) + (self._rotate_half(q) * sin)
@@ -197,7 +217,9 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         k_pe = k_pe.view(batch_size, seq_len, self.num_heads, self.qk_rope_head_dim).transpose(1, 2)
 
         # Apply rotary embeddings to the rotary parts of Q and K.
-        q_pe, k_pe = self._apply_rotary_pos_emb(q_pe, k_pe, positional_encodings)
+        q_pe, k_pe = self._apply_rotary_pos_emb(
+            q=q_pe, k=k_pe, positional_encodings=positional_encodings, seq_len=seq_len
+        )
 
         # Compute attention scores.
         # The score is a sum of two parts: the rotary attention and the latent attention.
@@ -208,6 +230,8 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         kv_b_proj_w = self.kv_b_proj.weight.view(self.num_heads, -1, self.kv_lora_rank)
         k_absorb, v_absorb = torch.split(kv_b_proj_w, [self.qk_nope_head_dim, self.v_head_dim], dim=1)
 
+        # Add a singleton dimension to compressed_kv to represent the head dimension for broadcasting
+        compressed_kv = compressed_kv.unsqueeze(1)
         latent_attn = torch.matmul(torch.matmul(q_nope, k_absorb), compressed_kv.transpose(-1, -2))
 
         attention_scores = (rotary_attn + latent_attn) * self.softmax_scale

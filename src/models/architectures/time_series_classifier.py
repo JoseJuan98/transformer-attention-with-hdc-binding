@@ -75,7 +75,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         learning_rate: float = 1e-3,
         mask_input: bool = False,
         torch_profiling: torch.profiler.profile | None = None,
-        mhsa_type: AttentionTypeStr = "standard",
+        mhsa_type: AttentionTypeStr | dict = "standard",
     ):
         """Initializes the EncoderOnlyTransformerClassifier model.
 
@@ -123,7 +123,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         self.learning_rate = learning_rate
         self.num_heads = num_heads
         self.mask_input = mask_input
-        self.mhsa_type = mhsa_type
+        self.mhsa_type = self.encoder.mhsa_type
 
         # Others
         self.loss_fn = loss_fn

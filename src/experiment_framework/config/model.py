@@ -53,4 +53,4 @@ class ModelConfig(BaseConfig):
     positional_encoding: Union[TSPositionalEncodingTypeStr, Dict[str, Union[Any, TSPositionalEncodingTypeStr]]]
     embedding_binding: BindingMethodTypeStr
     embedding: Union[EmbeddingTypeStr, Dict[str, Union[Any, EmbeddingTypeStr]]]
-    multihead_attention: AttentionTypeStr = "standard"
+    multihead_attention: Union[AttentionTypeStr, Dict[str, Union[Any, AttentionTypeStr]]] = "standard"
