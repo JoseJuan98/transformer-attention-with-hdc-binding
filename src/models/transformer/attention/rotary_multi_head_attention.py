@@ -69,7 +69,7 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
             embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len, **kwargs
         )
 
-        self.sqrt_head_dim = self.head_dim**0.5
+        self.sqrt_head_dim = self.head_dim**-0.5
 
         # Q, K, V projection layers
         self.W_q = torch.nn.Linear(embed_dim, embed_dim)
@@ -187,7 +187,7 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
 
         # Compute attention scores
         # Z = Q @ K^T / sqrt(head_dim)
-        attention_scores = torch.matmul(q_rot, k_rot.transpose(-1, -2)) / self.sqrt_head_dim
+        attention_scores = torch.matmul(q_rot, k_rot.transpose(-1, -2)) * self.sqrt_head_dim
 
         # Z = Z + mask
         if mask is not None:

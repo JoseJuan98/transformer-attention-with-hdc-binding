@@ -56,7 +56,7 @@ class ERPEAttention(BaseMultiHeadAttention):
         # W_o is already defined in BaseMultiHeadAttention
 
         # Scaling factor for attention scores
-        self.sqrt_head_dim = self.head_dim**0.5
+        self.sqrt_head_dim = self.head_dim**-0.5
 
         # eRPE specific parameters
         # A learnable table for relative position biases. One scalar per head for each possible relative position.
@@ -113,7 +113,7 @@ class ERPEAttention(BaseMultiHeadAttention):
 
         # Calculate scaled dot-product attention scores
         # Z = Q @ K^T / sqrt(head_dim)
-        attention_scores = torch.matmul(q_proj, k_proj.transpose(-1, -2)) / self.sqrt_head_dim
+        attention_scores = torch.matmul(q_proj, k_proj.transpose(-1, -2)) * self.sqrt_head_dim
 
         # Apply mask if provided
         if mask is not None:
