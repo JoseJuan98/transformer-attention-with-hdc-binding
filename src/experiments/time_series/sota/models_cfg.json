@@ -64,6 +64,12 @@
     "positional_encoding": "rotary",
     "embedding": "linear_projection",
     "embedding_binding": "identity",
-    "multihead_attention": "mla"
-  }
+    "multihead_attention": {
+      "type": "mla",
+      "qk_rope_head_dim": 4,
+      "q_lora_rank": 96,
+      "kv_lora_rank": 32,
+      "v_head_dim": 8
+    }
+    }
 }
