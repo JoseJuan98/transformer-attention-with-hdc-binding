@@ -23,7 +23,7 @@ class TestGetTrainMetricsAndPlot(unittest.TestCase):
     def setUp(self):
         """Set up a temporary directory for test files."""
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.csv_dir = self.temp_dir.name
+        self.csv_dir = pathlib.Path(self.temp_dir.name)
         self.plots_dir = pathlib.Path(self.csv_dir) / "plots"
         self.plots_path = self.plots_dir / "test_plot.png"
 
@@ -37,20 +37,30 @@ class TestGetTrainMetricsAndPlot(unittest.TestCase):
         """Clean up the temporary directory."""
         self.temp_dir.cleanup()
 
-    def _run_test(self, df_data: dict, expected_metrics: dict):
+    def _run_test(
+        self,
+        df_data: dict,
+        expected_metrics: dict,
+        dataset_name="test_dataset",
+        model_name="test_model",
+        run_version="1",
+    ):
         """Helper function to run the test."""
         metrics_path = pathlib.Path(self.csv_dir) / "metrics.csv"
         df = pandas.DataFrame(df_data)
         df.to_csv(metrics_path, index=False)
 
-        handler = MetricsHandler(metrics_path=self.csv_dir)
+        handler = MetricsHandler(metrics_path=metrics_path)
 
         result_df = handler.get_train_metrics_and_plot(
-            csv_dir=self.csv_dir,
+            csv_dir=self.csv_dir.as_posix(),
             experiment="test_exp",
             logger=logging.getLogger("TestLogger"),
             plots_path=self.plots_path,
             show_plot=False,
+            dataset_name=dataset_name,
+            model_name=model_name,
+            run_version=run_version,
         )
 
         # Prepare expected DataFrame
@@ -65,6 +75,8 @@ class TestGetTrainMetricsAndPlot(unittest.TestCase):
         """Test metrics.csv without a 'val_acc' column."""
         data = {
             "epoch": [0, 1, 2],
+            "step": [0, 1, 2],  # Added step column which should be dropped
+            "n_samples": [100, 200, 300],  # Added n_samples column which should be dropped
             "train_loss": [1.0, 0.8, 0.6],
             "train_acc": [0.5, 0.6, 0.7],
             # "val_acc": MISSING
@@ -151,8 +163,8 @@ class TestGetTrainMetricsAndPlot(unittest.TestCase):
         """Test behavior when metrics.csv does not exist."""
 
         with pytest.raises(FileNotFoundError):
-            _ = MetricsHandler.get_train_metrics_and_plot(
-                csv_dir=self.csv_dir,
+            _ = MetricsHandler(metrics_path=self.csv_dir / "test_metrics.csv").get_train_metrics_and_plot(
+                csv_dir=self.csv_dir.as_posix(),
                 experiment="test_exp_no_file",
                 logger=None,
                 plots_path=self.plots_path,

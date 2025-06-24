@@ -12,10 +12,10 @@ from models.transformer.attention.self_attention import SelfAttention
 
 
 # Fixture for creating a MultiHeadAttention instance
-@pytest.fixture(params=[(64, 2), (128, 4), (256, 8)])
+@pytest.fixture(params=[(64, 2, 32), (128, 4, 64), (256, 8, 128)])
 def multihead_attention(request):
-    embed_dim, num_heads = request.param
-    return MultiHeadAttention(embed_dim=embed_dim, num_heads=num_heads)
+    embed_dim, num_heads, seq_len = request.param
+    return MultiHeadAttention(embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len)
 
 
 # Test initialization
@@ -33,7 +33,7 @@ def test_multihead_attention_init(multihead_attention):
 # Test invalid initialization (embed_dim not divisible by num_heads)
 def test_multihead_attention_init_invalid():
     with pytest.raises(ValueError):
-        MultiHeadAttention(embed_dim=63, num_heads=2)
+        MultiHeadAttention(embed_dim=63, num_heads=2, seq_len=1)
 
 
 # Test forward pass with valid input
