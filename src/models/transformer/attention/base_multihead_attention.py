@@ -26,6 +26,7 @@ class BaseMultiHeadAttention(ABC, torch.nn.Module):
         Args:
             embed_dim (int): The dimensionality of the input embeddings.
             num_heads (int): The number of attention heads.
+            seq_len (int): The maximum sequence length of the input.
         """
         super(BaseMultiHeadAttention, self).__init__()
 

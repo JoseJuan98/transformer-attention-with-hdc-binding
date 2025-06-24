@@ -9,7 +9,7 @@ from models.embedding.temporal_spatial import SpatialTemporalEmbedding
 from models.embedding.ts_convolutional import TimeSeries1dConvEmbedding
 
 EmbeddingType = Union[TimeSeries1dConvEmbedding, LinearProjection, SpatialTemporalEmbedding]
-EmbeddingTypeStr = Literal["1d_conv", "2d_conv", "linear_projection", "spatial_temporal"]
+EmbeddingTypeStr = Literal["1d_conv", "linear_projection", "spatial_temporal"]
 
 
 class EmbeddingFactory:

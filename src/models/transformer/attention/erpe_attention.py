@@ -74,9 +74,9 @@ class ERPEAttention(BaseMultiHeadAttention):
     def init_weights(self):
         """Initializes weights with Xavier Normal."""
         super(ERPEAttention, self).init_weights()
-        torch.torch.nn.init.xavier_normal_(self.W_q.weight, gain=1.0)
-        torch.torch.nn.init.xavier_normal_(self.W_k.weight, gain=1.0)
-        torch.torch.nn.init.xavier_normal_(self.W_v.weight, gain=1.0)
+        torch.nn.init.xavier_normal_(self.W_q.weight, gain=1.0)
+        torch.nn.init.xavier_normal_(self.W_k.weight, gain=1.0)
+        torch.nn.init.xavier_normal_(self.W_v.weight, gain=1.0)
 
     def _split_for_attention_heads(self, tensor: torch.Tensor, batch_size: int, seq_len: int) -> torch.Tensor:
         """Reshapes and transposes the input tensor to split it into multiple heads.
@@ -127,7 +127,7 @@ class ERPEAttention(BaseMultiHeadAttention):
 
         # Apply softmax to get attention probabilities
         # Z = softmax(Z)
-        attention_weights = torch.torch.nn.functional.softmax(attention_scores, dim=-1)
+        attention_weights = torch.nn.functional.softmax(attention_scores, dim=-1)
 
         # eRPE bias addition
         # Gather the relative position biases from the learnable table.

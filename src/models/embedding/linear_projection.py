@@ -27,6 +27,9 @@ class LinearProjection(BaseEmbedding):
             in_features (int): Number of input features.
             out_features (int): Number of output features.
             bias (bool): Whether to include a bias term in the linear layer.
+            kwargs (dict): Additional keyword arguments, such as:
+                - normalization (bool): Whether to apply layer normalization after the linear transformation. Defaults
+                to True.
         """
         super(LinearProjection, self).__init__(in_features=in_features, out_features=out_features, bias=bias)
 

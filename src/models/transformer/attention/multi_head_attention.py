@@ -39,6 +39,7 @@ class MultiHeadAttention(BaseMultiHeadAttention):
         Args:
             embed_dim (int): The dimensionality of the input embeddings.
             num_heads (int): The number of attention heads.
+            seq_len (int): The maximum sequence length of the input.
         """
         # W_o is defined in BaseMultiHeadAttention
         super(MultiHeadAttention, self).__init__(embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len, **kwargs)

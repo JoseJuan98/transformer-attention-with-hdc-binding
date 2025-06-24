@@ -38,6 +38,7 @@ class MultiHeadAttentionFactory:
 
         Returns:
             torch.nn.Module: An instance of the requested attention module.
+            str: The type of attention module created.
         """
         if isinstance(attention_args, dict):
             attention_type: AttentionTypeStr = attention_args["type"]

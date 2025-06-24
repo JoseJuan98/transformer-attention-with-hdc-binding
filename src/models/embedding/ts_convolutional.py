@@ -88,12 +88,12 @@ class TimeSeries1dConvEmbedding(BaseEmbedding):
         """Applies the convolutional embedding to the input time series.
 
         Args:
-            x (torch.Tensor): Input time series data of shape (batch_size, seq_len, c_in).
+            x (torch.Tensor): Input time series data of shape (batch_size, seq_len, in_features).
 
         Returns:
             torch.Tensor: Time series embeddings of shape (batch_size, seq_len, d_model).
         """
-        # Transpose to (batch_size, c_in, seq_len) for Conv1d
+        # Transpose to (batch_size, in_features, seq_len) for Conv1d
         x = x.transpose(dim0=1, dim1=2)
 
         # Apply the 1D Convolution
