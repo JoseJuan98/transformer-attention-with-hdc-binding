@@ -144,7 +144,10 @@ class ExperimentRunner:
             self.results_path = Config.model_dir / self._task_exp_path / dataset
 
             msg_task(msg=f" Dataset {dataset} ", logger=self.logger)
-            self.logger.info(f"\n\n\t{f'{"=" * 24}{" Loading Data ":^40}{"=" * 24}': ^100}\n")
+            banner_symbol = "=" * 24
+            msg = f'{" Loading Data ":^40}'
+            msg = f"\n\n\t{banner_symbol}{msg}{banner_symbol}"
+            self.logger.info(f"{msg: ^100}\n")
 
             try:
                 # Load dataset and create dataloaders only once per dataset

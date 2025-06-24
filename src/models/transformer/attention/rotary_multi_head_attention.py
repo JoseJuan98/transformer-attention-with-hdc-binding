@@ -29,7 +29,7 @@ Modifications:
 - The core rotation logic was extracted from the original `RoFormerSelfAttention` class into the method
 `apply_rotary_pos_emb`.
 
-- Created a `RotaryMultiHeadAttention` class that inherits from the project's `MultiHeadAttention` class to ensure
+- Created a `RotaryMultiHeadAttention` class that inherits from the project's `BaseMultiHeadAttention` class to ensure
 architectural consistency.
 
 - The `forward` method was adapted to accept rotary embeddings as a separate argument.
@@ -52,8 +52,10 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
         name (str): The name of the attention type, set to "rotary".
         embed_dim (int): The dimensionality of the embeddings.
         num_heads (int): The number of attention heads.
+        seq_len (int): The maximum sequence length of the input.
         head_dim (int): The dimensionality of each attention head, calculated as embed_dim // num_heads.
-        sqrt_head_dim (float): The square root of the head dimension, used for scaling attention scores.
+        inv_sqrt_head_dim (float): The inverse of the square root of the head dimension, used for scaling attention
+            scores.
         W_q (torch.nn.Linear): Linear layer for projecting queries.
         W_k (torch.nn.Linear): Linear layer for projecting keys.
         W_v (torch.nn.Linear): Linear layer for projecting values.
@@ -62,16 +64,19 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
 
     name = "rotary"
 
-    def __init__(self, embed_dim: int, num_heads: int):
+    def __init__(self, embed_dim: int, num_heads: int, seq_len, **kwargs):
         # Overrides __init__ to create the specific layers needed for this attention type
-        super(RotaryMultiHeadAttention, self).__init__(embed_dim=embed_dim, num_heads=num_heads)
+        super(RotaryMultiHeadAttention, self).__init__(
+            embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len, **kwargs
+        )
 
-        self.sqrt_head_dim = self.head_dim**0.5
+        self.inv_sqrt_head_dim = self.head_dim**-0.5
 
         # Q, K, V projection layers
         self.W_q = torch.nn.Linear(embed_dim, embed_dim)
         self.W_k = torch.nn.Linear(embed_dim, embed_dim)
         self.W_v = torch.nn.Linear(embed_dim, embed_dim)
+        # W_o is already defined in BaseMultiHeadAttention
 
         # Initialize weights
         self.init_weights()
@@ -79,9 +84,8 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
     def init_weights(self):
         """Initializes the weights of the linear layers using the Xavier Normal initialization."""
         super(RotaryMultiHeadAttention, self).init_weights()
-        torch.nn.init.xavier_normal_(self.W_q.weight, gain=1.0)
-        torch.nn.init.xavier_normal_(self.W_k.weight, gain=1.0)
-        torch.nn.init.xavier_normal_(self.W_v.weight, gain=1.0)
+        for layer in [self.W_q, self.W_k, self.W_v]:
+            torch.nn.init.xavier_normal_(layer.weight, gain=1.0)
 
     @staticmethod
     def _rotate_half(x: torch.Tensor) -> torch.Tensor:
@@ -165,8 +169,6 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
         Returns:
             torch.Tensor: The output tensor of shape (batch_size, seq_len, embed_dim).
         """
-        if positional_encodings is None:
-            raise ValueError("'positional_encodings' must be provided for RotaryMultiHeadAttention.")
 
         batch_size, seq_len, _ = q.shape
 
@@ -183,7 +185,7 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
 
         # Compute attention scores
         # Z = Q @ K^T / sqrt(head_dim)
-        attention_scores = torch.matmul(q_rot, k_rot.transpose(-1, -2)) / self.sqrt_head_dim
+        attention_scores = torch.matmul(q_rot, k_rot.transpose(-1, -2)) * self.inv_sqrt_head_dim
 
         # Z = Z + mask
         if mask is not None:

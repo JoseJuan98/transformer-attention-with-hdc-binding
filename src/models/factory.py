@@ -25,7 +25,7 @@ from models import EncoderOnlyTransformerTSClassifier
 from models.binding_method import BindingMethodFactory
 from models.callbacks.fine_tune_lr_finder import FineTuneLearningRateFinder
 from models.callbacks.pocket_algorithm import PocketAlgorithm
-from models.embedding.embedding_factory import EmbeddingFactory
+from models.embedding.factory import EmbeddingFactory
 from models.positional_encoding import PositionalEncodingFactory
 from utils import Config
 
@@ -70,7 +70,7 @@ class ModelFactory:
 
         # Get the embedding instance based on the configuration
         embedding = EmbeddingFactory.get_embedding(
-            embedding_type=model_config.embedding, num_channels=dataset_cfg.num_channels, d_model=model_config.d_model
+            embedding_args=model_config.embedding, num_channels=dataset_cfg.num_channels, d_model=model_config.d_model
         )
 
         # Get the Embedding Binding Method instance based on the configuration

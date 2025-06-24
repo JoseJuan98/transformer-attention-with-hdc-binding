@@ -23,6 +23,9 @@ dependencies = [
 ]
 
 [tool.poetry.group.dev.dependencies]
+pytest = ">=8.3.5"
+
+[tool.poetry.group.lint.dependencies]
 black = ">=25.1.0"
 flake8 = ">=7.1.2"
 isort = ">=6.0.1"
@@ -30,7 +33,6 @@ deptry = ">=0.23.0"
 mypy = ">=1.15.0"
 pydocstyle = ">=6.3.0"
 pre-commit = ">=4.1.0"
-pytest = ">=8.3.5"
 
 # The base group has no PyTorch - it will be installed by specific hardware groups or by poetry if it's the default
 #  installation

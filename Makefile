@@ -4,6 +4,7 @@ poetry-install-dev lint test run-ts clean-dev install-precommit clean-run-ts
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 install-poetry:
+	pip install --no-cache-dir -U pip && \
 	pip install --no-cache-dir -U "poetry>=2.1.1" && \
 	poetry config virtualenvs.in-project true
 
@@ -14,6 +15,10 @@ install:
 ## Install dev dependencies
 install-dev:
 	./scripts/install.sh --dev
+
+## Install only linting dependencies
+install-lint: install-poetry
+	poetry install --no-cache --with=lint
 
 poetry-install: install-poetry
 	poetry install --no-cache

@@ -7,7 +7,7 @@ from typing import Any, Dict, Union
 # First party imports
 from models import ModelTypeStr
 from models.binding_method.binding_factory import BindingMethodTypeStr
-from models.embedding.embedding_factory import EmbeddingTypeStr
+from models.embedding.factory import EmbeddingTypeStr
 from models.positional_encoding.factory import TSPositionalEncodingTypeStr
 from models.transformer.attention.factory import AttentionTypeStr
 from utils.base_config import BaseConfig
@@ -52,5 +52,5 @@ class ModelConfig(BaseConfig):
     dropout: float
     positional_encoding: Union[TSPositionalEncodingTypeStr, Dict[str, Union[Any, TSPositionalEncodingTypeStr]]]
     embedding_binding: BindingMethodTypeStr
-    embedding: EmbeddingTypeStr
-    multihead_attention: AttentionTypeStr = "standard"
+    embedding: Union[EmbeddingTypeStr, Dict[str, Union[Any, EmbeddingTypeStr]]]
+    multihead_attention: Union[AttentionTypeStr, Dict[str, Union[Any, AttentionTypeStr]]] = "standard"

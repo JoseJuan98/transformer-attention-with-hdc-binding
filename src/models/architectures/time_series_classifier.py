@@ -25,7 +25,7 @@ import torchmetrics
 # First party imports
 from models.base_model import BaseModel
 from models.binding_method import BindingMethodType
-from models.embedding.embedding_factory import EmbeddingType
+from models.embedding.factory import EmbeddingType
 from models.positional_encoding import TSPositionalEncodingType
 from models.transformer.attention.factory import AttentionTypeStr
 from models.transformer.encoder import Encoder
@@ -75,7 +75,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         learning_rate: float = 1e-3,
         mask_input: bool = False,
         torch_profiling: torch.profiler.profile | None = None,
-        mhsa_type: AttentionTypeStr = "standard",
+        mhsa_type: AttentionTypeStr | dict = "standard",
     ):
         """Initializes the EncoderOnlyTransformerClassifier model.
 
@@ -103,7 +103,13 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         self.positional_encoding = positional_encoding
         self.embedding_binding = embedding_binding
         self.encoder = Encoder(
-            num_layers=num_layers, d_model=d_model, num_heads=num_heads, d_ff=d_ff, dropout=dropout, mhsa_type=mhsa_type
+            num_layers=num_layers,
+            d_model=d_model,
+            num_heads=num_heads,
+            d_ff=d_ff,
+            dropout=dropout,
+            mhsa_type=mhsa_type,
+            seq_len=context_length,
         )
 
         # Classification head
@@ -117,7 +123,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         self.learning_rate = learning_rate
         self.num_heads = num_heads
         self.mask_input = mask_input
-        self.mhsa_type = mhsa_type
+        self.mhsa_type = self.encoder.mhsa_type
 
         # Others
         self.loss_fn = loss_fn
@@ -178,7 +184,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
         # Positional Encoding
         x_pos_enc = self.positional_encoding(x)
 
-        if self.mhsa_type == "standard":
+        if self.mhsa_type in ["standard", "erpe"]:
             # Binding
             x = self.embedding_binding(x_embed, x_pos_enc)  # type: ignore [misc]
             x = self.dropout(x)
@@ -186,7 +192,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
             # Encoder
             x = self.encoder(x, mask)
         # RoPE Attention
-        elif self.mhsa_type == "rotary":
+        elif self.mhsa_type in ["rotary", "mla"]:
             # For RoPE, there is no binding at the input level. The embeddings are passed directly to the encoder.
             x = self.dropout(x_embed)
 

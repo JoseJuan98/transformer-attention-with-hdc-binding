@@ -16,9 +16,9 @@ from models.architectures.time_series_classifier import EncoderOnlyTransformerTS
 
 
 class MockEmbedding(nn.Module):
-    def __init__(self, input_size, d_model):
+    def __init__(self, in_features, d_model):
         super().__init__()
-        self.linear = nn.Linear(input_size, d_model)
+        self.linear = nn.Linear(in_features, d_model)
 
     def forward(self, x):
         return self.linear(x)
@@ -65,12 +65,13 @@ def model_config(num_classes):
         "d_model": 16,
         "num_heads": 4,
         "d_ff": 32,
-        "input_size": 5,
+        "in_features": 5,  # Updated parameter name
         "context_length": 10,
         "num_classes": num_classes,
         "dropout": 0.1,
         "learning_rate": 1e-3,
         "mask_input": False,
+        "mhsa_type": "standard",  # Added required parameter
     }
 
 
@@ -78,7 +79,7 @@ def model_config(num_classes):
 def model_instance(model_config):
     """Creates a model instance based on the config."""
     num_classes = model_config["num_classes"]
-    input_size = model_config["input_size"]
+    in_features = model_config["in_features"]  # Updated parameter name
     d_model = model_config["d_model"]
     context_length = model_config["context_length"]
 
@@ -86,7 +87,7 @@ def model_instance(model_config):
     loss_fn = nn.BCEWithLogitsLoss() if num_classes == 2 else nn.CrossEntropyLoss()
 
     # Create mock dependencies
-    embedding = MockEmbedding(input_size, d_model)
+    embedding = MockEmbedding(in_features, d_model)
     positional_encoding = MockPositionalEncoding(d_model, context_length)
     embedding_binding = MockBinding()
 
@@ -112,10 +113,10 @@ def batch_data(batch_size, model_instance):
     """Creates dummy batch data."""
     config = model_instance.hparams
     context_length = config.context_length
-    input_size = config.input_size
+    in_features = config.in_features  # Updated parameter name
     num_classes = config.num_classes
 
-    x = torch.randn(batch_size, context_length, input_size)
+    x = torch.randn(batch_size, context_length, in_features)
 
     if num_classes == 2:
         # Binary classification: targets should be float (0.0 or 1.0) for BCEWithLogitsLoss
