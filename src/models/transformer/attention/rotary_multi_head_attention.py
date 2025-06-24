@@ -83,9 +83,8 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
     def init_weights(self):
         """Initializes the weights of the linear layers using the Xavier Normal initialization."""
         super(RotaryMultiHeadAttention, self).init_weights()
-        torch.nn.init.xavier_normal_(self.W_q.weight, gain=1.0)
-        torch.nn.init.xavier_normal_(self.W_k.weight, gain=1.0)
-        torch.nn.init.xavier_normal_(self.W_v.weight, gain=1.0)
+        for layer in [self.W_q, self.W_k, self.W_v]:
+            torch.nn.init.xavier_normal_(layer.weight, gain=1.0)
 
     @staticmethod
     def _rotate_half(x: torch.Tensor) -> torch.Tensor:
@@ -169,8 +168,6 @@ class RotaryMultiHeadAttention(BaseMultiHeadAttention):
         Returns:
             torch.Tensor: The output tensor of shape (batch_size, seq_len, embed_dim).
         """
-        if positional_encodings is None:
-            raise ValueError("'positional_encodings' must be provided for RotaryMultiHeadAttention.")
 
         batch_size, seq_len, _ = q.shape
 

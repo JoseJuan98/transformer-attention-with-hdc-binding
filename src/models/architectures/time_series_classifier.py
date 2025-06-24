@@ -192,7 +192,7 @@ class EncoderOnlyTransformerTSClassifier(BaseModel, lightning.LightningModule):
             # Encoder
             x = self.encoder(x, mask)
         # RoPE Attention
-        elif self.mhsa_type == "rotary":
+        elif self.mhsa_type in ["rotary", "mla"]:
             # For RoPE, there is no binding at the input level. The embeddings are passed directly to the encoder.
             x = self.dropout(x_embed)
 

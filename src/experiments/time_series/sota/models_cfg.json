@@ -48,5 +48,22 @@
     "embedding": "spatial_temporal",
     "embedding_binding": "additive",
     "multihead_attention": "erpe"
+  },
+
+  "Linear Multi-Head Latent Attention (MLA) TS Transformer": {
+    "model_name": "linear_mla",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings and Multi-Head Latent Attention (MLA) for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding": "rotary",
+    "embedding": "linear_projection",
+    "embedding_binding": "identity",
+    "multihead_attention": "mla"
   }
 }

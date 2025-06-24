@@ -49,7 +49,7 @@ class EncoderLayer(torch.nn.Module):
         """
         super(EncoderLayer, self).__init__()
         self.self_attention = MultiHeadAttentionFactory.get_attention_module(
-            attention_type=mhsa_type, embed_dim=d_model, num_heads=num_heads, seq_len=seq_len
+            attention_args=mhsa_type, embed_dim=d_model, num_heads=num_heads, seq_len=seq_len
         )
         self.mhsa_type = mhsa_type
         self.norm1 = torch.nn.LayerNorm(d_model)
@@ -73,7 +73,7 @@ class EncoderLayer(torch.nn.Module):
             torch.Tensor: The output tensor of shape (batch_size, seq_len, d_model).
         """
         # Multi-head attention and residual connection.
-        if self.mhsa_type == "rotary":
+        if self.mhsa_type in ["rotary", "mla"]:
             attn_output = self.self_attention(q=x, k=x, v=x, mask=mask, positional_encodings=positional_encodings)
         else:
             attn_output = self.self_attention(q=x, k=x, v=x, mask=mask)

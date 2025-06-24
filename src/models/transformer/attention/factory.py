@@ -5,11 +5,12 @@ from typing import Literal, Union
 
 # Local imports
 from .erpe_attention import ERPEAttention
+from .mla import MultiHeadLatentAttention
 from .multi_head_attention import MultiHeadAttention
 from .rotary_multi_head_attention import RotaryMultiHeadAttention
 
-AttentionType = Union[MultiHeadAttention, RotaryMultiHeadAttention, ERPEAttention]
-AttentionTypeStr = Literal["standard", "rotary", "erpe"]
+AttentionType = Union[MultiHeadAttention, RotaryMultiHeadAttention, ERPEAttention, MultiHeadLatentAttention]
+AttentionTypeStr = Literal["standard", "rotary", "erpe", "mla"]
 
 
 class MultiHeadAttentionFactory:
@@ -19,26 +20,36 @@ class MultiHeadAttentionFactory:
         "standard": MultiHeadAttention,
         "rotary": RotaryMultiHeadAttention,
         "erpe": ERPEAttention,
+        "mla": MultiHeadLatentAttention,
     }
 
     @classmethod
     def get_attention_module(
-        cls, attention_type: AttentionTypeStr, embed_dim: int, num_heads: int, seq_len: int
+        cls, attention_args: AttentionTypeStr | dict, embed_dim: int, num_heads: int, seq_len: int
     ) -> AttentionType:
         """Returns the attention module class based on the given name.
 
         Args:
-            attention_type (AttentionTypeStr): The name of the attention mechanism.
+            attention_args (str, dict): The type of attention module to create. If a string is provided, it should be
+                one of the keys in the catalog. If a dictionary is provided, it should contain the key "type" with the
+                attention type.
             embed_dim (int): The dimensionality of the input embeddings.
             num_heads (int): The number of attention heads.
 
         Returns:
             torch.nn.Module: An instance of the requested attention module.
         """
-        if attention_type not in cls.catalog:
+        if isinstance(attention_args, dict):
+            attention_type: AttentionTypeStr = attention_args["type"]
+            attention_args = {k: v for k, v in attention_args.items() if k != "type"}
+        else:
+            attention_type = attention_args
+            attention_args = {}
+
+        if attention_args not in cls.catalog:
             raise ValueError(
-                f"Attention type '{attention_type}' is not supported.\nSupported types: {list(cls.catalog.keys())}"
+                f"Attention type '{attention_args}' is not supported.\nSupported types: {list(cls.catalog.keys())}"
             )
 
         attention_class = cls.catalog[attention_type]
-        return attention_class(embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len)
+        return attention_class(embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len, **attention_args)
