@@ -135,7 +135,6 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         for layer in [self.q_a_proj, self.q_b_proj, self.kv_a_proj_with_mqa, self.kv_b_proj]:
             torch.nn.init.xavier_normal_(layer.weight, gain=1.0)
 
-    # TODO: make it a trait to be reused her and in RotaryMultiHeadAttention: use _split_for_attention_heads
     def _split_for_attention_heads(
         self, tensor: torch.Tensor, batch_size: int, seq_len: int, head_dim: int
     ) -> torch.Tensor:
@@ -149,7 +148,6 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         """
         return tensor.view(batch_size, seq_len, self.num_heads, head_dim).transpose(1, 2)
 
-    # TODO: make it a trait to be reused her and in RotaryMultiHeadAttention
     @staticmethod
     def _rotate_half(x: torch.Tensor) -> torch.Tensor:
         """Rotates the second half of the last dimension of the input tensor."""
