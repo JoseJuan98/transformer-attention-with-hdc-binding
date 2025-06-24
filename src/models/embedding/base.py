@@ -16,8 +16,8 @@ class BaseEmbedding(ABC, torch.nn.Module):
     It is designed to be subclassed by specific embedding implementations.
 
     Args:
-        d_model (int): The dimensionality of the embeddings.
-        num_positions (int, optional): The maximum sequence length. Defaults to 5000.
+        in_features (int): The dimensionality of the embeddings (d_model).
+        out_features (int): The output dimensionality of the embeddings (d_model).
         learnable (bool, optional): If True, the embeddings are learnable parameters. Defaults to False.
     """
 
