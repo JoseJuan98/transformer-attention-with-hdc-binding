@@ -1,0 +1,67 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for pre-commit
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"  # Use the minimum supported version for linting
+
+    - name: Cache Poetry installation
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.local/share/pypoetry
+          ~/.cache/pypoetry
+        key: poetry-${{ runner.os }}-3.11-${{ hashFiles('**/pyproject.toml') }}
+        restore-keys: |
+          poetry-${{ runner.os }}-3.11-
+
+    - name: Install Poetry
+      run: make install-poetry
+
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-lint-${{ runner.os }}-3.11-${{ hashFiles('**/pyproject.toml', '**/poetry.lock') }}
+        restore-keys: |
+          venv-lint-${{ runner.os }}-3.11-
+
+    - name: Cache pre-commit hooks
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pre-commit
+        key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+        restore-keys: |
+          pre-commit-${{ runner.os }}-
+
+    - name: Install dependencies
+      run: make install-dev
+
+    - name: Run linting
+      run: make lint
+
+    - name: Upload lint results
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: lint-results
+        path: |
+          lint-report/
+          .pre-commit-results/
+        retention-days: 7
