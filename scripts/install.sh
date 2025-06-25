@@ -29,10 +29,22 @@ function print_message() {
 
 print_message "$BLUE" "\n   PyTorch Project Installation Script"
 print_message "$BLUE" "=========================================="
-echo -e "\tPYTORCH_VERSION=${PYTORCH_VERSION} \n\tTRITON_VERSION=${TRITON_VERSION}"
-echo -e "\tROCM_VERSION=${ROCM_VERSION} \n\tINTEL_EXTENSION_VERSION=${INTEL_EXTENSION_VERSION}"
-echo -e "\tCUDA_VERSION=${CUDA_VERSION}"
+echo -e "\tPYTORCH_VERSION = ${PYTORCH_VERSION} \n\tTRITON_VERSION  = ${TRITON_VERSION}"
+echo -e "\tROCM_VERSION    = ${ROCM_VERSION} \nINTEL_EXTENSION_VERSION = ${INTEL_EXTENSION_VERSION}"
+echo -e "\tCUDA_VERSION    = ${CUDA_VERSION}"
 print_message "$BLUE" "==========================================\n"
+
+# Ask if the user wants to install the dev dependencies
+function ask_install_dev() {
+  read -p "Are the dependencies above correct? Please notice that only the ones that apply to your backend are going to be used (y/n): " choice
+  case "$choice" in
+    [Yy]* ) echo "Proceeding ..." ;;
+    [Nn]* ) exit 0 ;;
+    * ) echo "Please answer yes or no." && ask_install_dev ;;
+  esac
+}
+ask_install_dev
+
 
 # Parse command line arguments
 INSTALL_DEV=false
