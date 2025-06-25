@@ -216,7 +216,7 @@ class ExperimentRunner:
 
         # Save dataset configuration
         self.results_path.mkdir(parents=True, exist_ok=True)
-        self.logger.info(f"Saving dataset configuration to {self._task_exp_path}/{dataset_name}/dataset_config.json")
+        self.logger.info(f"Saving dataset configuration to {self._task_exp_path}{dataset_name}/dataset_config.json")
         self.dataset_configs[dataset_name].dump(path=self.results_path / "dataset_config.json")
 
     def single_run(self, dataset: str):
