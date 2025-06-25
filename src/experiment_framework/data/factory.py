@@ -55,7 +55,7 @@ class DataFactory:
 
         # Determine optimal number of workers
         cpu_count = multiprocessing.cpu_count()
-        num_workers = min(cpu_count - 2, 4) if cpu_count > 4 else cpu_count
+        num_workers = min(cpu_count - 2, 4) if cpu_count > 4 else 1
 
         n_jobs = -1
         data_module = UCRDataModule(
