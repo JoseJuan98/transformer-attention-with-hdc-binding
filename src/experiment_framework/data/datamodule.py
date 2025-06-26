@@ -85,6 +85,7 @@ class UCRDataModule(lightning.LightningDataModule):
                 extract_path=self.extract_path,
                 plot_path=self.plot_path,
                 n_jobs=self.n_jobs,
+                logger=self.logger,
             )
 
             # Calculate validation split sizes

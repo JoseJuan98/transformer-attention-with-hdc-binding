@@ -73,8 +73,6 @@ class DataFactory:
             n_jobs=n_jobs,
         )
 
-        logger.info("Downloading and preparing the dataset...")
-        logger.info(f"Using {cpu_count if n_jobs == -1 else n_jobs} cores for preparing the data.")
         data_module.setup("fit")
 
         # Create dataset configuration
