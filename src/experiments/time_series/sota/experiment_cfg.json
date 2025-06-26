@@ -50,5 +50,6 @@
   "profiler": false,
   "summary": false,
   "plots": true,
+  "preprocessing_only": false,
   "development": false
 }

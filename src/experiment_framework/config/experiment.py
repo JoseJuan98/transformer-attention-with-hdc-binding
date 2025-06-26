@@ -58,6 +58,7 @@ class ExperimentConfig(BaseConfig):
         swa_learning_rate (float): The learning rate to use for SWA. Default: 1e-2.
         use_lr_finder (bool): Whether to use the learning rate finder. Default: False.
         lr_finder_milestones (list[int]): The milestones to use for the learning rate finder. Default: [].
+        preprocessing_only (bool): If set to True, the run will only execute the preprocessing step without training.
     """
 
     experiment_name: str
@@ -103,6 +104,7 @@ class ExperimentConfig(BaseConfig):
     swa_learning_rate: float = 1e-2  # Default SWA learning rate
     use_lr_finder: bool = False  # Default: don't use LR Finder
     lr_finder_milestones: list[int] = field(default_factory=list)  # Default: LR Finder milestones
+    preprocessing_only: bool = False
 
     def pretty_str(self) -> str:
         """List the attributes of the class in a pretty format."""

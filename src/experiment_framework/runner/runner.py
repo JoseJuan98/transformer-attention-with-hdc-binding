@@ -153,7 +153,8 @@ class ExperimentRunner:
                 # Load dataset and create dataloaders only once per dataset
                 self._load_dataset(dataset_name=dataset)
                 # Run the experiment for this dataset
-                self.single_run(dataset=dataset)
+                if not self.experiment_cfg.preprocessing_only:
+                    self.single_run(dataset=dataset)
 
             except Exception as e:
                 self.error_handler.handle_error(dataset=dataset, exception=e)
@@ -168,14 +169,15 @@ class ExperimentRunner:
 
         total_time = time.perf_counter() - self.exp_start_time
 
-        # Calculate aggregated metrics
-        self.metrics_handler.aggregate_metrics()
+        if not self.experiment_cfg.preprocessing_only:
+            # Calculate aggregated metrics
+            self.metrics_handler.aggregate_metrics()
 
-        # Log final errors if any occurred
-        if self.error_handler.errors:
-            self.logger.error(
-                f"Summary of errors occurred during the experiment:\n{json.dumps(self.error_handler.errors, indent=4)}"
-            )
+            # Log final errors if any occurred
+            if self.error_handler.errors:
+                self.logger.error(
+                    f"Summary of errors occurred during the experiment:\n{json.dumps(self.error_handler.errors, indent=4)}"
+                )
 
         self.logger.info(
             f"Experiment {self.exp_name_title} completed in {total_time // 3600:.0f} hours "
