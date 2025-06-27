@@ -17,8 +17,9 @@ if __name__ == "__main__":
     file_path = (
         pathlib.Path(__file__).parents[2]
         # / "docs/experiment_results/binding_version_1/metrics_binding_version_1.csv"
-        / "docs/experiment_results/binding_N_L_4/metrics_binding_N_l_4.csv"
+        # / "docs/experiment_results/binding_N_L_4/metrics_binding_N_l_4.csv"
         # / "docs/experiment_results/pe_version_1/metrics_pe_version_1.csv"
+        / "docs/experiment_results/sota_version_1/metrics_sota_version_1.csv"
     )
 
     if not file_path.exists():
