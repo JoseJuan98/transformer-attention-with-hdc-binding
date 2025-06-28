@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """Argument formatter for model configuration parameters."""
+# Standard imports
 from typing import Any, Dict
 
 
 class ArgFormatter:
     """Argument formatter for model configuration parameters."""
+
     catalog: Dict[str, Any]
     component_name: str
 

@@ -4,10 +4,10 @@
 from typing import Literal, Union
 
 # First party imports
+from models.arg_formatter import ArgFormatter
 from models.embedding.linear_projection import LinearProjection
 from models.embedding.temporal_spatial import SpatialTemporalEmbedding
 from models.embedding.ts_convolutional import TimeSeries1dConvEmbedding
-from models.arg_formatter import ArgFormatter
 
 EmbeddingType = Union[TimeSeries1dConvEmbedding, LinearProjection, SpatialTemporalEmbedding]
 EmbeddingTypeStr = Literal["1d_conv", "linear_projection", "spatial_temporal"]

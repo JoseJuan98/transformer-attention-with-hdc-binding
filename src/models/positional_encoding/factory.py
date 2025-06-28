@@ -4,6 +4,7 @@
 from typing import Literal, Union
 
 # First party imports
+from models.arg_formatter import ArgFormatter
 from models.positional_encoding.adaptive_sinusoidal import AdaptiveSinusoidalPositionalEncoding
 from models.positional_encoding.fractional import FPEOrigPositionalEncoding
 from models.positional_encoding.null_pe import NullPositionalEncoding
@@ -12,7 +13,6 @@ from models.positional_encoding.rotary import RotaryPositionalEncoding
 from models.positional_encoding.sinusoidal import SinusoidalPositionalEncoding
 from models.positional_encoding.split_sinusoidal import SplitSinusoidalPositionalEncoding
 from models.positional_encoding.tape import TimeAbsolutePositionalEncoding
-from models.arg_formatter import ArgFormatter
 
 TSPositionalEncodingType = Union[
     SplitSinusoidalPositionalEncoding,
@@ -32,6 +32,7 @@ TSPositionalEncodingTypeStr = Literal[
 
 class PositionalEncodingFactory(ArgFormatter):
     """Factory class for creating positional encodings based on configuration."""
+
     component_name = "positional_encoding"
     catalog = {
         "split_sinusoidal": SplitSinusoidalPositionalEncoding,
@@ -62,7 +63,9 @@ class PositionalEncodingFactory(ArgFormatter):
         Returns:
             object: The positional encoding instance.
         """
-        positional_encoding_type, positional_encoding_arguments = cls.format_arguments(arguments=positional_encoding_arguments)
+        positional_encoding_type, positional_encoding_arguments = cls.format_arguments(
+            arguments=positional_encoding_arguments
+        )
         positional_encoding_type: TSPositionalEncodingTypeStr = positional_encoding_type
 
         # Get the positional encoding class based on the configuration and instantiate it

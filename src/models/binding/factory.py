@@ -5,10 +5,10 @@
 from typing import Literal, Union
 
 # First party imports
+from models.arg_formatter import ArgFormatter
 from models.binding.additive import AdditiveBinding
 from models.binding.convolutional import ConvolutionalBinding
 from models.binding.multiplicative import MultiplicativeBinding
-from models.arg_formatter import ArgFormatter
 
 BindingMethodType = Union[AdditiveBinding, ConvolutionalBinding, MultiplicativeBinding, None]
 BindingMethodTypeStr = Literal["additive", "multiplicative", "convolutional", "identity"]
@@ -16,6 +16,7 @@ BindingMethodTypeStr = Literal["additive", "multiplicative", "convolutional", "i
 
 class BindingMethodFactory(ArgFormatter):
     """Factory class for obtaining the available binding methods."""
+
     component_name = "binding_method"
     catalog = {
         "additive": AdditiveBinding,

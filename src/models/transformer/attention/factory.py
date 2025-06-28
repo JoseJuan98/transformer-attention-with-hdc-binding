@@ -3,12 +3,14 @@
 # Standard imports
 from typing import Literal, Union
 
+# First party imports
+from models.arg_formatter import ArgFormatter
+
 # Local imports
 from .erpe_attention import ERPEAttention
 from .mla import MultiHeadLatentAttention
 from .multi_head_attention import MultiHeadAttention
 from .rotary_multi_head_attention import RotaryMultiHeadAttention
-from models.arg_formatter import ArgFormatter
 
 AttentionType = Union[MultiHeadAttention, RotaryMultiHeadAttention, ERPEAttention, MultiHeadLatentAttention]
 AttentionTypeStr = Literal["standard", "rotary", "erpe", "mla"]
@@ -16,6 +18,7 @@ AttentionTypeStr = Literal["standard", "rotary", "erpe", "mla"]
 
 class MultiHeadAttentionFactory(ArgFormatter):
     """Factory class for obtaining attention modules."""
+
     component_name = "attention"
     catalog = {
         "standard": MultiHeadAttention,
@@ -43,7 +46,6 @@ class MultiHeadAttentionFactory(ArgFormatter):
         """
         attention_type, attention_args = cls.format_arguments(arguments=attention_args)
         attention_type: AttentionTypeStr = attention_type
-
 
         attention_class = cls.catalog[attention_type]
         return (

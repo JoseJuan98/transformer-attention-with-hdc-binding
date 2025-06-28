@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 """Unit tests for ArgFormatter"""
+# Pytest imports
 import pytest
+
+# Standard imports
 import unittest
 
+# First party imports
 from models.arg_formatter import ArgFormatter
 
 
 class TestFormatter(ArgFormatter):
     component_name = "test"
-    catalog = {
-        "test-component": None
-    }
+    catalog = {"test-component": None}
+
 
 class TestArgFormatter(unittest.TestCase):
-
 
     def test_format_arguments_with_str(self):
 
@@ -21,18 +23,13 @@ class TestArgFormatter(unittest.TestCase):
 
         component_type, component_args = TestFormatter.format_arguments(arguments=expected_arg)
 
-
         assert component_type == expected_arg
         assert component_args == {}
         assert isinstance(component_type, str)
 
     def test_format_arguments_with_dict(self):
 
-        args = {
-            "type": "test-component",
-            "arg1": "value1",
-            "arg2": .1
-        }
+        args = {"type": "test-component", "arg1": "value1", "arg2": 0.1}
 
         component_type, component_args = TestFormatter.format_arguments(arguments=args)
 
@@ -42,7 +39,6 @@ class TestArgFormatter(unittest.TestCase):
 
         assert isinstance(component_type, str)
         assert isinstance(component_args, dict)
-
 
     def test_format_arguments_raises_value_error(self):
 
