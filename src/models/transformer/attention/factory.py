@@ -8,14 +8,15 @@ from .erpe_attention import ERPEAttention
 from .mla import MultiHeadLatentAttention
 from .multi_head_attention import MultiHeadAttention
 from .rotary_multi_head_attention import RotaryMultiHeadAttention
+from models.arg_formatter import ArgFormatter
 
 AttentionType = Union[MultiHeadAttention, RotaryMultiHeadAttention, ERPEAttention, MultiHeadLatentAttention]
 AttentionTypeStr = Literal["standard", "rotary", "erpe", "mla"]
 
 
-class MultiHeadAttentionFactory:
+class MultiHeadAttentionFactory(ArgFormatter):
     """Factory class for obtaining attention modules."""
-
+    component_name = "attention"
     catalog = {
         "standard": MultiHeadAttention,
         "rotary": RotaryMultiHeadAttention,
@@ -40,17 +41,9 @@ class MultiHeadAttentionFactory:
             torch.nn.Module: An instance of the requested attention module.
             str: The type of attention module created.
         """
-        if isinstance(attention_args, dict):
-            attention_type: AttentionTypeStr = attention_args["type"]
-            attention_args = {k: v for k, v in attention_args.items() if k != "type"}
-        else:
-            attention_type = attention_args
-            attention_args = {}
+        attention_type, attention_args = cls.format_arguments(arguments=attention_args)
+        attention_type: AttentionTypeStr = attention_type
 
-        if attention_type not in cls.catalog:
-            raise ValueError(
-                f"Attention type '{attention_type}' is not supported.\nSupported types: {list(cls.catalog.keys())}"
-            )
 
         attention_class = cls.catalog[attention_type]
         return (

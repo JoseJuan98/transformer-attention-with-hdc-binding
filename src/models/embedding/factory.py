@@ -7,12 +7,13 @@ from typing import Literal, Union
 from models.embedding.linear_projection import LinearProjection
 from models.embedding.temporal_spatial import SpatialTemporalEmbedding
 from models.embedding.ts_convolutional import TimeSeries1dConvEmbedding
+from models.arg_formatter import ArgFormatter
 
 EmbeddingType = Union[TimeSeries1dConvEmbedding, LinearProjection, SpatialTemporalEmbedding]
 EmbeddingTypeStr = Literal["1d_conv", "linear_projection", "spatial_temporal"]
 
 
-class EmbeddingFactory:
+class EmbeddingFactory(ArgFormatter):
     """Factory class for creating embedding based on configuration."""
 
     catalog = {
@@ -35,15 +36,8 @@ class EmbeddingFactory:
         Returns:
             object: The embedding instance.
         """
-        if isinstance(embedding_args, dict):
-            embedding_type: EmbeddingTypeStr = embedding_args["type"]
-            embedding_args = {k: v for k, v in embedding_args.items() if k != "type"}
-        else:
-            embedding_type = embedding_args
-            embedding_args = {}
-
-        if embedding_type not in EmbeddingFactory.catalog:
-            raise ValueError(f"Unknown binding method: {embedding_args}")
+        embedding_type, embedding_args = cls.format_arguments(arguments=embedding_args)
+        embedding_type: EmbeddingTypeStr = embedding_type
 
         # Get the embedding class from the catalog
         embedding_class = cls.catalog[embedding_type]

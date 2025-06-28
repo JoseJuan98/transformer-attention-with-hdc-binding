@@ -12,6 +12,7 @@ from models.positional_encoding.rotary import RotaryPositionalEncoding
 from models.positional_encoding.sinusoidal import SinusoidalPositionalEncoding
 from models.positional_encoding.split_sinusoidal import SplitSinusoidalPositionalEncoding
 from models.positional_encoding.tape import TimeAbsolutePositionalEncoding
+from models.arg_formatter import ArgFormatter
 
 TSPositionalEncodingType = Union[
     SplitSinusoidalPositionalEncoding,
@@ -29,9 +30,9 @@ TSPositionalEncodingTypeStr = Literal[
 ]
 
 
-class PositionalEncodingFactory:
+class PositionalEncodingFactory(ArgFormatter):
     """Factory class for creating positional encodings based on configuration."""
-
+    component_name = "positional_encoding"
     catalog = {
         "split_sinusoidal": SplitSinusoidalPositionalEncoding,
         "sinusoidal": SinusoidalPositionalEncoding,
@@ -61,16 +62,8 @@ class PositionalEncodingFactory:
         Returns:
             object: The positional encoding instance.
         """
-
-        if isinstance(positional_encoding_arguments, dict):
-            positional_encoding_type: TSPositionalEncodingTypeStr = positional_encoding_arguments["type"]
-            positional_encoding_arguments = {k: v for k, v in positional_encoding_arguments.items() if k != "type"}
-        else:
-            positional_encoding_type = positional_encoding_arguments
-            positional_encoding_arguments = {}
-
-        if positional_encoding_type not in cls.catalog:
-            raise ValueError(f"Unknown positional encoding type: {positional_encoding_type}")
+        positional_encoding_type, positional_encoding_arguments = cls.format_arguments(arguments=positional_encoding_arguments)
+        positional_encoding_type: TSPositionalEncodingTypeStr = positional_encoding_type
 
         # Get the positional encoding class based on the configuration and instantiate it
         positional_encoding_class = cls.catalog[positional_encoding_type]

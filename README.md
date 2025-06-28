@@ -93,7 +93,7 @@ The core model is a Transformer-based classifier adapted for time series classif
 ├── src                     # Source code
 │     ├── models                # Model definitions
 │     │     ├── architectures        # Time series specific models (e.g., encoder-only transformer classifier)
-│     │     ├── binding_method       # HDC binding methods (e.g., addition, component-wise multiplication, circular convolution)
+│     │     ├── binding       # HDC binding methods (e.g., addition, component-wise multiplication, circular convolution)
 │     │     ├── callbacks            # Callbacks for training (e.g., early stopping, learning rate scheduling)
 │     │     ├── embedding            # Embedding layers (e.g. linear projection, 1D convolution)
 │     │     ├── positional_encoding  # Implementations of different positional encoding methods (including HDC binding)

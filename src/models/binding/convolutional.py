@@ -4,7 +4,7 @@
 import torch
 
 # First party imports
-from models.binding_method.basic import EmbeddingBinding
+from models.binding.basic import EmbeddingBinding
 
 
 class ConvolutionalBinding(EmbeddingBinding):

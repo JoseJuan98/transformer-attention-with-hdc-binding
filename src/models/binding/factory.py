@@ -5,17 +5,18 @@
 from typing import Literal, Union
 
 # First party imports
-from models.binding_method.additive import AdditiveBinding
-from models.binding_method.convolutional import ConvolutionalBinding
-from models.binding_method.multiplicative import MultiplicativeBinding
+from models.binding.additive import AdditiveBinding
+from models.binding.convolutional import ConvolutionalBinding
+from models.binding.multiplicative import MultiplicativeBinding
+from models.arg_formatter import ArgFormatter
 
 BindingMethodType = Union[AdditiveBinding, ConvolutionalBinding, MultiplicativeBinding, None]
 BindingMethodTypeStr = Literal["additive", "multiplicative", "convolutional", "identity"]
 
 
-class BindingMethodFactory:
+class BindingMethodFactory(ArgFormatter):
     """Factory class for obtaining the available binding methods."""
-
+    component_name = "binding_method"
     catalog = {
         "additive": AdditiveBinding,
         "multiplicative": MultiplicativeBinding,
@@ -33,13 +34,9 @@ class BindingMethodFactory:
             embedding_dim (int): The dimension of the embeddings.
 
         Returns:
-            class: The binding method class.
+            object: The binding method object.
         """
-
-        if binding_method_name not in cls.catalog:
-            raise ValueError(
-                f"Binding method '{binding_method_name}' is not supported.\nSupported methods: {cls.catalog.keys()}"
-            )
+        binding_method_name, _ = cls.format_arguments(arguments=binding_method_name)
 
         if binding_method_name == "identity":
             # Return None for identity binding method, which means no binding is applied
