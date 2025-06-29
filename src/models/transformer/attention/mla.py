@@ -8,7 +8,7 @@ shared low-rank latent vector.
 The implementation is adapted to fit the project's architecture, inheriting from `BaseMultiHeadAttention` and
 utilizing the project's existing rotary embedding logic.
 
-Source code: https://github.com/deepseek-ai/DeepSeek-VL2/blob/main/deepseek_vl2/models/modeling_deepseek.py
+Source code: https:/    /github.com/deepseek-ai/DeepSeek-VL2/blob/main/deepseek_vl2/models/modeling_deepseek.py
 
 Copyright 2023 DeepSeek-AI and The HuggingFace Inc. team. All rights reserved.
 
@@ -251,7 +251,7 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         attn_output = torch.matmul(attention_weights, compressed_kv)
         attn_output = torch.matmul(attn_output, v_absorb.transpose(-1, -2))
 
-        # 8. Concatenate heads and apply final linear layer.
+        # Concatenate heads and apply final linear layer.
         attn_output = (
             attn_output.transpose(1, 2).contiguous().view(batch_size, seq_len, self.num_heads * self.v_head_dim)
         )
