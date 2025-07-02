@@ -135,8 +135,9 @@ class ERPEAttention(BaseMultiHeadAttention):
         relative_biases = self.relative_bias_table[self.relative_position_index]  # Shape: (seq_len, seq_len, num_heads)
         relative_biases = relative_biases.permute(2, 0, 1).unsqueeze(0)  # Shape: (1, num_heads, seq_len, seq_len)
 
-        # Add the relative bias to the attention probabilities (post-softmax, as per paper's code)
-        attn_weights_with_bias = attention_weights + relative_biases
+        # Add the relative bias to the attention probabilities (post-softmax, as per paper's implementation)
+        seq_len = attention_weights.size(-1)
+        attn_weights_with_bias = attention_weights + relative_biases[:, :, :seq_len, :seq_len]
 
         # Apply attention to values
         # Z = Z @ V
