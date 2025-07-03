@@ -32,7 +32,7 @@
     "AtrialFibrillation",
     "StandWalkJump"
   ],
-  "trials_per_experiment": 1,
+  "trials_per_experiment": 10,
   "validation_split": 0.2,
   "early_stopping_patience": 10,
   "accumulate_grad_batches": 64,
