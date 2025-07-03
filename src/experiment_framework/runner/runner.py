@@ -342,13 +342,7 @@ class ExperimentRunner:
 
         # --- Tune Batch Size ---
         # This method modifies data_module.batch_size in place if tuning is enabled and successful.
-        tuned_batch_size = self._tune_batch_size(
-            trainer=trainer,
-            model=model,
-            data_module=data_module,
-            model_name=model_name,
-            dataset_name=dataset_name,
-        )
+        tuned_batch_size = self._tune_batch_size(trainer=trainer, model=model, data_module=data_module)
         # Update the datamodule with the new batch size
         data_module.batch_size = tuned_batch_size
 
@@ -439,8 +433,6 @@ class ExperimentRunner:
         trainer: lightning.Trainer,
         model: lightning.LightningModule,
         data_module: lightning.LightningDataModule,
-        model_name: str,
-        dataset_name: str,
     ) -> int:
         """Tunes the batch size for the given model and datamodule using the trainer.
 
@@ -450,8 +442,6 @@ class ExperimentRunner:
             trainer (lightning.Trainer): The Lightning Trainer instance.
             model (lightning.LightningModule): The Lightning model instance.
             data_module (lightning.LightningDataModule): The LightningDataModule instance.
-            model_name (str): The name of the model (used for specific bug fixes).
-            dataset_name (str): The name of the dataset (used for specific bug fixes).
 
         Returns:
             int: The tuned batch size (or the original batch size if tuning is skipped or fails).
