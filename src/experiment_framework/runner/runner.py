@@ -4,10 +4,9 @@
 import json
 import logging
 import math
-import os
 import pathlib
 import time
-from typing import Dict, Optional
+from typing import Dict
 
 # Third party imports
 import lightning
@@ -364,9 +363,9 @@ class ExperimentRunner:
             accumulation_steps = math.ceil(effective_batch_size / tuned_batch_size)
             trainer.accumulate_grad_batches = accumulation_steps
             self.logger.info(
-                f"\t=> Effective batch size target : {effective_batch_size}."
-                f"\t=> Tuned physical batch size   : {tuned_batch_size}. "
-                f"\t=> Using Gradient Accumulation with {accumulation_steps} steps."
+                f"\t=> Effective batch size target : {effective_batch_size}.\n"
+                f"\t=> Tuned physical batch size   : {tuned_batch_size}.\n"
+                f"\t=> Using Gradient Accumulation with {accumulation_steps} steps.\n"
             )
 
         # --- Train and Test ---
@@ -464,23 +463,18 @@ class ExperimentRunner:
         self.logger.info("\t=> Tuning batch size")
         tuner = Tuner(trainer=trainer)
 
-        ### MODIFICATION START ###
-        # The PYTORCH_CUDA_ALLOC_CONF manipulation is complex and can be brittle.
-        # A simpler approach is to let the tuner run and catch OOM errors gracefully.
-        # The tuner is designed to handle this. We will remove the manual env var setting.
-        ### MODIFICATION END ###
-
-        new_batch_size = data_module.batch_size  # Default to original if tuning fails
+        # Default to original if tuning fails
+        new_batch_size = data_module.batch_size
         try:
-            # if default batchsize is bigger than the dataset size, set it to the dataset size for faster tuning
+            # If default batchsize is bigger than the dataset size, set it to the dataset size for faster tuning
             n_train_samples = len(data_module.train_dataset)
-            # Start tuning from a small batch size to increase chances of success
-            initial_batch_size = 2
+            initial_batch_size = min(self.experiment_cfg.default_batch_size, n_train_samples // 2)
+
+            # It will use the batch size in the datamodule as initial value
             data_module.batch_size = initial_batch_size
 
             # Auto-scale batch size by growing it exponentially (default)
-            # The `steps_per_trial` argument ensures it runs a few steps, making it more likely to catch
-            # OOMs that happen during the backward pass.
+            # Change the mode to "binsearch" for a binary search approach
             new_batch_size = tuner.scale_batch_size(
                 model, datamodule=data_module, mode="power", max_trials=25, steps_per_trial=3
             )
@@ -490,7 +484,7 @@ class ExperimentRunner:
                 self.logger.warning(f"Tuned batch size {new_batch_size} > 1024, capping at 1024.")
                 new_batch_size = 1024
 
-            # |Bug fix| for small datasets when the batch size is too small or bigger than the train sampoles
+            # |Bug fix| for small datasets when the batch size is too small or bigger than the train samples
             # `binsearch` mode doesn't finish and `power` mode finds one too big. So, this uses the closest exponent
             # of 2 to the number of train samples if the batch size is bigger than the dataset
             if new_batch_size > n_train_samples:
@@ -509,10 +503,9 @@ class ExperimentRunner:
             self.logger.info(f"Optimal batch size found: {new_batch_size}")
 
         except Exception as e:
-            # If tuning fails for any reason (including OOM), fall back to a safe default.
-            safe_batch_size = 2
-            self.logger.error(f"Batch size tuning failed: {e}. Falling back to a safe batch size of {safe_batch_size}.")
-            new_batch_size = safe_batch_size
+            # If tuning fails for any reason (including OOM), fall back to a safe default of 1.
+            self.logger.error(f"Batch size tuning failed: {e}. Falling back to a safe batch size of 1.")
+            new_batch_size = 1
 
         finally:
             # Clean up any memory that might have been fragmented during tuning
