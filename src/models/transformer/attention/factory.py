@@ -30,7 +30,7 @@ class MultiHeadAttentionFactory(ArgFormatter):
     @classmethod
     def get_attention_module(
         cls, attention_args: AttentionTypeStr | dict, embed_dim: int, num_heads: int, seq_len: int
-    ) -> tuple[AttentionType, AttentionTypeStr]:
+    ) -> AttentionType:
         """Returns the attention module class based on the given name.
 
         Args:
@@ -45,10 +45,8 @@ class MultiHeadAttentionFactory(ArgFormatter):
             str: The type of attention module created.
         """
         attention_type, attention_args = cls.format_arguments(arguments=attention_args)
-        attention_type: AttentionTypeStr = attention_type
+        attention_type: AttentionTypeStr = attention_type  # type: ignore[no-redef]
 
         attention_class = cls.catalog[attention_type]
-        return (
-            attention_class(embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len, **attention_args),
-            attention_type,
-        )
+
+        return attention_class(embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len, **attention_args)

@@ -33,6 +33,8 @@ class MultiHeadAttention(BaseMultiHeadAttention):
         W_o (torch.nn.Linear): Linear transformation for the concatenated output.
     """
 
+    name = "standard"
+
     def __init__(self, embed_dim: int, num_heads: int, seq_len: int, **kwargs):
         """Initializes the MultiHeadAttention module.
 

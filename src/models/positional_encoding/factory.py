@@ -66,7 +66,7 @@ class PositionalEncodingFactory(ArgFormatter):
         positional_encoding_type, positional_encoding_arguments = cls.format_arguments(
             arguments=positional_encoding_arguments
         )
-        positional_encoding_type: TSPositionalEncodingTypeStr = positional_encoding_type
+        positional_encoding_type: TSPositionalEncodingTypeStr = positional_encoding_type  # type: ignore[no-redef]
 
         # Get the positional encoding class based on the configuration and instantiate it
         positional_encoding_class = cls.catalog[positional_encoding_type]

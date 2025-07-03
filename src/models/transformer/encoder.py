@@ -48,9 +48,10 @@ class EncoderLayer(torch.nn.Module):
             mhsa_type (AttentionTypeStr, optional): The type of multi-head self-attention to use. Defaults to "standard".
         """
         super(EncoderLayer, self).__init__()
-        self.self_attention, self.mhsa_type = MultiHeadAttentionFactory.get_attention_module(
+        self.self_attention = MultiHeadAttentionFactory.get_attention_module(
             attention_args=mhsa_type, embed_dim=d_model, num_heads=num_heads, seq_len=seq_len
         )
+        self.mhsa_type = self.self_attention.name
 
         self.norm1 = torch.nn.LayerNorm(d_model)
         self.dropout1 = torch.nn.Dropout(dropout)

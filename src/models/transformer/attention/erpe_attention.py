@@ -46,6 +46,8 @@ class ERPEAttention(BaseMultiHeadAttention):
         seq_len (int): The maximum sequence length of the input.
     """
 
+    name = "erpe"
+
     def __init__(self, embed_dim: int, num_heads: int, seq_len: int, **kwargs):
         super(ERPEAttention, self).__init__(embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len, **kwargs)
 

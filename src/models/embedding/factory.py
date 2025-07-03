@@ -37,7 +37,7 @@ class EmbeddingFactory(ArgFormatter):
             object: The embedding instance.
         """
         embedding_type, embedding_args = cls.format_arguments(arguments=embedding_args)
-        embedding_type: EmbeddingTypeStr = embedding_type
+        embedding_type: EmbeddingTypeStr = embedding_type  # type: ignore[no-redef]
 
         # Get the embedding class from the catalog
         embedding_class = cls.catalog[embedding_type]
