@@ -353,22 +353,20 @@ class ExperimentRunner:
         # Update the datamodule with the new batch size
         data_module.batch_size = tuned_batch_size
 
-        # Default value
-        if (
-            isinstance(self.experiment_cfg.accumulate_grad_batches, int)
-            and self.experiment_cfg.accumulate_grad_batches > 1
-        ):
-            # Get the gradient accumulation value from the config or the tuned batch size if it's larger
-            # If the training samples are smaller than the selected size, set it to the number of training samples
-            desired_batch_size = min(
-                max(self.experiment_cfg.accumulate_grad_batches, tuned_batch_size), len(data_module.train_dataset)
-            )
+        # Clean cache after tuning
+        self._clean_backend_cache()
 
-            # Devide the desired batch size by the tuned batch size to get the number of batches
-            trainer.accumulate_grad_batches = math.ceil(desired_batch_size / tuned_batch_size)
+        # --- Configure Gradient Accumulation ---
+        # If the tuned batch size is smaller, gradient accumulation is used to make up the difference.
+        effective_batch_size = self.experiment_cfg.accumulate_grad_batches
+        if isinstance(effective_batch_size, int) and effective_batch_size > tuned_batch_size:
+            # Calculate the number of accumulation steps needed
+            accumulation_steps = math.ceil(effective_batch_size / tuned_batch_size)
+            trainer.accumulate_grad_batches = accumulation_steps
             self.logger.info(
-                f"\t=> Using Gradient Accumulation with {trainer.accumulate_grad_batches} batches for batch"
-                f" size {tuned_batch_size}."
+                f"\t=> Effective batch size target : {effective_batch_size}."
+                f"\t=> Tuned physical batch size   : {tuned_batch_size}. "
+                f"\t=> Using Gradient Accumulation with {accumulation_steps} steps."
             )
 
         # --- Train and Test ---
@@ -381,17 +379,24 @@ class ExperimentRunner:
             start_time = time.perf_counter()
             trainer.fit(model, datamodule=data_module)
 
+            # Clean cache after fitting
+            self._clean_backend_cache()
+
             training_time = time.perf_counter() - start_time
 
             self.logger.info(f"{model_name.title()} training finished in {training_time:.2f} seconds!")
         else:
             self.logger.info("Skipping training as num_epochs is 0.")
 
-        # Test the model (always test, even if not trained in this run, e.g., loading checkpoint)
+        # Test the model
+        # The PocketAlgorithm will automatically load the best model checkpoint
         self.logger.info("Testing model...")
         trainer.test(model=model, datamodule=data_module)
 
-        # --- Plot Metrics ---
+        # Clean cache after testing
+        self._clean_backend_cache()
+
+        # --- Plot and Store Metrics ---
         if model_cfg.num_epochs > 0:
             metrics = self.metrics_handler.get_train_metrics_and_plot(
                 csv_dir=trainer.log_dir,
@@ -459,47 +464,26 @@ class ExperimentRunner:
         self.logger.info("\t=> Tuning batch size")
         tuner = Tuner(trainer=trainer)
 
-        # Turning off the memory growth for the GPU for the batch size tuning
-        # Note: This env var might not be the most reliable way across systems/versions
-        original_alloc_conf: Optional[str] = None
-        if torch.cuda.is_available():
-            original_alloc_conf = os.environ.get("PYTORCH_CUDA_ALLOC_CONF")
-            expandable_segments = "expandable_segments:False"
-            os.environ["PYTORCH_CUDA_ALLOC_CONF"] = (
-                expandable_segments if original_alloc_conf is None else original_alloc_conf + "," + expandable_segments
-            )
-            self.logger.debug(f"Set PYTORCH_CUDA_ALLOC_CONF to: {os.environ['PYTORCH_CUDA_ALLOC_CONF']}")
+        ### MODIFICATION START ###
+        # The PYTORCH_CUDA_ALLOC_CONF manipulation is complex and can be brittle.
+        # A simpler approach is to let the tuner run and catch OOM errors gracefully.
+        # The tuner is designed to handle this. We will remove the manual env var setting.
+        ### MODIFICATION END ###
 
         new_batch_size = data_module.batch_size  # Default to original if tuning fails
         try:
             # if default batchsize is bigger than the dataset size, set it to the dataset size for faster tuning
             n_train_samples = len(data_module.train_dataset)
-            initial_batch_size = min(self.experiment_cfg.default_batch_size, n_train_samples // 2)
-            # it will use the batch size in the datamodule as initial value
+            # Start tuning from a small batch size to increase chances of success
+            initial_batch_size = 2
             data_module.batch_size = initial_batch_size
 
-            # |Bug fix| for the dataset SelfRegulationSCP1 and model linear_component_wise_sinusoidal it will not
-            #   select the proper batch size
-            #   * Only works for GPUs with 11 Gb of VRAM, modify for other GPUs
-            if (
-                model_name in ["linear_component_wise_sinusoidal", "linear_component_wise_isolated_sinusoidal"]
-                and dataset_name == "SelfRegulationSCP1"
-            ):
-                self.logger.warning(
-                    f"Applying specific fix for {model_name} on {dataset_name}. Overriding tuned batch size "
-                    f"{new_batch_size} with 32."
-                )
-                return 32
-
-            if self.experiment_cfg.default_batch_size > n_train_samples // 2:
-                self.logger.warning(
-                    f"Default batch size {self.experiment_cfg.default_batch_size} is larger than half the dataset "
-                    f"size ({n_train_samples // 2}), setting initial tuning batch size to {initial_batch_size}."
-                )
-
             # Auto-scale batch size by growing it exponentially (default)
-            # You can change the mode to "binsearch" for a binary search approach
-            new_batch_size = tuner.scale_batch_size(model, datamodule=data_module, mode="power", max_trials=25)
+            # The `steps_per_trial` argument ensures it runs a few steps, making it more likely to catch
+            # OOMs that happen during the backward pass.
+            new_batch_size = tuner.scale_batch_size(
+                model, datamodule=data_module, mode="power", max_trials=25, steps_per_trial=3
+            )
 
             # Big number batch sizes gives memory unstability, better to cap it to 1024
             if new_batch_size > 1024:
@@ -525,28 +509,14 @@ class ExperimentRunner:
             self.logger.info(f"Optimal batch size found: {new_batch_size}")
 
         except Exception as e:
-            self.logger.error(f"Batch size tuning failed: {e}. Using original batch size {data_module.batch_size}.")
-            # Keep the original or initial batch size set before the try block
-            new_batch_size = data_module.batch_size
+            # If tuning fails for any reason (including OOM), fall back to a safe default.
+            safe_batch_size = 2
+            self.logger.error(f"Batch size tuning failed: {e}. Falling back to a safe batch size of {safe_batch_size}.")
+            new_batch_size = safe_batch_size
 
         finally:
-            # Restore original alloc conf and turning on the memory growth for the GPU for the training
-            if torch.cuda.is_available():
-                expandable_segments = "expandable_segments:True"
-                if original_alloc_conf is None:
-                    # If it wasn't set before, try removing our setting or just set to default True
-                    # Setting it explicitly might be safer if the tuner changed other things.
-                    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = expandable_segments
-                else:
-                    # Attempt to restore the original setting plus the default expandable_segments
-                    # This assumes the original didn't explicitly set expandable_segments to False
-                    if "expandable_segments" not in original_alloc_conf:
-                        os.environ["PYTORCH_CUDA_ALLOC_CONF"] = original_alloc_conf + "," + expandable_segments
-                    else:
-                        # If original had it, just restore original (might be True or False)
-                        os.environ["PYTORCH_CUDA_ALLOC_CONF"] = original_alloc_conf
-
-                self.logger.debug(f"Restored PYTORCH_CUDA_ALLOC_CONF to: {os.environ.get('PYTORCH_CUDA_ALLOC_CONF')}")
+            # Clean up any memory that might have been fragmented during tuning
+            self._clean_backend_cache()
 
         # Ensure batch size is at least 1, it some cases it can be 0
         new_batch_size = max(1, new_batch_size)
