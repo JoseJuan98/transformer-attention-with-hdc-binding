@@ -21,6 +21,7 @@ from experiment_framework.config.model import ModelConfig
 from experiment_framework.data.factory import DataFactory
 from experiment_framework.runner.error_handler import ErrorHandler
 from experiment_framework.runner.metrics_handler import MetricsHandler
+from utils.cache_cleaner import CacheCleaner
 from models.factory import ModelFactory
 from utils import Config, get_logger, msg_task
 
@@ -357,9 +358,9 @@ class ExperimentRunner:
             accumulation_steps = math.ceil(effective_batch_size / tuned_batch_size)
             trainer.accumulate_grad_batches = accumulation_steps
             self.logger.info(
-                f"\t=> Effective batch size target : {effective_batch_size}.\n"
-                f"\t=> Tuned physical batch size   : {tuned_batch_size}.\n"
-                f"\t=> Using Gradient Accumulation with {accumulation_steps} steps.\n"
+                f"\t\t=> Effective batch size target : {effective_batch_size}.\n"
+                f"\t\t=> Tuned physical batch size   : {tuned_batch_size}.\n"
+                f"\t\t=> Using Gradient Accumulation with {accumulation_steps} steps.\n"
             )
 
         # --- Train and Test ---
@@ -450,7 +451,7 @@ class ExperimentRunner:
             self.logger.info("Batch size tuning skipped as auto_scale_batch_size is False.")
             return data_module.batch_size
 
-        self.logger.info("\t=> Tuning batch size")
+        self.logger.info(" Tuning batch size ...")
         tuner = Tuner(trainer=trainer)
 
         # Default to original if tuning fails
@@ -490,7 +491,7 @@ class ExperimentRunner:
                     f"Adjusted to nearest power of 2: {new_batch_size}"
                 )
 
-            self.logger.info(f"Optimal batch size found: {new_batch_size}")
+            self.logger.info(f"\t=> Optimal batch size for given memory capacity found: {new_batch_size}")
 
         except Exception as e:
             # If tuning fails for any reason (including OOM), fall back to a safe default of 1.
@@ -534,11 +535,4 @@ class ExperimentRunner:
     @staticmethod
     def _clean_backend_cache() -> None:
         """Clean up the cache to free memory."""
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-
-        if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-            torch.mps.empty_cache()
-
-        if hasattr(torch, "xpu") and torch.xpu.is_available():
-            torch.xpu.empty_cache()
+        CacheCleaner.clean_backend_cache()
