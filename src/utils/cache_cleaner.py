@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """Cache Cleaner for PyTorch."""
 
+# Third party imports
 import torch
+
 
 class CacheCleaner:
     """A class to handle the cleaning of various caches in PyTorch to free up memory."""

@@ -21,9 +21,9 @@ from experiment_framework.config.model import ModelConfig
 from experiment_framework.data.factory import DataFactory
 from experiment_framework.runner.error_handler import ErrorHandler
 from experiment_framework.runner.metrics_handler import MetricsHandler
-from utils.cache_cleaner import CacheCleaner
 from models.factory import ModelFactory
 from utils import Config, get_logger, msg_task
+from utils.cache_cleaner import CacheCleaner
 
 
 class ExperimentRunner:
