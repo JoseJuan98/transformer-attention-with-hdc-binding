@@ -1,5 +1,5 @@
 model,confidence_interval,mean_test_acc,std,margin_of_error,num_runs,num_runs_total
-convtran,0.6133 ± 0.0320,0.6133,0.2862,0.0320,219,260
+convtran,0.6011 ± 0.0314,0.6011,0.2869,0.0314,228,270
 linear_conv_adaptive_sin_pe,0.6442 ± 0.0289,0.6442,0.2616,0.0289,223,270
 linear_mla,0.6271 ± 0.0299,0.6271,0.2706,0.0299,223,270
-linear_rope,0.6350 ± 0.0298,0.6350,0.2638,0.0298,214,260
+linear_rope,0.6213 ± 0.0298,0.6213,0.2685,0.0298,222,270

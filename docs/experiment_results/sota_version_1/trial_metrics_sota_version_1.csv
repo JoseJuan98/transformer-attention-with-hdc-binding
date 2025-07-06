@@ -27,8 +27,10 @@ Epilepsy,convtran,0.9384 ± 0.0122,0.9384,0.0182,0.0122,8,10
 Epilepsy,linear_conv_adaptive_sin_pe,0.8378 ± 0.0082,0.8378,0.0122,0.0082,8,10
 Epilepsy,linear_mla,0.8645 ± 0.0063,0.8645,0.0108,0.0063,10,10
 Epilepsy,linear_rope,0.8524 ± 0.0144,0.8524,0.0215,0.0144,8,10
+EthanolConcentration,convtran,0.3046 ± 0.0104,0.3046,0.0167,0.0104,9,10
 EthanolConcentration,linear_conv_adaptive_sin_pe,0.2467 ± 0.0089,0.2467,0.0133,0.0089,8,10
 EthanolConcentration,linear_mla,0.2610 ± 0.0102,0.2610,0.0152,0.0102,8,10
+EthanolConcentration,linear_rope,0.2567 ± 0.0156,0.2567,0.0233,0.0156,8,10
 FaceDetection,convtran,0.5186 ± 0.0113,0.5186,0.0168,0.0113,8,10
 FaceDetection,linear_conv_adaptive_sin_pe,0.6744 ± 0.0039,0.6744,0.0058,0.0039,8,10
 FaceDetection,linear_mla,0.6068 ± 0.0033,0.6068,0.0049,0.0033,8,10
