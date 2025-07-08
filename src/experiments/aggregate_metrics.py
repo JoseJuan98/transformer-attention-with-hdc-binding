@@ -100,6 +100,8 @@ if __name__ == "__main__":
     print(f"--> Processing experiment results from: {my_experiment_metrics_path}")
     handler = MetricsHandler(metrics_path=my_experiment_metrics_path, metrics_mode="append")
     handler.aggregate_metrics()
+
+    # Uncomment the following line if you want to compare the test accuracies with the results of the ConvTran paper.
     # my_results_df = handler.aggregate_test_acc_per_dataset_and_model()
     # print(f"Found {len(my_results_df)} aggregated results for models.")
     #
