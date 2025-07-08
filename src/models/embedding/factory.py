@@ -16,6 +16,7 @@ EmbeddingTypeStr = Literal["1d_conv", "linear_projection", "spatial_temporal"]
 class EmbeddingFactory(ArgFormatter):
     """Factory class for creating embedding based on configuration."""
 
+    component_name = "embedding"
     catalog = {
         "linear_projection": LinearProjection,
         "1d_conv": TimeSeries1dConvEmbedding,
