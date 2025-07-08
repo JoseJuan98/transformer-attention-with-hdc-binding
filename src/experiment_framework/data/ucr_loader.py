@@ -169,6 +169,7 @@ def get_ucr_datasets(
     num_cases_train, max_len_train, num_dimensions = X_train.shape
     num_cases_test, max_len_test, _ = X_test.shape
 
+    # This doesn't work for univariate time series
     if plot_path is not None and num_dimensions > 1:
         _plot_time_series_sample(dsid=dsid, plot_path=plot_path, sample=X_train[0], num_dimensions=num_dimensions)
 
