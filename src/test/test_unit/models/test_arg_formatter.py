@@ -43,4 +43,4 @@ class TestArgFormatter(unittest.TestCase):
     def test_format_arguments_raises_value_error(self):
 
         with pytest.raises(ValueError):
-            TestFormatter.format_arguments(arguments="Uknown")
+            TestFormatter.format_arguments(arguments="Unknown")
