@@ -78,8 +78,8 @@ The datasets used for experiments and automatically downloaded are:
 ]
 ```
 
-[//]: # (#TODO: Each model has the parameters in the `models_cfg.json` file used for each experiment, which includes a list of the model architectures with the kind of attention, binding method, embedding method and positional encoding method used for the experiment.)
-[//]: # (This 4 parameters can be just a string or dictionary with the key type and any extra arguments for that component, e.g. `{"type": "convolutional", "kernel_size": 3}` for a convolutional binding method with a kernel size of 3.)
+<!-- #TODO: Each model has the parameters in the `models_cfg.json` file used for each experiment, which includes a list of the model architectures with the kind of attention, binding method, embedding method and positional encoding method used for the experiment.)-->
+<!-- (This 4 parameters can be just a string or dictionary with the key type and any extra arguments for that component, e.g. `{"type": "convolutional", "kernel_size": 3}` for a convolutional binding method with a kernel size of 3.)-->
 
 ## 1. Binding Method Experiments
 
