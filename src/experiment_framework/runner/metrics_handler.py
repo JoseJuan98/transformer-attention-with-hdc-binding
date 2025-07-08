@@ -142,7 +142,7 @@ class MetricsHandler:
         # If n > 1 and std is not NaN and greater than 0, calculate MOE using t-distribution
         if n > 1 and pandas.notna(std) and std > 0:
 
-            t_score = stats.t.ppf(1 - self.significance_level, n - 1)
+            t_score = stats.t.ppf(1 - self.significance_level / 2, n - 1)
             return t_score * std / numpy.sqrt(n)
 
         # If n <= 1 or std is NaN or 0, return 0.0 (no uncertainty)
