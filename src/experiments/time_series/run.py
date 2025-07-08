@@ -8,11 +8,11 @@ import pathlib
 from experiment_framework import ExperimentConfigFactory, ExperimentRunner, ModelConfigFactory
 
 experiments = {
-    1: "binding_methods",
-    2: "binding_methods_N_L_4",
-    3: "positional_encodings",
-    4: "sota",
-    5: "d_model",
+    1: "1_binding_methods",
+    2: "2_binding_methods_N_L_4",
+    3: "3_positional_encodings",
+    4: "4_sota",
+    5: "5_d_model",
 }
 
 
