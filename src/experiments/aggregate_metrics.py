@@ -59,11 +59,11 @@ def parse_baseline_results(json_path: pathlib.Path) -> pandas.DataFrame:
             row = {
                 "dataset": dataset_name,
                 "model": model_name,
-                "mean_acc_filtered": round(acc, 4),
-                "std_acc_filtered": 0.0,
-                "num_runs_filtered": 1,
+                "mean_acc": round(acc, 4),
+                "std_acc": 0.0,
+                "num_runs": 1,
                 "margin_of_error": 0.0,
-                "ci_filtered": f"{acc:.4f} ± 0.0000",
+                "confidence_interval": f"{acc:.4f} ± 0.0000",
             }
             baseline_rows.append(row)
 
