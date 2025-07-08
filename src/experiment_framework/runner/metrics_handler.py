@@ -32,39 +32,30 @@ class MetricsHandler:
         """Initializes the MetricsHandler class.
 
         Args:
-            metrics_path (pathlib.Path, str): The path to save the metrics.
-            aggregated_metrics_path (pathlib.Path): The path to save the aggregated metrics. If None, it will be set to
-                the parent directory of the metrics path with the prefix "aggregated_".
-            model_metrics_path (pathlib.Path): The path to save the model metrics. If None, it will be set to the parent
-                directory of the metrics path with the prefix "model_".
-            metrics_mode (str): The mode to aggregate metrics to. Values are ['append', 'write']. If 'append', and the
-                metrics file already exist, the new metrics will be appended to the existing file. If 'write', the new
-                metrics will overwrite the existing file.
-            significance_level (float): The significance level for statistical tests. Defaults to 0.05.
-            metrics_precision (int): The number of decimal places to round the metrics to. Defaults to 4.
-            min_runs_for_filter (int): The minimum number of runs in a dataset/model group to apply filtering. Defaults to 4.
+            metrics_path (pathlib.Path, str): The path to save the raw trial metrics.
+            aggregated_metrics_path (pathlib.Path): Path to save aggregated metrics per dataset/model.
+            model_metrics_path (pathlib.Path): Path to save aggregated metrics per model (based on ranks).
+            metrics_mode (str): 'append' to add to existing metrics file, 'write' to overwrite.
+            significance_level (float): The significance level for statistical tests (e.g., 0.05 for 95% CI).
+            min_runs_for_filter (int): The minimum number of runs in a group to apply percentile-based filtering.
+            metrics_precision (int): The number of decimal places to round the metrics to.
         """
         self.metrics_path = metrics_path if isinstance(metrics_path, pathlib.Path) else pathlib.Path(metrics_path)
         self.mode = metrics_mode
-        # Divide significance level by 2 for two-tailed tests
-        self.significance_level = significance_level / 2
+        self.significance_level = significance_level
         self.metrics_precision = metrics_precision
-        # Minimum runs in a dataset/model group to apply filtering
         self.min_runs_for_filter = min_runs_for_filter
 
-        if isinstance(aggregated_metrics_path, str):
-            aggregated_metrics_path = pathlib.Path(aggregated_metrics_path)
-
-        if isinstance(model_metrics_path, str):
-            model_metrics_path = pathlib.Path(model_metrics_path)
-
-        self.aggregated_metrics_path = (
-            aggregated_metrics_path
+        # Define output paths with clear naming
+        self.aggregated_dataset_model_path = (
+            pathlib.Path(aggregated_metrics_path)
             if aggregated_metrics_path
-            else self.metrics_path.parent / f"trial_{self.metrics_path.name}"
+            else self.metrics_path.parent / f"aggregated_by_dataset_{self.metrics_path.name}"
         )
-        self.model_metrics_path = (
-            model_metrics_path if model_metrics_path else self.metrics_path.parent / f"model_{self.metrics_path.name}"
+        self.aggregated_model_rank_path = (
+            pathlib.Path(model_metrics_path)
+            if model_metrics_path
+            else self.metrics_path.parent / f"summary_model_{self.metrics_path.name}"
         )
 
         # Ensure directory exists
@@ -74,6 +65,9 @@ class MetricsHandler:
             self.results = pandas.read_csv(filepath_or_buffer=self.metrics_path, header=0)
         else:
             self.results = pandas.DataFrame()
+
+        # Aggregated metrics by model and dataset (to avoid re-computing it multiple times)
+        self.dataset_and_model_metrics = pandas.DataFrame()
 
     def update_metrics(
         self,
@@ -135,40 +129,27 @@ class MetricsHandler:
         final_order = core_cols + other_cols
         metrics_copy = metrics_copy[final_order]
 
-        if self.results.empty:
-            self.results = metrics_copy
-        else:
-            self.results = pandas.concat([self.results, metrics_copy], axis=0, sort=False)
+        self.results = pandas.concat([self.results, metrics_copy], ignore_index=True, axis=0, sort=False)
 
         # Save updated metrics
         self.results.to_csv(path_or_buf=self.metrics_path, index=False, header=True)
 
-    def aggregate_test_acc_per_dataset_and_model(self) -> pandas.DataFrame:
-        """Aggregates test accuracy per model and dataset with 95% confidence interval and stores it in a CSV file."""
-        return self._aggregate_metrics(aggregate_by="dataset_model")
-
-    def aggregate_test_acc_per_model(self) -> pandas.DataFrame:
-        """Aggregates test accuracy per model with 95% confidence interval and stores it in a CSV file."""
-        return self._aggregate_metrics(aggregate_by="model")
-
-    def _calculate_moe(self, row):
-        """Calculate the margin of error (MOE) for the given row."""
-        n = row["num_runs"]
-        std = row["std_filtered"]
+    def _calculate_moe(self, row: pandas.Series, std_col: str, count_col: str) -> float:
+        """Calculate the margin of error (MOE) for a given row."""
+        n = row[count_col]
+        std = row[std_col]
 
         if n > 1 and pandas.notna(std) and std > 0:
-            t_score = stats.t.ppf((1 - self.significance_level * 2), n - 1)
+
+            t_score = stats.t.ppf(1 - self.significance_level, n - 1)
             return t_score * std / numpy.sqrt(n)
-
-        elif n == 1 or std == 0:
+        elif n <= 1 or std == 0:
             return 0.0
-
-        # n=0 or std is NaN/0
         else:
             return numpy.nan
 
-    def _aggregate_metrics(self, aggregate_by: Literal["dataset_model", "model"]) -> pandas.DataFrame:
-        # --- Initial Loading ---
+    def _get_filtered_metrics(self) -> pandas.DataFrame:
+        """Loads, cleans, and filters the raw metrics data."""
         # Use the in-memory DataFrame if available and not empty, otherwise read from file
         if not self.results.empty:
             metrics = self.results.copy()
@@ -184,203 +165,171 @@ class MetricsHandler:
         if metrics.empty:
             raise ValueError("Error: No metrics data available to aggregate.")
 
-        # --- Essential Column Checks ---
         required_cols = ["dataset", "model", "test_acc"]
         if not all(col in metrics.columns for col in required_cols):
             missing = [col for col in required_cols if col not in metrics.columns]
             raise KeyError(f"Error: Missing required columns in metrics data: {missing}")
 
-        # --- Data Cleaning ---
-        # Ensure 'test_acc' is numeric, coerce errors to NaN
         metrics["test_acc"] = pandas.to_numeric(metrics["test_acc"], errors="coerce")
         original_rows = len(metrics)
         metrics.dropna(subset=["test_acc"], inplace=True)
         if len(metrics) < original_rows:
-            print(f"Warning: Dropped {original_rows - len(metrics)} rows with non-numeric or NaN 'test_acc'.")
+            logging.warning(f"Dropped {original_rows - len(metrics)} rows with non-numeric or NaN 'test_acc'.")
 
         if metrics.empty:
             raise ValueError("Error: No valid 'test_acc' data remaining after cleaning.")
 
-        # --- Step 1: Filter Data Per Dataset/Model ---
-        filter_group_keys = ["dataset", "model"]
+        # --- Outlier Filtering Step ---
+        group_keys = ["dataset", "model"]
         metric_col = "test_acc"
 
-        # Remove outliers based on percentiles
-        # Calculate group size, q05, q95 using transform to broadcast results back to the original DataFrame shape
-        metrics["group_count"] = metrics.groupby(filter_group_keys)[metric_col].transform("count")
-        metrics["q05"] = metrics.groupby(filter_group_keys)[metric_col].transform(
-            lambda x: x.quantile(self.significance_level)
-        )
-        metrics["q95"] = metrics.groupby(filter_group_keys)[metric_col].transform(
-            lambda x: x.quantile(1 - self.significance_level)
-        )
+        # Use transform to broadcast group-wise calculations
+        metrics["group_count"] = metrics.groupby(group_keys)[metric_col].transform("count")
 
-        # Keep row if:
-        # 1. The group has fewer than min_runs_for_filter OR
-        # 2. The group has enough runs AND the value is within [q05, q95]
+        # Calculate lower and upper bounds for filtering
+        lower_quantile = self.significance_level / 2  # 0.025
+        upper_quantile = 1 - (self.significance_level / 2)  # 0.975
+        metrics["lower_bound"] = metrics.groupby(group_keys)[metric_col].transform(lambda x: x.quantile(lower_quantile))
+        metrics["upper_bound"] = metrics.groupby(group_keys)[metric_col].transform(lambda x: x.quantile(upper_quantile))
+
+        # Keep a row if the group is too small to filter OR if the value is within the bounds
         filter_mask = (metrics["group_count"] < self.min_runs_for_filter) | (
-            (metrics[metric_col] >= metrics["q05"]) & (metrics[metric_col] <= metrics["q95"])
+            (metrics[metric_col] >= metrics["lower_bound"]) & (metrics[metric_col] <= metrics["upper_bound"])
         )
 
         filtered_metrics = metrics[filter_mask].copy()
 
-        # Report how many rows were filtered out
         rows_filtered_out = len(metrics) - len(filtered_metrics)
         if rows_filtered_out > 0:
             print(
-                f"Filtered out {rows_filtered_out} runs falling outside the {self.significance_level}th-"
-                f"{1 - self.significance_level}th percentile range within their dataset/model group (for groups with "
-                f">= {self.min_runs_for_filter} runs)."
+                f"Filtered out {rows_filtered_out} runs falling outside the central "
+                f"{100 * (1 - self.significance_level)}% percentile range within their dataset/model group "
+                f"(for groups with >= {self.min_runs_for_filter} runs)."
             )
-        else:
-            print("No runs were filtered out (or all groups were too small to filter).")
 
-        # Drop temporary columns
-        filtered_metrics = filtered_metrics.drop(columns=["group_count", "q05", "q95"], errors="ignore")
+        return filtered_metrics.drop(columns=["group_count", "lower_bound", "upper_bound"])
 
+    def aggregate_test_acc_per_dataset_and_model(self) -> pandas.DataFrame:
+        """Aggregates test accuracy per model and dataset after filtering outliers.
+
+        Calculates mean, std, and a 95% confidence interval.
+        """
+        if not self.dataset_and_model_metrics.empty:
+            print("Using cached dataset and model metrics.")
+            return self.dataset_and_model_metrics
+
+        filtered_metrics = self._get_filtered_metrics()
         if filtered_metrics.empty:
-            print("Warning: All rows were filtered out. No data left for aggregation.")
+            print("Warning: No data remains after filtering. Cannot aggregate.")
             return pandas.DataFrame()
 
-        # --- Step 2: Aggregate the Filtered Data ---
-        # Define the final grouping keys based on the desired aggregation level
-        final_grouping_keys = ["model"] if aggregate_by == "model" else ["dataset", "model"]
-        grouped_filtered = filtered_metrics.groupby(final_grouping_keys)
+        group_keys = ["dataset", "model"]
 
-        # Calculate statistics on the filtered data
-        stats_filtered = grouped_filtered[metric_col].agg(["mean", "std", "count"]).reset_index()
-        stats_filtered.rename(
-            columns={"count": "num_runs", "mean": "mean_filtered", "std": "std_filtered"}, inplace=True
+        # Aggregate the filtered data
+        agg_filtered = (
+            filtered_metrics.groupby(group_keys)["test_acc"].agg(mean="mean", std="std", count="count").reset_index()
         )
 
-        # Calculate original counts for the same groups using the *unfiltered* data
-        original_counts = metrics.groupby(final_grouping_keys).size().reset_index(name="num_runs_total")
+        # Calculate MOE on the filtered data
+        agg_filtered["margin_of_error"] = agg_filtered.apply(
+            self._calculate_moe, axis=1, std_col="std", count_col="count"
+        )
 
-        # Merge filtered stats and original counts
-        result = pandas.merge(stats_filtered, original_counts, on=final_grouping_keys, how="left")
+        # Formatting
+        for col in ["mean", "std", "margin_of_error"]:
+            agg_filtered[col] = agg_filtered[col].round(self.metrics_precision)
 
-        # --- Calculate Margin of Error on Filtered Data ---
-        result["margin_of_error"] = result.apply(self._calculate_moe, axis=1)
-
-        # --- Formatting ---
-        result["mean_test_acc_filtered"] = result["mean_filtered"].round(self.metrics_precision)
-        result["std_test_acc_filtered"] = result["std_filtered"].round(self.metrics_precision)
-        result["margin_of_error"] = result["margin_of_error"].round(self.metrics_precision)
-
-        result["confidence_interval_filtered"] = result.apply(
+        agg_filtered["confidence_interval"] = agg_filtered.apply(
             lambda row: (
-                f"{row['mean_test_acc_filtered']:.4f} ± {row['margin_of_error']:.4f}"
-                if pandas.notna(row["mean_test_acc_filtered"]) and pandas.notna(row["margin_of_error"])
-                else "N/A"
+                f"{row['mean']:.4f} ± {row['margin_of_error']:.4f}" if pandas.notna(row["margin_of_error"]) else "N/A"
             ),
             axis=1,
         )
 
-        # Ensure integer types for counts
-        result["num_runs"] = result["num_runs"].astype(int)
-        result["num_runs_total"] = result["num_runs_total"].astype(int)
-
-        # --- Select and Reorder Final Columns ---
-        cols = [
-            "model",
-            "confidence_interval_filtered",
-            "mean_test_acc_filtered",
-            "std_test_acc_filtered",
-            "margin_of_error",
-            "num_runs",
-            "num_runs_total",
-        ]
-        if aggregate_by == "dataset_model":
-            cols = ["dataset"] + cols
-
-        # Select only the desired columns that actually exist in the result
-        final_cols = [col for col in cols if col in result.columns]
-        aggregated_metrics = result[final_cols]
-
-        # --- Save Results ---
-        output_path = self.model_metrics_path if aggregate_by == "model" else self.aggregated_metrics_path
-
-        aggregated_metrics = aggregated_metrics.rename(
+        agg_filtered.rename(
             columns={
-                "mean_test_acc_filtered": "mean_test_acc",
-                "std_test_acc_filtered": "std",
-                "confidence_interval_filtered": "confidence_interval",
-            }
+                "mean": "mean_acc",
+                "std": "std_acc",
+                "count": "num_runs_filtered",
+            },
+            inplace=True,
         )
 
-        # Ensure directory exists
-        output_path.parent.mkdir(parents=True, exist_ok=True)
+        # Save and return
+        self.aggregated_dataset_model_path.parent.mkdir(parents=True, exist_ok=True)
+        agg_filtered.to_csv(
+            self.aggregated_dataset_model_path, index=False, float_format=f"%.{self.metrics_precision}f"
+        )
+        print(f"Aggregated metrics per dataset/model saved to {self.aggregated_dataset_model_path}")
+        self.dataset_and_model_metrics = agg_filtered
 
-        aggregated_metrics.to_csv(
-            path_or_buf=output_path,
-            index=False,
-            header=True,
-            float_format="%.4f",
+        return agg_filtered
+
+    def aggregate_test_acc_per_model_by_rank(self) -> pandas.DataFrame:
+        """Aggregates model performance across datasets using ranks, which is more robust than averaging raw accuracy."""
+        # Use the per-dataset aggregated results as the starting point
+        per_dataset_results = self.aggregate_test_acc_per_dataset_and_model()
+
+        # Rank models within each dataset based on their mean filtered accuracy (higher is better)
+        per_dataset_results["rank"] = per_dataset_results.groupby("dataset")["mean_acc"].rank(
+            method="average", ascending=False
         )
 
-        return aggregated_metrics
+        # TODO: create an average accuracy across all datasets for each model as a summary
+
+        # Aggregate the ranks for each model across all datasets
+        rank_aggregation = (
+            per_dataset_results.groupby("model")["rank"]
+            .agg(mean_rank="mean", std_rank="std", num_datasets="count")
+            .reset_index()
+        )
+
+        # Sort by the most important metric: mean_rank (lower is better)
+        rank_aggregation.sort_values("mean_rank", inplace=True)
+
+        # Formatting
+        for col in ["mean_rank", "std_rank"]:
+            rank_aggregation[col] = rank_aggregation[col].round(self.metrics_precision)
+
+        # Save and return
+        self.aggregated_model_rank_path.parent.mkdir(parents=True, exist_ok=True)
+        rank_aggregation.to_csv(
+            self.aggregated_model_rank_path, index=False, float_format=f"%.{self.metrics_precision}f"
+        )
+        print(f"Aggregated model performance by rank saved to {self.aggregated_model_rank_path}")
+
+        return rank_aggregation
 
     def aggregate_per_dataset_with_model_as_cols(self) -> pandas.DataFrame:
-        """Aggregates test accuracy per dataset with models as columns and stores it in a CSV file."""
-        # Use the already aggregated (and filtered) data
+        """Creates a pivot table of (Dataset x Model) showing the confidence interval."""
         agg_dataset_model_metrics = self.aggregate_test_acc_per_dataset_and_model()
 
-        if agg_dataset_model_metrics.empty:
-            print("Cannot generate dataset_results.csv as dataset/model aggregation is empty.")
-            return pandas.DataFrame()
+        # TODO:
+        # Create a new "dataset" that is the average of each model across all datasets
 
-        # Check if the required columns exist before pivoting
-        required_pivot_cols = ["dataset", "model", "confidence_interval"]
-        if not all(col in agg_dataset_model_metrics.columns for col in required_pivot_cols):
-            missing = [col for col in required_pivot_cols if col not in agg_dataset_model_metrics.columns]
-            print(f"Cannot pivot for dataset_results.csv. Missing columns: {missing}")
-            return pandas.DataFrame()
 
-        # Pivot over the models using the filtered confidence interval
-        try:
-            # Use the filtered confidence interval column
-            pivot_table = agg_dataset_model_metrics.pivot(
-                index="dataset", columns="model", values="confidence_interval"
-            )
-        except Exception as e:
-            print(f"Error pivoting data: {e}")
-            # Handle potential duplicate dataset/model entries if they weren't aggregated correctly
-            # Or if the aggregation step failed silently.
-            print("Attempting pivot_table with aggregation...")
-            try:
-                pivot_table = pandas.pivot_table(
-                    agg_dataset_model_metrics,
-                    values="confidence_interval",
-                    index=["dataset"],
-                    columns=["model"],
-                    aggfunc="first",  # Should only be one value per dataset/model after aggregation
-                )
-            except Exception as e2:
-                print(f"Error creating pivot_table: {e2}")
-                return pandas.DataFrame()
+        pivot_table = agg_dataset_model_metrics.pivot(index="dataset", columns="model", values="confidence_interval")
 
-        output_path = self.metrics_path.parent / "dataset_results.csv"
-        try:
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            pivot_table.to_csv(path_or_buf=output_path, index=True, header=True)
-            print(f"Dataset results (pivot table) saved to {output_path}")
-        except Exception as e:
-            print(f"Error saving pivot table results to {output_path}: {e}")
-
+        output_path = self.metrics_path.parent / "summary_dataset_results.csv"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        pivot_table.to_csv(output_path, index=True, header=True)
+        print(f"Dataset results pivot table saved to {output_path}")
         return pivot_table
 
     def aggregate_metrics(self) -> None:
-        """Alias for all aggregate methods."""
-        print("\n\t=> Aggregating Test Accuracy per Dataset and Model")
+        """Runs all aggregation methods."""
+        print("\n\t=> Aggregating Test Accuracy per Dataset and Model...")
         self.aggregate_test_acc_per_dataset_and_model()
-        print("\n\t=> Aggregating Test Accuracy per Model (using filtered data pooled across datasets)")
-        self.aggregate_test_acc_per_model()
-        print("\n\t=> Generating Pivot Table (Dataset vs Model)")
+
+        print("\n\t=> Aggregating Model Performance Across Datasets by Rank...")
+        self.aggregate_test_acc_per_model_by_rank()
+
+        print("\n\t=> Generating Pivot Table (Dataset vs Model)...")
         self.aggregate_per_dataset_with_model_as_cols()
         print("\n\t=> Aggregation complete")
 
+    @staticmethod
     def get_train_metrics_and_plot(
-        self,
         csv_dir: str,
         experiment: str,
         logger: logging.Logger | None = None,
