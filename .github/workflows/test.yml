@@ -43,7 +43,7 @@ jobs:
           venv-${{ runner.os }}-${{ matrix.python-version }}-
 
     - name: Install dependencies
-      run: make install-dev
+      run: CI=true make install-dev
 
     - name: Run tests
       run: make test

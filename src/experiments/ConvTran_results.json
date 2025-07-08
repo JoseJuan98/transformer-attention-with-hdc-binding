@@ -18,7 +18,6 @@
     "RacketSports",
     "Epilepsy",
     "NATOPS",
-    "EigenWorms",
     "UWaveGesture",
     "Libras",
     "ArticularyWord",
@@ -30,7 +29,7 @@
     "AtrialFibrillation",
     "StandWalkJump"
   ],
-  "ConvTran": [
+  "ConvTran_Original": [
     0.6722,
     0.7132,
     0.9871,

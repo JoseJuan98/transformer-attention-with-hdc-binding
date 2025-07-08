@@ -4,6 +4,7 @@
 from typing import Literal, Union
 
 # First party imports
+from models.arg_formatter import ArgFormatter
 from models.positional_encoding.adaptive_sinusoidal import AdaptiveSinusoidalPositionalEncoding
 from models.positional_encoding.fractional import FPEOrigPositionalEncoding
 from models.positional_encoding.null_pe import NullPositionalEncoding
@@ -29,9 +30,10 @@ TSPositionalEncodingTypeStr = Literal[
 ]
 
 
-class PositionalEncodingFactory:
+class PositionalEncodingFactory(ArgFormatter):
     """Factory class for creating positional encodings based on configuration."""
 
+    component_name = "positional_encoding"
     catalog = {
         "split_sinusoidal": SplitSinusoidalPositionalEncoding,
         "sinusoidal": SinusoidalPositionalEncoding,
@@ -61,16 +63,10 @@ class PositionalEncodingFactory:
         Returns:
             object: The positional encoding instance.
         """
-
-        if isinstance(positional_encoding_arguments, dict):
-            positional_encoding_type: TSPositionalEncodingTypeStr = positional_encoding_arguments["type"]
-            positional_encoding_arguments = {k: v for k, v in positional_encoding_arguments.items() if k != "type"}
-        else:
-            positional_encoding_type = positional_encoding_arguments
-            positional_encoding_arguments = {}
-
-        if positional_encoding_type not in cls.catalog:
-            raise ValueError(f"Unknown positional encoding type: {positional_encoding_type}")
+        positional_encoding_type, positional_encoding_arguments = cls.format_arguments(
+            arguments=positional_encoding_arguments
+        )
+        positional_encoding_type: TSPositionalEncodingTypeStr = positional_encoding_type  # type: ignore[no-redef]
 
         # Get the positional encoding class based on the configuration and instantiate it
         positional_encoding_class = cls.catalog[positional_encoding_type]

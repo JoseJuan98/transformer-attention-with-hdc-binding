@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """Dataset modules for loading and preparing the time series classification data for experiments."""
 # Standard imports
+import logging
 import pathlib
+import pickle
 
 # Third party imports
 import numpy
@@ -101,6 +103,8 @@ def get_ucr_datasets(
     extract_path: pathlib.Path | str,
     plot_path: pathlib.Path | None = None,
     n_jobs: int = -1,
+    force_preprocessing: bool = False,
+    logger: logging.Logger | None = None,
 ) -> tuple[TensorDataset, TensorDataset, int, int, int]:
     """Loads and standardizes a UCR dataset using sktime.
 
@@ -110,7 +114,9 @@ def get_ucr_datasets(
         dsid (str): The name of the UCR dataset.
         extract_path (`pathlib.Path`): The path to extract the dataset to.
         plot_path (`pathlib.Path`, optional): The path to save the plot. Defaults to None.
+        logger (logging.Logger, optional): Logger instance for logging information. Defaults to None.
         n_jobs (int, optional): The number of jobs to use for parallel processing. Defaults to -1 (use all available cores).
+        force_preprocessing (bool, optional): If True, forces preprocessing even if saved datasets exist. Defaults to False.
 
     Returns:
         ~`torch.utils.data.TensorDataset`: The training dataset.
@@ -122,24 +128,49 @@ def get_ucr_datasets(
     if isinstance(extract_path, str):
         extract_path = pathlib.Path(extract_path)
 
+    dataset_dir = extract_path / dsid
+    dataset_dir.mkdir(parents=True, exist_ok=True)
+
+    train_file = dataset_dir / "train_dataset.pkl"
+    test_file = dataset_dir / "test_dataset.pkl"
+    metadata_file = dataset_dir / "metadata.pkl"
+
+    if not force_preprocessing and train_file.exists() and test_file.exists() and metadata_file.exists():
+        if logger:
+            logger.info(f"Loading preprocessed datasets for {dsid} from {dataset_dir}/ ...")
+
+        # Load saved datasets and metadata
+        with open(train_file, "rb") as f:
+            train_dataset = pickle.load(f)
+
+        with open(test_file, "rb") as f:
+            test_dataset = pickle.load(f)
+
+        with open(metadata_file, "rb") as f:
+            max_len, num_classes, num_dimensions = pickle.load(f)
+
+        return train_dataset, test_dataset, max_len, num_classes, num_dimensions
+
+    if logger:
+        logger.info("Downloading the dataset ...")
+
     # Load data using sktime
-    extract_path.mkdir(parents=True, exist_ok=True)
     X_train, y_train = load_UCR_UEA_dataset(dsid, split="train", return_X_y=True, extract_path=extract_path)
     X_test, y_test = load_UCR_UEA_dataset(dsid, split="test", return_X_y=True, extract_path=extract_path)
+
+    if logger:
+        logger.info(f"Preparing the data ({n_jobs=})")
 
     # Distribute the number of jobs across the available cores or the number of samples if less than the number of cores
     X_train = __convert_to_numpy(X_train, n_jobs=min(n_jobs, X_train.shape[0]))
     X_test = __convert_to_numpy(X_test, n_jobs=min(n_jobs, X_test.shape[0]))
 
     # Standardize data using sklearn.preprocessing.StandardScaler
-    # Each feature needs to be standarized independently. This means the data needs to be reshaped to
-    # (num_cases * max_len, num_dimensions), standardize, and then reshape back.
     num_cases_train, max_len_train, num_dimensions = X_train.shape
-
-    # max_len and num_dimensions should be the same
     num_cases_test, max_len_test, _ = X_test.shape
 
-    if plot_path is not None and num_dimensions >= 1:
+    # This doesn't work for univariate time series
+    if plot_path is not None and num_dimensions > 1:
         _plot_time_series_sample(dsid=dsid, plot_path=plot_path, sample=X_train[0], num_dimensions=num_dimensions)
 
     scaler = StandardScaler(with_std=True, with_mean=True)
@@ -161,5 +192,22 @@ def get_ucr_datasets(
     train_dataset = TensorDataset(X_train, y_train)
     test_dataset = TensorDataset(X_test, y_test)
     num_classes = len(unique_labels)
+
+    # Save datasets and metadata
+    with open(train_file, "wb") as f:
+        pickle.dump(obj=train_dataset, file=f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    with open(test_file, "wb") as f:
+        pickle.dump(obj=test_dataset, file=f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    with open(metadata_file, "wb") as f:
+        pickle.dump(obj=(max_len_train, num_classes, num_dimensions), file=f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    # Clean up
+    # Remove all files in the directory except the serialized datasets and metadata
+    for file in dataset_dir.iterdir():
+        # f"{dsid}_TRAIN.ts", f"{dsid}_TEST.ts", (original UCR files)
+        if file.is_file() and file.name not in ["train_dataset.pkl", "test_dataset.pkl", "metadata.pkl"]:
+            file.unlink()
 
     return train_dataset, test_dataset, max_len_train, num_classes, num_dimensions

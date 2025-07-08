@@ -8,7 +8,7 @@ shared low-rank latent vector.
 The implementation is adapted to fit the project's architecture, inheriting from `BaseMultiHeadAttention` and
 utilizing the project's existing rotary embedding logic.
 
-Source code: https://github.com/deepseek-ai/DeepSeek-VL2/blob/main/deepseek_vl2/models/modeling_deepseek.py
+Source code: https:/    /github.com/deepseek-ai/DeepSeek-VL2/blob/main/deepseek_vl2/models/modeling_deepseek.py
 
 Copyright 2023 DeepSeek-AI and The HuggingFace Inc. team. All rights reserved.
 
@@ -135,6 +135,7 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         for layer in [self.q_a_proj, self.q_b_proj, self.kv_a_proj_with_mqa, self.kv_b_proj]:
             torch.nn.init.xavier_normal_(layer.weight, gain=1.0)
 
+    # TODO: make it a trait to be reused here and in RotaryMultiHeadAttention: use _split_for_attention_heads
     def _split_for_attention_heads(
         self, tensor: torch.Tensor, batch_size: int, seq_len: int, head_dim: int
     ) -> torch.Tensor:
@@ -148,6 +149,7 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         """
         return tensor.view(batch_size, seq_len, self.num_heads, head_dim).transpose(1, 2)
 
+    # TODO: make it a trait to be reused here and in RotaryMultiHeadAttention
     @staticmethod
     def _rotate_half(x: torch.Tensor) -> torch.Tensor:
         """Rotates the second half of the last dimension of the input tensor."""
@@ -155,6 +157,7 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         x_odd = x[..., 1::2]
         return torch.stack([-x_odd, x_even], dim=-1).reshape_as(x)
 
+    # TODO: make it a trait to be reused here and in RotaryMultiHeadAttention
     def _apply_rotary_pos_emb(
         self, q: torch.Tensor, k: torch.Tensor, positional_encodings: torch.Tensor, seq_len: int
     ) -> tuple[torch.Tensor, torch.Tensor]:
@@ -248,7 +251,7 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         attn_output = torch.matmul(attention_weights, compressed_kv)
         attn_output = torch.matmul(attn_output, v_absorb.transpose(-1, -2))
 
-        # 8. Concatenate heads and apply final linear layer.
+        # Concatenate heads and apply final linear layer.
         attn_output = (
             attn_output.transpose(1, 2).contiguous().view(batch_size, seq_len, self.num_heads * self.v_head_dim)
         )

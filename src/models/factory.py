@@ -22,7 +22,7 @@ from experiment_framework.config.dataset import DatasetConfig
 from experiment_framework.config.experiment import ExperimentConfig
 from experiment_framework.config.model import ModelConfig
 from models import EncoderOnlyTransformerTSClassifier
-from models.binding_method import BindingMethodFactory
+from models.binding import BindingMethodFactory
 from models.callbacks.fine_tune_lr_finder import FineTuneLearningRateFinder
 from models.callbacks.pocket_algorithm import PocketAlgorithm
 from models.embedding.factory import EmbeddingFactory

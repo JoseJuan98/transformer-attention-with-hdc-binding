@@ -1,5 +1,8 @@
 # Enhancing Transformer Attention with HDC Binding for Positional Encodings
 
+[![Lint](https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/lint.yml/badge.svg)](https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/lint.yml)
+[![Unit Test](https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/test.yml/badge.svg)](https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/test.yml)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-green.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.6+-orange.svg)](https://pytorch.org/)
@@ -90,7 +93,7 @@ The core model is a Transformer-based classifier adapted for time series classif
 ├── src                     # Source code
 │     ├── models                # Model definitions
 │     │     ├── architectures        # Time series specific models (e.g., encoder-only transformer classifier)
-│     │     ├── binding_method       # HDC binding methods (e.g., addition, component-wise multiplication, circular convolution)
+│     │     ├── binding       # HDC binding methods (e.g., addition, component-wise multiplication, circular convolution)
 │     │     ├── callbacks            # Callbacks for training (e.g., early stopping, learning rate scheduling)
 │     │     ├── embedding            # Embedding layers (e.g. linear projection, 1D convolution)
 │     │     ├── positional_encoding  # Implementations of different positional encoding methods (including HDC binding)

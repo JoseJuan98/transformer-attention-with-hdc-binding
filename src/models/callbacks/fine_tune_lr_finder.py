@@ -8,6 +8,9 @@ import os
 import lightning
 from lightning.pytorch.callbacks import LearningRateFinder
 
+# First party imports
+from utils.cache_cleaner import CacheCleaner
+
 
 class FineTuneLearningRateFinder(LearningRateFinder):
     """The ``FineTuneLearningRateFinder`` callback enables the user to do a range test of good initial learning rates.
@@ -49,3 +52,11 @@ class FineTuneLearningRateFinder(LearningRateFinder):
         files = glob.glob(os.path.join(trainer.default_root_dir, ".lr_find*.ckpt"))
         for file in files:
             os.remove(file)
+
+        # Clean up the backend cache to free memory
+        self._clean_backend_cache()
+
+    @staticmethod
+    def _clean_backend_cache() -> None:
+        """Clean up the cache to free memory."""
+        CacheCleaner.clean_backend_cache()

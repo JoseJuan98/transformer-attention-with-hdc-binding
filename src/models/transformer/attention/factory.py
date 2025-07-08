@@ -3,6 +3,9 @@
 # Standard imports
 from typing import Literal, Union
 
+# First party imports
+from models.arg_formatter import ArgFormatter
+
 # Local imports
 from .erpe_attention import ERPEAttention
 from .mla import MultiHeadLatentAttention
@@ -13,9 +16,10 @@ AttentionType = Union[MultiHeadAttention, RotaryMultiHeadAttention, ERPEAttentio
 AttentionTypeStr = Literal["standard", "rotary", "erpe", "mla"]
 
 
-class MultiHeadAttentionFactory:
+class MultiHeadAttentionFactory(ArgFormatter):
     """Factory class for obtaining attention modules."""
 
+    component_name = "attention"
     catalog = {
         "standard": MultiHeadAttention,
         "rotary": RotaryMultiHeadAttention,
@@ -26,7 +30,7 @@ class MultiHeadAttentionFactory:
     @classmethod
     def get_attention_module(
         cls, attention_args: AttentionTypeStr | dict, embed_dim: int, num_heads: int, seq_len: int
-    ) -> tuple[AttentionType, AttentionTypeStr]:
+    ) -> AttentionType:
         """Returns the attention module class based on the given name.
 
         Args:
@@ -40,20 +44,9 @@ class MultiHeadAttentionFactory:
             torch.nn.Module: An instance of the requested attention module.
             str: The type of attention module created.
         """
-        if isinstance(attention_args, dict):
-            attention_type: AttentionTypeStr = attention_args["type"]
-            attention_args = {k: v for k, v in attention_args.items() if k != "type"}
-        else:
-            attention_type = attention_args
-            attention_args = {}
-
-        if attention_type not in cls.catalog:
-            raise ValueError(
-                f"Attention type '{attention_type}' is not supported.\nSupported types: {list(cls.catalog.keys())}"
-            )
+        attention_type, attention_args = cls.format_arguments(arguments=attention_args)
+        attention_type: AttentionTypeStr = attention_type  # type: ignore[no-redef]
 
         attention_class = cls.catalog[attention_type]
-        return (
-            attention_class(embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len, **attention_args),
-            attention_type,
-        )
+
+        return attention_class(embed_dim=embed_dim, num_heads=num_heads, seq_len=seq_len, **attention_args)
