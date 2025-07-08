@@ -157,7 +157,7 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         x_odd = x[..., 1::2]
         return torch.stack([-x_odd, x_even], dim=-1).reshape_as(x)
 
-    # TODO: make it a trait to be reused her and in RotaryMultiHeadAttention
+    # TODO: make it a trait to be reused here and in RotaryMultiHeadAttention
     def _apply_rotary_pos_emb(
         self, q: torch.Tensor, k: torch.Tensor, positional_encodings: torch.Tensor, seq_len: int
     ) -> tuple[torch.Tensor, torch.Tensor]:
