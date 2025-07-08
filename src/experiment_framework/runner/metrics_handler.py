@@ -135,14 +135,17 @@ class MetricsHandler:
         self.results.to_csv(path_or_buf=self.metrics_path, index=False, header=True)
 
     def _calculate_moe(self, row: pandas.Series, std_col: str, count_col: str) -> float:
-        """Calculate the margin of error (MOE) for a given row."""
+        """Calculate the Margin of Error (MOE) for a given row."""
         n = row[count_col]
         std = row[std_col]
 
+        # If n > 1 and std is not NaN and greater than 0, calculate MOE using t-distribution
         if n > 1 and pandas.notna(std) and std > 0:
 
             t_score = stats.t.ppf(1 - self.significance_level, n - 1)
             return t_score * std / numpy.sqrt(n)
+
+        # If n <= 1 or std is NaN or 0, return 0.0 (no uncertainty)
         elif n <= 1 or std == 0:
             return 0.0
         else:
@@ -173,6 +176,7 @@ class MetricsHandler:
         metrics["test_acc"] = pandas.to_numeric(metrics["test_acc"], errors="coerce")
         original_rows = len(metrics)
         metrics.dropna(subset=["test_acc"], inplace=True)
+
         if len(metrics) < original_rows:
             logging.warning(f"Dropped {original_rows - len(metrics)} rows with non-numeric or NaN 'test_acc'.")
 
@@ -266,7 +270,7 @@ class MetricsHandler:
         return agg_filtered
 
     def aggregate_test_acc_per_model_by_rank(self) -> pandas.DataFrame:
-        """Aggregates model performance across datasets using ranks, which is more robust than averaging raw accuracy."""
+        """Aggregates model performance across datasets using ranks, which is more robust than averaging raw accuracy"""
         # Use the per-dataset aggregated results as the starting point
         per_dataset_results = self.aggregate_test_acc_per_dataset_and_model()
 
@@ -274,8 +278,6 @@ class MetricsHandler:
         per_dataset_results["rank"] = per_dataset_results.groupby("dataset")["mean_acc"].rank(
             method="average", ascending=False
         )
-
-        # TODO: create an average accuracy across all datasets for each model as a summary
 
         # Aggregate the ranks for each model across all datasets
         rank_aggregation = (
@@ -291,6 +293,21 @@ class MetricsHandler:
         for col in ["mean_rank", "std_rank"]:
             rank_aggregation[col] = rank_aggregation[col].round(self.metrics_precision)
 
+        # Get the mean accuracy for each model across all datasets
+        model_acc = (
+            self.aggregate_test_acc_per_model()
+            .rename(columns={"mean": "mean_acc"})
+            .drop(columns=["std", "count"], errors="ignore")
+        )
+
+        rank_aggregation = (
+            rank_aggregation
+            # Merge the mean accuracy with the rank aggregation
+            .merge(model_acc, on="model", how="left")
+            # Reorder columns to have a clear view
+            [["model", "mean_acc", "mean_rank", "std_rank", "num_datasets"]]
+        )
+
         # Save and return
         self.aggregated_model_rank_path.parent.mkdir(parents=True, exist_ok=True)
         rank_aggregation.to_csv(
@@ -300,15 +317,31 @@ class MetricsHandler:
 
         return rank_aggregation
 
+    def aggregate_test_acc_per_model(self) -> pandas.DataFrame:
+        """Aggregates test accuracy per model across all datasets."""
+        # TODO: filter the outliers as in the previous method
+        return (
+            self.results.copy()
+            .groupby(["model"])["test_acc"]
+            .agg(["mean", "std", "count"])
+            .reset_index()
+            .round(self.metrics_precision)
+        )
+
     def aggregate_per_dataset_with_model_as_cols(self) -> pandas.DataFrame:
         """Creates a pivot table of (Dataset x Model) showing the confidence interval."""
         agg_dataset_model_metrics = self.aggregate_test_acc_per_dataset_and_model()
 
-        # TODO:
+        # Get the average accuracy for each model across all datasets
+        model_metrics = self.aggregate_test_acc_per_model()
+        model_metrics["dataset"] = "Average Test Accuracy"
+
+        # Pivot the model metrics to have models as columns
+        row_model_metrics = model_metrics.pivot(index="dataset", columns="model", values="mean")
+
         # Create a new "dataset" that is the average of each model across all datasets
-
-
         pivot_table = agg_dataset_model_metrics.pivot(index="dataset", columns="model", values="confidence_interval")
+        pivot_table = pandas.concat([pivot_table, row_model_metrics])
 
         output_path = self.metrics_path.parent / "summary_dataset_results.csv"
         output_path.parent.mkdir(parents=True, exist_ok=True)
