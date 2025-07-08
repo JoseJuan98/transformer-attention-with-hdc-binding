@@ -124,7 +124,7 @@ if __name__ == "__main__":
     #     values="confidence_interval",  # Using the confidence interval string for a clear view
     #     aggfunc='first'  # Use 'first' as there should be only one entry per dataset/model
     # )
-    # pivot_output_path = output_dir / "dataset_comparison_pivot_table.csv"
+    # pivot_output_path = output_dir / "experiment_comparison_by_dataset.csv"
     # pivot_table.to_csv(pivot_output_path)
     # print(f"    Saved pivot table to: {pivot_output_path}")
     #
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     #     num_datasets="count"
     # ).round(3).sort_values("mean_rank")
     #
-    # rank_output_path = output_dir / "model_comparison_by_rank.csv"
+    # rank_output_path = output_dir / "experiment_comparison_by_rank.csv"
     # rank_comparison_df.to_csv(rank_output_path)
     # print(f"    Saved rank comparison to: {rank_output_path}")
     #
