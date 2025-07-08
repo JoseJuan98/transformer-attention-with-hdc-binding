@@ -149,7 +149,7 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
         """
         return tensor.view(batch_size, seq_len, self.num_heads, head_dim).transpose(1, 2)
 
-    # TODO: make it a trait to be reused her and in RotaryMultiHeadAttention
+    # TODO: make it a trait to be reused here and in RotaryMultiHeadAttention
     @staticmethod
     def _rotate_half(x: torch.Tensor) -> torch.Tensor:
         """Rotates the second half of the last dimension of the input tensor."""
