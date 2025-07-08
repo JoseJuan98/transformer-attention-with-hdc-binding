@@ -7,17 +7,25 @@ Notes:
     This is script is not intended to be run as a standalone script. It's a draft for visualizing the output of layers,
     and it was used in debugging mode meanwhile training for ease of understanding the model's behavior.
 """
+# Standard imports
 import pathlib
 from typing import Literal
-from matplotlib import pyplot
+
+# Third party imports
 import torch
+from matplotlib import pyplot
 
 
-def visualize_input_and_layer_output(x: torch.Tensor, model: torch.nn.Module, dataset: str, layer_name: str,
-                                     kind_of_signal: Literal["multivariate", "univariate"], plotdir: str | pathlib.Path = ""
-                                     ) -> None:
+def visualize_input_and_layer_output(
+    x: torch.Tensor,
+    model: torch.nn.Module,
+    dataset: str,
+    layer_name: str,
+    kind_of_signal: Literal["multivariate", "univariate"],
+    plot_dir: str | pathlib.Path = "",
+) -> None:
     """Visualizes the input signal and the output of the embedding layer for both multivariate and univariate signals.
-    
+
     Notes:
         The model is better to not be trained already, to see the first epoch without any changes, but if you want to
         visualize the changes during training, you can use load a trained model using:
@@ -28,10 +36,19 @@ def visualize_input_and_layer_output(x: torch.Tensor, model: torch.nn.Module, da
             multivariate signals or (batch_size, time_steps) for univariate signals.
         model (torch.nn.Module): The model containing the embedding layer to visualize.
         dataset (str): The name of the dataset being visualized, e.g., "ArticularyWordRecognition" or "UWaveGesture".
-        layer_name (str): The name of the layer to visualize, e.g., "Linear Projection" or
+        layer_name (str): The name of the layer to visualize, e.g., "Linear Projection".
+        kind_of_signal (Literal["multivariate", "univariate"]): Specifies whether the signal is multivariate or
+            univariate.
+        plot_dir (str | pathlib.Path): The directory where the plots will be saved. If not provided, it defaults to
+            the current working directory.
     """
-    if plotdir and not isinstance(plotdir, pathlib.Path):
-        plotdir = pathlib.Path(plotdir)
+    # Current directory if plot_dir is not specified
+    if not plot_dir:
+        plot_dir = pathlib.Path(".")
+
+    # Ensure plot_dir is a Path object
+    elif not isinstance(plot_dir, pathlib.Path):
+        plot_dir = pathlib.Path(plot_dir)
 
     # Multivariate signal
     if kind_of_signal == "multivariate":
@@ -45,7 +62,7 @@ def visualize_input_and_layer_output(x: torch.Tensor, model: torch.nn.Module, da
 
         pyplot.title(f"{dataset} Multivariate Signal")
         pyplot.legend()
-        pyplot.savefig(plotdir / f"Multivariate_Signal_2_{dataset}_multivariate_raw.png", dpi=300)
+        pyplot.savefig(plot_dir / f"Multivariate_Signal_2_{dataset}_multivariate_raw.png", dpi=300)
         pyplot.close()
 
         # Result of embedding layer
@@ -57,7 +74,7 @@ def visualize_input_and_layer_output(x: torch.Tensor, model: torch.nn.Module, da
 
         pyplot.title(f"{dataset} {layer_name} Output")
         pyplot.legend()
-        pyplot.savefig(plotdir / f"Multivariate_Signal_2_{dataset}_{layer_name.replace(' ', '_')}_output.png", dpi=300)
+        pyplot.savefig(plot_dir / f"Multivariate_Signal_2_{dataset}_{layer_name.replace(' ', '_')}_output.png", dpi=300)
         pyplot.close()
 
     else:
@@ -67,11 +84,11 @@ def visualize_input_and_layer_output(x: torch.Tensor, model: torch.nn.Module, da
         n_channels = 64
         time_steps = x.shape[0]
 
-        pyplot.plot([t for t in range(0, time_steps)], x, label=f"Signal")
+        pyplot.plot([t for t in range(0, time_steps)], x, label="Signal")
 
         pyplot.title(f"{dataset} Univariate Signal")
         pyplot.legend()
-        pyplot.savefig(plotdir / f"Univariate_Signal_1_{dataset}_Univariate_raw.png", dpi=300)
+        pyplot.savefig(plot_dir / f"Univariate_Signal_1_{dataset}_Univariate_raw.png", dpi=300)
         pyplot.close()
 
         # Result of embedding layer
@@ -84,5 +101,5 @@ def visualize_input_and_layer_output(x: torch.Tensor, model: torch.nn.Module, da
 
         pyplot.title(f"{dataset} {layer_name} Output")
         pyplot.legend()
-        pyplot.savefig(plotdir / f"Univariate_Signal_1_{dataset}_{layer_name.replace(' ', '_')}_output.png", dpi=300)
+        pyplot.savefig(plot_dir / f"Univariate_Signal_1_{dataset}_{layer_name.replace(' ', '_')}_output.png", dpi=300)
         pyplot.close()
