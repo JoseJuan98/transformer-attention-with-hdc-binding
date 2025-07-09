@@ -1,7 +1,7 @@
 {
   "experiment_name": "time_series_classification_sota",
   "task": "time series classification",
-  "description": "Time Series Classification Experiment for d_model. Different d_model values for 3 models with N_L=1, d_ff=256, num_heads=8, dropout=0.1",
+  "description": "Time Series Classification Experiment for d_model with values: {{32,64,128,256,512,1024}}. For ach binding method with N_L=1, d_ff=256, num_heads=8, dropout=0.1, for a total of 18 models.",
   "run_version": "d_model_v1",
   "dataset_names": [
     "FaceDetection",
