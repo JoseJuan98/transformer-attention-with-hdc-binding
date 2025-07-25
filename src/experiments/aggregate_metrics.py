@@ -77,7 +77,8 @@ if __name__ == "__main__":
         # / "docs/experiment_results/1_binding_version_1/metrics_binding_version_1.csv"
         # / "docs/experiment_results/2_binding_N_L_4/metrics_binding_N_l_4.csv"
         # / "docs/experiment_results/3_pe_version_1/metrics_pe_version_1.csv"
-        / "docs/experiment_results/4_sota_version_1/metrics_sota_version_1.csv"
+        # / "docs/experiment_results/4_sota_version_1/metrics_sota_version_1.csv"
+        / "docs/experiment_results/5_d_model_v1/metrics_d_model_v1.csv"
     )
 
     # Define output directory
