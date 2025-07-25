@@ -6,7 +6,7 @@ echo -e "Memory available on the server: $(free -h | grep Mem | awk '{print $2}'
 echo -e "\n\n_____________________________ Starting Setup _____________________________ \n"
 apt-get update
 apt-get upgrade -y
-apt-get install -y neovim btop htop
+apt-get install -y neovim btop htop nvtop
 
 echo -e "\n\n_____________________________ Miniconda3 Setup _____________________________ \n"
 mkdir -p ~/miniconda3

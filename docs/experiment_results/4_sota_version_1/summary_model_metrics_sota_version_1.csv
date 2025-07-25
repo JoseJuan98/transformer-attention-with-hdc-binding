@@ -1,0 +1,6 @@
+model,mean_acc,mean_rank,std_rank,num_datasets
+linear_conv_adaptive_sin_pe,0.6457,2.4815,1.3970,27
+linear_conv_sinusoidal,0.6377,2.7593,1.1550,27
+linear_mla,0.6208,3.0926,1.1932,27
+convtran,0.6043,3.2593,1.8932,27
+linear_rope,0.6215,3.4074,1.2172,27

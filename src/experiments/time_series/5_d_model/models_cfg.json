@@ -1,0 +1,290 @@
+{
+  "Linear Additive Sinusoidal d_model=32 TS Transformer": {
+    "model_name": "linear_additive_32",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Additive Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 32,
+    "num_heads": 8,
+    "d_ff": 128,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "additive"
+  },
+
+  "Linear Additive Sinusoidal d_model=64 TS Transformer": {
+    "model_name": "linear_additive_64",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Additive Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "additive"
+  },
+
+  "Linear Additive Sinusoidal d_model=128 TS Transformer": {
+    "model_name": "linear_additive_128",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Additive Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 128,
+    "num_heads": 8,
+    "d_ff": 512,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "additive"
+  },
+
+  "Linear Additive Sinusoidal d_model=256 TS Transformer": {
+    "model_name": "linear_additive_256",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Additive Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 256,
+    "num_heads": 8,
+    "d_ff": 1024,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "additive"
+  },
+
+  "Linear Additive Sinusoidal d_model=512 TS Transformer": {
+    "model_name": "linear_additive_512",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Additive Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 512,
+    "num_heads": 8,
+    "d_ff": 2048,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "additive"
+  },
+
+  "Linear Additive Sinusoidal d_model=1024 TS Transformer": {
+    "model_name": "linear_additive_1024",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Additive Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 1024,
+    "num_heads": 8,
+    "d_ff": 4096,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "additive"
+  },
+
+  "Linear Component-Wise Sinusoidal d_model=32 TS Transformer": {
+    "model_name": "linear_component_wise_32",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Component-Wise Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 32,
+    "num_heads": 8,
+    "d_ff": 128,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "multiplicative"
+  },
+
+  "Linear Component-Wise Sinusoidal d_model=64 TS Transformer": {
+    "model_name": "linear_component_wise_64",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Component-Wise Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "multiplicative"
+  },
+
+  "Linear Component-Wise Sinusoidal d_model=128 TS Transformer": {
+    "model_name": "linear_component_wise_128",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Component-Wise Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 128,
+    "num_heads": 8,
+    "d_ff": 512,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "multiplicative"
+  },
+
+  "Linear Component-Wise Sinusoidal d_model=256 TS Transformer": {
+    "model_name": "linear_component_wise_256",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Component-Wise Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 256,
+    "num_heads": 8,
+    "d_ff": 1024,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "multiplicative"
+  },
+
+  "Linear Component-Wise Sinusoidal d_model=512 TS Transformer": {
+    "model_name": "linear_component_wise_512",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Component-Wise Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 512,
+    "num_heads": 8,
+    "d_ff": 2048,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "multiplicative"
+  },
+
+  "Linear Component-Wise Sinusoidal d_model=1024 TS Transformer": {
+    "model_name": "linear_component_wise_1024",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Component-Wise Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 1024,
+    "num_heads": 8,
+    "d_ff": 4096,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "multiplicative"
+  },
+
+
+  "Linear Circular Convolution Sinusoidal d_model=32 TS Transformer": {
+    "model_name": "linear_circular_conv_32",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Circular Convolution Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 32,
+    "num_heads": 8,
+    "d_ff": 128,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  },
+
+  "Linear Circular Convolution Sinusoidal d_model=64 TS Transformer": {
+    "model_name": "linear_circular_conv_64",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Circular Convolution Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  },
+
+  "Linear Circular Convolution Sinusoidal d_model=128 TS Transformer": {
+    "model_name": "linear_circular_conv_128",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Circular Convolution Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 128,
+    "num_heads": 8,
+    "d_ff": 512,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  },
+
+  "Linear Circular Convolution Sinusoidal d_model=256 TS Transformer": {
+    "model_name": "linear_circular_conv_256",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Circular Convolution Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 256,
+    "num_heads": 8,
+    "d_ff": 1024,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  },
+
+  "Linear Circular Convolution Sinusoidal d_model=512 TS Transformer": {
+    "model_name": "linear_circular_conv_512",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Circular Convolution Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 512,
+    "num_heads": 8,
+    "d_ff": 2048,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  },
+
+  "Linear Circular Convolution Sinusoidal d_model=1024 TS Transformer": {
+    "model_name": "linear_circular_conv_1024",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Circular Convolution Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 1024,
+    "num_heads": 8,
+    "d_ff": 4096,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : "sinusoidal",
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  }
+}
