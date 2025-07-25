@@ -320,7 +320,7 @@
         "AtrialFibrillation",
         "StandWalkJump"
     ],
-    "description": "Time Series Classification Experiment for d_model with values: {{32,64,128,256,512,1024}}. For ach binding method with N_L=1, d_ff=256, num_heads=8, dropout=0.1, for a total of 18 models.",
+    "description": "Time Series Classification Experiment for d_model with values: {{32,64,128,256,512,1024}}. For each binding method with N_L=1, d_ff=256, num_heads=8, dropout=0.1, for a total of 18 models.",
     "run_version": "d_model_v1",
     "trials_per_experiment": 10,
     "default_batch_size": 64,
