@@ -15,7 +15,8 @@
             "dropout": 0.1,
             "positional_encoding": "null",
             "embedding_binding": "additive",
-            "embedding": "linear_projection"
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
         },
         "Linear Convolutional Random PE TS Transformer": {
             "model_name": "linear_conv_random_pe",
@@ -30,7 +31,8 @@
             "dropout": 0.1,
             "positional_encoding": "random",
             "embedding_binding": "convolutional",
-            "embedding": "linear_projection"
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
         },
         "Linear Convolutional Learnable Random PE TS Transformer": {
             "model_name": "linear_conv_learnable_random_pe",
@@ -48,7 +50,8 @@
                 "learnable": true
             },
             "embedding_binding": "convolutional",
-            "embedding": "linear_projection"
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
         },
         "Linear Convolutional Sinusoidal PE TS Transformer (Baseline)": {
             "model_name": "linear_conv_sinusoidal",
@@ -66,7 +69,8 @@
                 "learnable": false
             },
             "embedding_binding": "convolutional",
-            "embedding": "linear_projection"
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
         },
         "Linear Convolutional Sinusoidal PE TS Transformer Learnable": {
             "model_name": "linear_conv_learnable_sinusoidal",
@@ -84,7 +88,8 @@
                 "learnable": true
             },
             "embedding_binding": "convolutional",
-            "embedding": "linear_projection"
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
         },
         "Linear Convolutional \u03b2=0.8 Gaussian Fractional Power Encoding TS Transformer Learnable": {
             "model_name": "linear_conv_0_8_gaussian_fpe",
@@ -103,7 +108,8 @@
                 "kernel": "gaussian"
             },
             "embedding_binding": "convolutional",
-            "embedding": "linear_projection"
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
         },
         "Linear Convolutional \u03b2=1 Sinc Fractional Power Encoding TS Transformer Learnable": {
             "model_name": "linear_conv_1_sinc_fpe",
@@ -122,7 +128,8 @@
                 "kernel": "sinc"
             },
             "embedding_binding": "convolutional",
-            "embedding": "linear_projection"
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
         },
         "Linear Convolutional \u03b2=2 Sinc Fractional Power Encoding TS Transformer Learnable": {
             "model_name": "linear_conv_2_sinc_fpe",
@@ -141,7 +148,8 @@
                 "kernel": "sinc"
             },
             "embedding_binding": "convolutional",
-            "embedding": "linear_projection"
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
         },
         "Linear Convolutional \u03b2=5 Sinc Fractional Power Encoding TS Transformer Learnable": {
             "model_name": "linear_conv_5_sinc_fpe",
@@ -160,7 +168,8 @@
                 "kernel": "sinc"
             },
             "embedding_binding": "convolutional",
-            "embedding": "linear_projection"
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
         }
     },
     "dataset_names": [
@@ -207,7 +216,7 @@
     "validation_split": 0.2,
     "early_stopping_patience": 10,
     "accumulate_grad_batches": 64,
-    "gradient_clip_val": 1.0,
+    "gradient_clip_val": 4.0,
     "gradient_clip_algorithm": "norm",
     "use_swa": false,
     "swa_learning_rate": 0.0005,
@@ -218,5 +227,6 @@
         30,
         50,
         75
-    ]
+    ],
+    "preprocessing_only": false
 }
