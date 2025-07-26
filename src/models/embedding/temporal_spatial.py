@@ -73,7 +73,7 @@ class SpatialTemporalEmbedding(BaseEmbedding):
         classification."
     """
 
-    name = "convtran"
+    name = "spatial_temporal"
 
     def __init__(
         self, in_features: int, out_features: int, bias: bool = False, temporal_kernel_size: int = 8, **kwargs
