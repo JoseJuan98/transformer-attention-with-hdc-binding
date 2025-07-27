@@ -9,7 +9,7 @@ from experiment_framework import ExperimentConfigFactory, ExperimentRunner, Mode
 
 experiments = {
     1: "1_binding_methods",
-    2: "2_binding_methods_N_L_4",
+    2: "2_N_L",
     3: "3_positional_encodings",
     4: "4_sota",
     5: "5_d_model",
@@ -36,7 +36,7 @@ def ask_user_for_experiment_choice() -> int:
     """Prompt the user to choose an experiment to run."""
     print("Choose an experiment to run:")
     print("1. TS Classification with different binding methods")
-    print("2. TS Classification with different binding methods with N_L=4")
+    print("2. TS Classification with different binding methods with different N_L values")
     print("3. TS Classification with different positional encodings")
     print("4. TS Classification with State-of-the-Art (SOTA) models")
     print("5. TS Classification with different d_model values")
