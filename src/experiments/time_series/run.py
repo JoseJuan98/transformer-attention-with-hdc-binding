@@ -10,9 +10,9 @@ from experiment_framework import ExperimentConfigFactory, ExperimentRunner, Mode
 experiments = {
     1: "1_binding_methods",
     2: "2_N_L",
-    3: "3_positional_encodings",
-    4: "4_sota",
-    5: "5_d_model",
+    3: "3_d_model",
+    4: "4_positional_encodings",
+    5: "5_sota",
 }
 
 
@@ -37,9 +37,9 @@ def ask_user_for_experiment_choice() -> int:
     print("Choose an experiment to run:")
     print("1. TS Classification with different binding methods")
     print("2. TS Classification with different binding methods with different N_L values")
-    print("3. TS Classification with different positional encodings")
-    print("4. TS Classification with State-of-the-Art (SOTA) models")
-    print("5. TS Classification with different d_model values")
+    print("3. TS Classification with different d_model values")
+    print("4. TS Classification with different positional encodings")
+    print("5. TS Classification with State-of-the-Art (SOTA) models")
 
     choice_msg = "> Enter the number of the experiment you want to run: "
     choice = int(input(choice_msg))
