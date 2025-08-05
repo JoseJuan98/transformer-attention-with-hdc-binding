@@ -69,6 +69,9 @@ class MetricsHandler:
         # Aggregated metrics by model and dataset (to avoid re-computing it multiple times)
         self.dataset_and_model_metrics = pandas.DataFrame()
 
+        # Filtered metrics DataFrame to avoid re-computing it multiple times
+        self._filtered_metrics = pandas.DataFrame()
+
     def update_metrics(
         self,
         metrics: pandas.DataFrame,
@@ -153,6 +156,11 @@ class MetricsHandler:
 
     def _get_filtered_metrics(self) -> pandas.DataFrame:
         """Loads, cleans, and filters the raw metrics data."""
+
+        if not self._filtered_metrics.empty:
+            print("Using cached filtered metrics.")
+            return self._filtered_metrics
+
         # Use the in-memory DataFrame if available and not empty, otherwise read from file
         if not self.results.empty:
             metrics = self.results.copy()
@@ -211,7 +219,8 @@ class MetricsHandler:
                 f"(for groups with >= {self.min_runs_for_filter} runs)."
             )
 
-        return filtered_metrics.drop(columns=["group_count", "lower_bound", "upper_bound"])
+        self._filtered_metrics = filtered_metrics.drop(columns=["group_count", "lower_bound", "upper_bound"])
+        return self._filtered_metrics
 
     def aggregate_test_acc_per_dataset_and_model(self) -> pandas.DataFrame:
         """Aggregates test accuracy per model and dataset after filtering outliers.
@@ -318,10 +327,9 @@ class MetricsHandler:
         return rank_aggregation
 
     def aggregate_test_acc_per_model(self) -> pandas.DataFrame:
-        """Aggregates test accuracy per model across all datasets."""
-        # TODO: filter the outliers as in the previous method
+        """Aggregates test accuracy per model from the filtered results."""
         return (
-            self.results.copy()
+            self._get_filtered_metrics()
             .groupby(["model"])["test_acc"]
             .agg(["mean", "std", "count"])
             .reset_index()
