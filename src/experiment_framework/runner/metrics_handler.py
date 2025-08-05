@@ -227,7 +227,7 @@ class MetricsHandler:
             print("Warning: No data remains after filtering. Cannot aggregate.")
             return pandas.DataFrame()
 
-        group_keys = ["dataset", "model"]
+        group_keys = ["dataset", "model", "train_samples", "sequence_length", "num_classes"]
 
         # Aggregate the filtered data
         agg_filtered = (

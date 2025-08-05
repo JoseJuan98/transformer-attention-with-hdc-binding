@@ -19,6 +19,7 @@ import pandas
 from experiment_framework.runner.metrics_handler import MetricsHandler
 
 
+# Deprecated: This function is no longer used in the current implementation.
 def parse_baseline_results(json_path: pathlib.Path) -> pandas.DataFrame:
     """Parses the JSON file containing baseline model results into a DataFrame.
 
@@ -71,6 +72,12 @@ def parse_baseline_results(json_path: pathlib.Path) -> pandas.DataFrame:
 
 
 if __name__ == "__main__":
+    # Set pandas options for better display of DataFrames
+    pandas.set_option("display.max_columns", None)
+
+    # Set pandas to not truncate DataFrame output
+    pandas.set_option("display.width", 0)
+
     # Path to experiment's raw metrics CSV file
     my_experiment_metrics_path = (
         pathlib.Path(__file__).parents[2]
