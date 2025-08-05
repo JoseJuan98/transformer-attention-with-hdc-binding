@@ -338,33 +338,26 @@ class MetricsHandler:
         model_metrics["dataset"] = avg_dataset_name
 
         # Pivot the model metrics to have models as columns
-        row_model_metrics = model_metrics.pivot(index="dataset", columns="model", values="mean")
+        row_model_metrics = model_metrics.pivot(index="dataset", columns="model", values="mean").reset_index()
 
         # Create a new "dataset" that is the average of each model across all datasets
-        # Pivot using a multi-level index to preserve the desired columns [dataset, train_samples, sequence_length,
-        #   num_classes] to the index.
-        index_columns = ["dataset", "train_samples", "sequence_length", "num_classes"]
+        # Pivot using a multi-level index to preserve the dataset columns
+        dataset_columns = ["dataset", "train_samples", "sequence_length", "num_classes"]
         pivot_table = agg_dataset_model_metrics.pivot(
-            index=index_columns, columns="model", values="confidence_interval"
-        )
+            index=dataset_columns, columns="model", values="confidence_interval"
+        ).reset_index()
 
-        # Concatenate the average row.
+        # Calculate the mean of each dataset column except "dataset"
+        for col in dataset_columns[1:]:
+            row_model_metrics[col] = pivot_table[col].mean().round(0).astype(int)
+
+        # Concatenate the average model metrics row with the dataset pivoted table
         pivot_table = pandas.concat([pivot_table, row_model_metrics])
 
-        # Reset the index to turn the multi-level index into columns.
-        avg_row = pivot_table.iloc[-1].copy()
-        pivot_table = pivot_table.iloc[:-1].reset_index()
-        pivot_table[index_columns] = pandas.DataFrame(pivot_table["index"].to_list(), index=pivot_table.index)
-        pivot_table.drop(["index"], axis=1, inplace=True)
-
-        # Calculate the average row for the dataset
-        for col in index_columns[1:]:  # except "dataset"
-            avg_row[col] = pivot_table[col].mean().round(0).astype(int)
-        avg_row["dataset"] = avg_dataset_name
-
-        pivot_table = pivot_table._append(avg_row, ignore_index=True)
-        # Reorder the columns to have "dataset" and its related columns first
-        pivot_table = pivot_table[index_columns + sorted(list(set(pivot_table.columns.to_list()) - set(index_columns)))]
+        # Reorder the columns to have the dataset columns first
+        pivot_table = pivot_table[
+            dataset_columns + sorted(list(set(pivot_table.columns.to_list()) - set(dataset_columns)))
+        ]
 
         output_path = self.metrics_path.parent / "summary_dataset_results.csv"
         output_path.parent.mkdir(parents=True, exist_ok=True)
