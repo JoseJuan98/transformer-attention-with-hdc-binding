@@ -334,18 +334,41 @@ class MetricsHandler:
 
         # Get the average accuracy for each model across all datasets
         model_metrics = self.aggregate_test_acc_per_model()
-        model_metrics["dataset"] = "Average Test Accuracy"
+        avg_dataset_name = "Average Test Accuracy"
+        model_metrics["dataset"] = avg_dataset_name
 
         # Pivot the model metrics to have models as columns
         row_model_metrics = model_metrics.pivot(index="dataset", columns="model", values="mean")
 
         # Create a new "dataset" that is the average of each model across all datasets
-        pivot_table = agg_dataset_model_metrics.pivot(index="dataset", columns="model", values="confidence_interval")
+        # Pivot using a multi-level index to preserve the desired columns [dataset, train_samples, sequence_length,
+        #   num_classes] to the index.
+        index_columns = ["dataset", "train_samples", "sequence_length", "num_classes"]
+        pivot_table = agg_dataset_model_metrics.pivot(
+            index=index_columns, columns="model", values="confidence_interval"
+        )
+
+        # Concatenate the average row.
         pivot_table = pandas.concat([pivot_table, row_model_metrics])
+
+        # Reset the index to turn the multi-level index into columns.
+        avg_row = pivot_table.iloc[-1].copy()
+        pivot_table = pivot_table.iloc[:-1].reset_index()
+        pivot_table[index_columns] = pandas.DataFrame(pivot_table["index"].to_list(), index=pivot_table.index)
+        pivot_table.drop(["index"], axis=1, inplace=True)
+
+        # Calculate the average row for the dataset
+        for col in index_columns[1:]:  # except "dataset"
+            avg_row[col] = pivot_table[col].mean().round(0).astype(int)
+        avg_row["dataset"] = avg_dataset_name
+
+        pivot_table = pivot_table._append(avg_row, ignore_index=True)
+        # Reorder the columns to have "dataset" and its related columns first
+        pivot_table = pivot_table[index_columns + sorted(list(set(pivot_table.columns.to_list()) - set(index_columns)))]
 
         output_path = self.metrics_path.parent / "summary_dataset_results.csv"
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        pivot_table.to_csv(output_path, index=True, header=True)
+        pivot_table.to_csv(output_path, index=False, header=True)
         print(f"Dataset results pivot table saved to {output_path}")
         return pivot_table
 
