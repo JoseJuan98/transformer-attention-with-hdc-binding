@@ -155,7 +155,13 @@ class MetricsHandler:
             return numpy.nan
 
     def _get_filtered_metrics(self) -> pandas.DataFrame:
-        """Loads, cleans, and filters the raw metrics data."""
+        """Loads, cleans, and filters the raw metrics data.
+
+        Notes:
+            The Interquartile Range (IQR) method is used to filter out outliers, because it is robust, and it's a
+            well-established non-parametric method for identifying outliers.
+
+        """
 
         if not self._filtered_metrics.empty:
             print("Using cached filtered metrics.")
@@ -198,11 +204,14 @@ class MetricsHandler:
         # Use transform to broadcast group-wise calculations
         metrics["group_count"] = metrics.groupby(group_keys)[metric_col].transform("count")
 
-        # Calculate lower and upper bounds for filtering
-        lower_quantile = self.significance_level / 2  # 0.025
-        upper_quantile = 1 - (self.significance_level / 2)  # 0.975
-        metrics["lower_bound"] = metrics.groupby(group_keys)[metric_col].transform(lambda x: x.quantile(lower_quantile))
-        metrics["upper_bound"] = metrics.groupby(group_keys)[metric_col].transform(lambda x: x.quantile(upper_quantile))
+        # Calculate Q1, Q3, and IQR for filtering
+        Q1 = metrics.groupby(group_keys)[metric_col].transform("quantile", 0.25)
+        Q3 = metrics.groupby(group_keys)[metric_col].transform("quantile", 0.75)
+        IQR = Q3 - Q1
+
+        # Define the outlier bounds
+        metrics["lower_bound"] = Q1 - 1.5 * IQR
+        metrics["upper_bound"] = Q3 + 1.5 * IQR
 
         # Keep a row if the group is too small to filter OR if the value is within the bounds
         filter_mask = (metrics["group_count"] < self.min_runs_for_filter) | (
@@ -211,11 +220,10 @@ class MetricsHandler:
 
         filtered_metrics = metrics[filter_mask].copy()
 
-        rows_filtered_out = len(metrics) - len(filtered_metrics)
+        rows_filtered_out = metrics.shape[0] - filtered_metrics.shape[0]
         if rows_filtered_out > 0:
             print(
-                f"Filtered out {rows_filtered_out} runs falling outside the central "
-                f"{100 * (1 - self.significance_level)}% percentile range within their dataset/model group "
+                f"Filtered out {rows_filtered_out}/{metrics.shape[0]} rows as outliers falling outside the IQR bounds "
                 f"(for groups with >= {self.min_runs_for_filter} runs)."
             )
 
