@@ -1,9 +1,9 @@
 model,mean_acc,mean_rank,std_rank,num_datasets
-1d_conv_circular_conv_sinusoidal,0.6372,3.5000,1.9709,27
-1d_conv_circular_conv_split_sinusoidal,0.6465,3.5741,1.8329,27
-1d_conv_component_wise_sinusoidal,0.6042,3.7037,2.5392,27
-linear_circular_conv_sinusoidal,0.6303,3.8889,1.7992,27
-linear_component_wise_sinusoidal,0.6230,4.0185,1.9635,27
-linear_additive_sinusoidal,0.5111,5.1852,2.0576,27
-linear_additive_split_sinusoidal,0.4948,5.3889,2.2631,27
-1d_conv_additive_sinusoidal,0.3131,6.7407,1.9134,27
+linear_component_wise_sinusoidal,0.6397,3.4630,1.3862,27
+1d_conv_component_wise_sinusoidal,0.6419,3.5000,2.1970,27
+linear_circular_conv_sinusoidal,0.6352,3.5741,1.9986,27
+1d_conv_circular_conv_sinusoidal,0.6463,4.0556,1.9031,27
+1d_conv_circular_conv_split_sinusoidal,0.6388,4.2407,2.1094,27
+linear_additive_split_sinusoidal,0.5792,5.4444,2.3301,27
+1d_conv_additive_sinusoidal,0.5437,5.5741,2.6191,27
+linear_additive_sinusoidal,0.5774,6.1481,2.0325,27
