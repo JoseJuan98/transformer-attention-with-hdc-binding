@@ -19,9 +19,9 @@ def parse_experiment_choice() -> int:
         "-exp",
         dest="exp",
         type=int,
-        choices=[0, 1, 2, 3, 4, 5],
+        choices=list(experiments.keys()) + [0],
         default=0,
-        help="Choose the experiment to run (1-5).",
+        help=f"Choose the experiment to run (1-{len(experiments)}).",
     )
     return args.parse_args().exp
 
