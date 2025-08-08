@@ -201,6 +201,12 @@ The results include:
 
 A summary of key findings will be updated here upon completion of all experimental phases.
 
+## Things that I would like to improve
+
+* **Metrics**: The current metrics are limited to accuracy and loss. It would be beneficial to include additional metrics such as precision, recall, F1-score, and confusion matrices for a more comprehensive evaluation of model performance.
+* **Hyperparameter Tuning**: Create an experiment to seek higher model performance for the best configurations found by implementing automated hyperparameter tuning.
+* **Unit Tests**: The current unit tests are limited. It would be beneficial to add more tests, and increase the coverage of the codebase to ensure robustness and reliability.
+
 ## References
 
 [1] Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., ... & Polosukhin, I. (2017). Attention is all you need. In *Advances in neural information processing systems* (pp. 5998-6008).
