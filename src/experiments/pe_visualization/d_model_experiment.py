@@ -23,20 +23,33 @@ def plot_metrics_by_binding(metrics: pandas.DataFrame, plot_path: pathlib.Path) 
 
     models = ["additive", "component_wise", "circular_conv"]
     d_models = [32, 64, 128, 256, 512, 1024]
+    x_ticks = list(range(len(d_models)))
+    lower_limit = 0.52
 
     for model in models:
         acc = [metrics[metrics["model"] == f"linear_{model}_{d_model}"]["mean_acc"].values for d_model in d_models]
 
-        ax.plot(d_models, acc, label=f"{model.replace('_', ' ').title()} binding", marker="o")
+        ax.plot(x_ticks, acc, label=model.replace("_", " ").title(), marker="o", linewidth=2)
 
-    ax.set_xticks(d_models)
+        for i, v in enumerate(acc):
+
+            if v < lower_limit:
+                # If the value is below the lower limit, set the text color to red
+                ax.annotate(
+                    str(v * 100), xy=(i - 1, 0.5225), xytext=(9, 1), textcoords="offset points", annotation_clip=False
+                )
+            else:
+                ax.annotate(str(v * 100), xy=(i, v), xytext=(-7, 7), textcoords="offset points")
+
+    ax.set_xticks(x_ticks)
     ax.set_xticklabels(d_models, rotation=45)
+    ax.set_ylim([lower_limit, 0.6525])
     ax.set_xlabel("d_model")
     ax.set_ylabel("Mean Accuracy")
     ax.set_title("Mean Accuracy by d_model for Different Binding Operations")
 
     # Add a legend
-    ax.legend()
+    ax.legend(loc="lower left")
 
     # Save the plot to the specified directory
     pyplot.savefig(plot_path)
