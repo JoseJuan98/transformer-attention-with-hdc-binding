@@ -7,7 +7,14 @@ import pathlib
 # First party imports
 from experiment_framework import ExperimentConfigFactory, ExperimentRunner, ModelConfigFactory
 
-experiments = {1: "1_binding_methods", 2: "2_N_L", 3: "3_d_model", 4: "4_positional_encodings", 5: "5_sota", 6: "4a_pe"}
+experiments = {
+    1: "1_binding_methods",
+    2: "2_N_L",
+    3: "3_d_model",
+    4: "4_positional_encodings",
+    5: "5_sota",
+    6: "4_a_pe",
+}
 
 
 def parse_experiment_choice() -> int:
