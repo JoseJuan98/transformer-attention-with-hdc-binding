@@ -82,9 +82,10 @@ if __name__ == "__main__":
     experiment_metrics_path = (
         pathlib.Path(__file__).parents[2]
         # / "docs/experiment_results/1_binding_version_1/metrics_binding_version_1.csv"
-        / "docs/experiment_results/2_N_L_version_1/metrics_N_L_version_1.csv"
+        # / "docs/experiment_results/2_N_L_version_1/metrics_N_L_version_1.csv"
         # / "docs/experiment_results/3_d_model_v1/metrics_d_model_v1.csv"
         # / "docs/experiment_results/4_pe_version_1/metrics_pe_version_1.csv"
+        / "docs/experiment_results/4_a_pe_version_1/metrics_pe_a_version_1.csv"
         # / "docs/experiment_results/5_sota_version_1/metrics_sota_version_1.csv"
     )
 
