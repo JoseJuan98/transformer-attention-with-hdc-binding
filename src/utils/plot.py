@@ -26,15 +26,10 @@ def set_plot_style() -> None:
     pyplot.rcParams["figure.figsize"] = (19, 10)
 
     # Increase text size
-    pyplot.rcParams.update({"font.size": 14})
-
-    # Set the grid style
-    # pyplot.rcParams["grid.linestyle"] = "--"
-    # pyplot.rcParams["grid.linewidth"] = 0.5
-    # pyplot.rcParams["grid.alpha"] = 0.7
+    pyplot.rcParams.update({"font.size": 22})
 
     # Set the legend font size
-    pyplot.rcParams["legend.fontsize"] = 14
+    pyplot.rcParams["legend.fontsize"] = 22
 
     # Set the axes label size
-    pyplot.rcParams["axes.labelsize"] = 16
+    pyplot.rcParams["axes.labelsize"] = 24

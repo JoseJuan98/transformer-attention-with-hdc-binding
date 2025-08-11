@@ -67,12 +67,14 @@ def plot_metrics_by_binding(metrics: pandas.DataFrame, plot_path: pathlib.Path) 
     ax.set_xticks(x_ticks)
     ax.set_xticklabels(d_models, rotation=45)
     ax.set_ylim([lower_limit, 0.6525])
-    ax.set_xlabel("d_model")
+    ax.set_xlabel("$d_{model}$ (Embedding Dimension)")
     ax.set_ylabel("Mean Accuracy (%)")
     ax.set_title("Mean Accuracy by $d_{model}$ for Different Binding Operations")
 
     # Add a legend
     ax.legend(loc="lower left")
+
+    pyplot.tight_layout()
 
     # Save the plot to the specified directory
     pyplot.savefig(plot_path)

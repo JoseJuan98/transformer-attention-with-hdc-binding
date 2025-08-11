@@ -58,9 +58,11 @@ def plot_metrics_by_binding(metrics: pandas.DataFrame, plot_path: pathlib.Path) 
     ax.set_xticks(x_ticks)
     ax.set_xticklabels(n_ls)
     ax.set_ylim([lower_limit, 0.6525])
-    ax.set_xlabel("d_model")
+    ax.set_xlabel("$N_L$ (Number of Layers)")
     ax.set_ylabel("Mean Accuracy (%)")
     ax.set_title("Mean Accuracy by $N_L$ for Different Binding Operations")
+
+    pyplot.tight_layout()
 
     # Add a legend
     ax.legend(loc="lower left")
