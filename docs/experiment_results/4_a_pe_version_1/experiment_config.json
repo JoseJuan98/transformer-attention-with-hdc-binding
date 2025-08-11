@@ -19,7 +19,7 @@
             "multihead_attention": "standard"
         },
         "Linear Convolutional Random PE TS Transformer": {
-            "model_name": "linear_conv_random_pe",
+            "model_name": "linear_comp_wise_random_pe",
             "desc": "Encoder Only Transformer with Linear Projection Embeddings, Random Positional Encoding and Convolutional Binding for Time Series Classification",
             "model": "encoder-only-transformer",
             "num_epochs": 100,
@@ -35,7 +35,7 @@
             "multihead_attention": "standard"
         },
         "Linear Convolutional Learnable Random PE TS Transformer": {
-            "model_name": "linear_conv_learnable_random_pe",
+            "model_name": "linear_comp_wise_learnable_random_pe",
             "desc": "Encoder Only Transformer with Linear Projection Embeddings, Learnable Random Positional Encoding and Convolutional Binding for Time Series Classification",
             "model": "encoder-only-transformer",
             "num_epochs": 100,
@@ -54,7 +54,7 @@
             "multihead_attention": "standard"
         },
         "Linear Convolutional Sinusoidal PE TS Transformer (Baseline)": {
-            "model_name": "linear_conv_sinusoidal",
+            "model_name": "linear_comp_wise_sinusoidal",
             "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Convolutional Binding for Time Series Classification",
             "model": "encoder-only-transformer",
             "num_epochs": 100,
@@ -73,7 +73,7 @@
             "multihead_attention": "standard"
         },
         "Linear Convolutional Sinusoidal PE TS Transformer Learnable": {
-            "model_name": "linear_conv_learnable_sinusoidal",
+            "model_name": "linear_comp_wise_learnable_sinusoidal",
             "desc": "Encoder Only Transformer with Linear Projection Embeddings, Learnable Absolute Sinusoidal Positional Encoding and Convolutional Binding for Time Series Classification",
             "model": "encoder-only-transformer",
             "num_epochs": 100,
@@ -92,7 +92,7 @@
             "multihead_attention": "standard"
         },
         "Linear Convolutional \u03b2=0.8 Gaussian Fractional Power Encoding TS Transformer Learnable": {
-            "model_name": "linear_conv_0_8_gaussian_fpe",
+            "model_name": "linear_comp_wise_0_8_gaussian_fpe",
             "desc": "Encoder Only Transformer with Linear Projection Embeddings,\u03b2=0.8 Gaussian F.P. Encodings and Convolutional Binding for Time Series Classification",
             "model": "encoder-only-transformer",
             "num_epochs": 100,
@@ -112,7 +112,7 @@
             "multihead_attention": "standard"
         },
         "Linear Convolutional \u03b2=1 Sinc Fractional Power Encoding TS Transformer Learnable": {
-            "model_name": "linear_conv_1_sinc_fpe",
+            "model_name": "linear_comp_wise_1_sinc_fpe",
             "desc": "Encoder Only Transformer with Linear Projection Embeddings,\u03b2=1 Sinc F.P. Encodings and Convolutional Binding for Time Series Classification",
             "model": "encoder-only-transformer",
             "num_epochs": 100,
@@ -132,7 +132,7 @@
             "multihead_attention": "standard"
         },
         "Linear Convolutional \u03b2=2 Sinc Fractional Power Encoding TS Transformer Learnable": {
-            "model_name": "linear_conv_2_sinc_fpe",
+            "model_name": "linear_comp_wise_2_sinc_fpe",
             "desc": "Encoder Only Transformer with Linear Projection Embeddings,\u03b2=2 Sinc F.P. Encodings and Convolutional Binding for Time Series Classification",
             "model": "encoder-only-transformer",
             "num_epochs": 100,
@@ -152,7 +152,7 @@
             "multihead_attention": "standard"
         },
         "Linear Convolutional \u03b2=5 Sinc Fractional Power Encoding TS Transformer Learnable": {
-            "model_name": "linear_conv_5_sinc_fpe",
+            "model_name": "linear_comp_wise_5_sinc_fpe",
             "desc": "Encoder Only Transformer with Linear Projection Embeddings,\u03b2=5 Sinc F.P. Encodings and Convolutional Binding for Time Series Classification",
             "model": "encoder-only-transformer",
             "num_epochs": 100,
