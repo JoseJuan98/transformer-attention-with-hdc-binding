@@ -350,7 +350,7 @@ class MetricsHandler:
 
         # Get the average accuracy for each model across all datasets
         model_metrics = self.aggregate_test_acc_per_model()
-        avg_dataset_name = "Average Test Accuracy"
+        avg_dataset_name = "Average Accuracy"
         model_metrics["dataset"] = avg_dataset_name
 
         # Pivot the model metrics to have models as columns

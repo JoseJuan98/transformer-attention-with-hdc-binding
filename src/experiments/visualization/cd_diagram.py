@@ -77,6 +77,7 @@ def plot_cd_diagram(metrics: pandas.DataFrame, output_path: pathlib.Path | None 
 if __name__ == "__main__":
     # Set parameters for the plot
     relative_file_path = "1_binding_version_1/binding_v1_CD.png"
+    experiment = "Experiment 1"
 
     # Set pandas options for better display of DataFrames
     pandas.set_option("display.max_columns", None)
@@ -99,6 +100,15 @@ if __name__ == "__main__":
 
     # Load the experiment metrics CSV file into a DataFrame
     metrics = pandas.read_csv(experiment_metrics_path, header=0)
+
+    # For Experiment 1, the `split_sinusoidal` variants are not included in the CD diagram, as explained in the README for experiment 1 results directory.
+    if "Experiment 1" in experiment:
+        # Remove the columns that contains 'split_sinusoidal' in their names.
+        split_sin_columns = metrics.columns[metrics.columns.str.contains("split_sinusoidal")].tolist()
+
+        if split_sin_columns:
+            print(f"Removing columns: {split_sin_columns} from the metrics DataFrame.")
+            metrics.drop(columns=split_sin_columns, inplace=True)
 
     # Define the output path for the CD diagram
     plot_path = Config.plot_dir / "experiment" / relative_file_path
