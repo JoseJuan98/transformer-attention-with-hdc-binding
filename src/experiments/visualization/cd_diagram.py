@@ -76,8 +76,10 @@ def plot_cd_diagram(metrics: pandas.DataFrame, output_path: pathlib.Path | None 
 
 if __name__ == "__main__":
     # Set parameters for the plot
-    relative_file_path = "1_binding_version_1/binding_v1_CD.png"
-    experiment = "Experiment 1"
+    # relative_file_path = "1_binding_version_1/binding_v1_CD.png"
+    # experiment = "Experiment 1"
+    relative_file_path = "5_sota_version_1/sota_v1_CD.png"
+    experiment = "Experiment 5"
 
     # Set pandas options for better display of DataFrames
     pandas.set_option("display.max_columns", None)
@@ -87,7 +89,9 @@ if __name__ == "__main__":
 
     # Path to experiment's raw metrics CSV file
     experiment_metrics_path = (
-        pathlib.Path(__file__).parents[3] / "docs/experiment_results/1_binding_version_1/summary_dataset_results.csv"
+        pathlib.Path(__file__).parents[3]
+        # / "docs/experiment_results/1_binding_version_1/summary_dataset_results.csv"
+        / "docs/experiment_results/5_sota_version_1/summary_dataset_results.csv"
     )
 
     # Define output directory

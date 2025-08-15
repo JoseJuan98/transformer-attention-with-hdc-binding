@@ -7,14 +7,7 @@ import pathlib
 # First party imports
 from experiment_framework import ExperimentConfigFactory, ExperimentRunner, ModelConfigFactory
 
-experiments = {
-    1: "1_binding_methods",
-    2: "2_N_L",
-    3: "3_d_model",
-    4: "4_conv_pe",
-    5: "4_comp_wise_pe",
-    6: "5_sota",
-}
+experiments = {1: "1_binding_methods", 2: "2_N_L", 3: "3_d_model", 4: "4_conv_pe", 5: "5_sota", 6: "4_comp_wise_pe"}
 
 
 def parse_experiment_choice() -> int:
@@ -40,8 +33,8 @@ def ask_user_for_experiment_choice() -> int:
     print("2. TS Classification with different binding methods with different N_L values")
     print("3. TS Classification with different d_model values")
     print("4. TS Classification with different PEs with convolutional binding")
-    print("5. TS Classification with different PEs with multiplicative binding")
-    print("6. TS Classification with State-of-the-Art (SOTA) models")
+    print("5. TS Classification with State-of-the-Art (SOTA) models")
+    print("6. TS Classification with different PEs with multiplicative binding")
 
     choice_msg = "> Enter the number of the experiment you want to run: "
     choice = int(input(choice_msg))
