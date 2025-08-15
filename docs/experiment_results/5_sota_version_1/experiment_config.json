@@ -2,7 +2,82 @@
     "experiment_name": "time_series_classification_sota",
     "task": "time series classification",
     "model_configs": {
-        "Linear Convolutional Sinusoidal PE TS Transformer (Baseline)": {
+        "Linear Additive Null PE TS Transformer (Baseline)": {
+            "model_name": "linear_null_pe",
+            "desc": "Encoder Only Transformer with Linear Projection Embeddings without Positional Encoding for Time Series Classification",
+            "model": "encoder-only-transformer",
+            "num_epochs": 100,
+            "learning_rate": 0.003,
+            "d_model": 64,
+            "num_heads": 8,
+            "d_ff": 256,
+            "num_layers": 1,
+            "dropout": 0.1,
+            "positional_encoding": "null",
+            "embedding_binding": "additive",
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
+        },
+        "Linear Convolutional \u03b2=0.8 Gaussian Fractional Power Encoding TS Transformer Learnable": {
+            "model_name": "linear_conv_0_8_gaussian_fpe",
+            "desc": "Encoder Only Transformer with Linear Projection Embeddings,\u03b2=0.8 Gaussian F.P. Encodings and Convolutional Binding for Time Series Classification",
+            "model": "encoder-only-transformer",
+            "num_epochs": 100,
+            "learning_rate": 0.003,
+            "d_model": 64,
+            "num_heads": 8,
+            "d_ff": 256,
+            "num_layers": 1,
+            "dropout": 0.1,
+            "positional_encoding": {
+                "type": "fractional_power",
+                "beta": 0.8,
+                "kernel": "gaussian"
+            },
+            "embedding_binding": "convolutional",
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
+        },
+        "Linear Component-wise Sinusoidal PE TS Transformer": {
+            "model_name": "linear_comp_wise_sinusoidal",
+            "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Convolutional Binding for Time Series Classification",
+            "model": "encoder-only-transformer",
+            "num_epochs": 100,
+            "learning_rate": 0.003,
+            "d_model": 64,
+            "num_heads": 8,
+            "d_ff": 256,
+            "num_layers": 1,
+            "dropout": 0.1,
+            "positional_encoding": {
+                "type": "sinusoidal",
+                "learnable": false
+            },
+            "embedding_binding": "multiplicative",
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
+        },
+        "Linear Convolutional \u03b2=5 Sinc Fractional Power Encoding TS Transformer Learnable": {
+            "model_name": "linear_conv_5_sinc_fpe",
+            "desc": "Encoder Only Transformer with Linear Projection Embeddings,\u03b2=5 Sinc F.P. Encodings and Convolutional Binding for Time Series Classification",
+            "model": "encoder-only-transformer",
+            "num_epochs": 100,
+            "learning_rate": 0.003,
+            "d_model": 64,
+            "num_heads": 8,
+            "d_ff": 256,
+            "num_layers": 1,
+            "dropout": 0.1,
+            "positional_encoding": {
+                "type": "fractional_power",
+                "beta": 5,
+                "kernel": "sinc"
+            },
+            "embedding_binding": "convolutional",
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
+        },
+        "Linear Convolutional Sinusoidal PE TS Transformer": {
             "model_name": "linear_conv_sinusoidal",
             "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Convolutional Binding for Time Series Classification",
             "model": "encoder-only-transformer",
