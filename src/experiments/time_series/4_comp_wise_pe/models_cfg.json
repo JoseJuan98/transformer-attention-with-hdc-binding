@@ -15,10 +15,10 @@
    "embedding_binding": "additive"
   },
 
-  "Linear Convolutional Random PE TS Transformer": {
+  "Linear Component-wise Random PE TS Transformer": {
     "model_name": "linear_conv_random_pe",
     "model": "encoder-only-transformer",
-    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Random Positional Encoding and Convolutional Binding for Time Series Classification",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Random Positional Encoding and Component-wise Binding for Time Series Classification",
     "num_epochs": 100,
     "learning_rate": 0.003,
     "d_model": 64,
@@ -31,10 +31,10 @@
     "embedding_binding": "multiplicative"
   },
 
-  "Linear Convolutional Learnable Random PE TS Transformer": {
+  "Linear Component-wise Learnable Random PE TS Transformer": {
     "model_name": "linear_conv_learnable_random_pe",
     "model": "encoder-only-transformer",
-    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Learnable Random Positional Encoding and Convolutional Binding for Time Series Classification",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Learnable Random Positional Encoding and Component-wise Binding for Time Series Classification",
     "num_epochs": 100,
     "learning_rate": 0.003,
     "d_model": 64,
@@ -50,10 +50,10 @@
     "embedding_binding": "multiplicative"
   },
 
-  "Linear Convolutional Sinusoidal PE TS Transformer (Baseline)": {
+  "Linear Component-wise Sinusoidal PE TS Transformer (Baseline)": {
     "model_name": "linear_conv_sinusoidal",
     "model": "encoder-only-transformer",
-    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Convolutional Binding for Time Series Classification",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Component-wise Binding for Time Series Classification",
     "num_epochs": 100,
     "learning_rate": 0.003,
     "d_model": 64,
@@ -69,10 +69,10 @@
     "embedding_binding": "multiplicative"
   },
 
-  "Linear Convolutional Sinusoidal PE TS Transformer Learnable": {
+  "Linear Component-wise Sinusoidal PE TS Transformer Learnable": {
     "model_name": "linear_conv_learnable_sinusoidal",
     "model": "encoder-only-transformer",
-    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Learnable Absolute Sinusoidal Positional Encoding and Convolutional Binding for Time Series Classification",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Learnable Absolute Sinusoidal Positional Encoding and Component-wise Binding for Time Series Classification",
     "num_epochs": 100,
     "learning_rate": 0.003,
     "d_model": 64,
@@ -88,10 +88,10 @@
     "embedding_binding": "multiplicative"
   },
 
-  "Linear Convolutional β=0.8 Gaussian Fractional Power Encoding TS Transformer Learnable": {
+  "Linear Component-wise β=0.8 Gaussian Fractional Power Encoding TS Transformer Learnable": {
     "model_name": "linear_conv_0_8_gaussian_fpe",
     "model": "encoder-only-transformer",
-    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=0.8 Gaussian F.P. Encodings and Convolutional Binding for Time Series Classification",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=0.8 Gaussian F.P. Encodings and Component-wise Binding for Time Series Classification",
     "num_epochs": 100,
     "learning_rate": 0.003,
     "d_model": 64,
@@ -108,10 +108,10 @@
     "embedding_binding": "multiplicative"
   },
 
-  "Linear Convolutional β=1 Sinc Fractional Power Encoding TS Transformer Learnable": {
+  "Linear Component-wise β=1 Sinc Fractional Power Encoding TS Transformer Learnable": {
     "model_name": "linear_conv_1_sinc_fpe",
     "model": "encoder-only-transformer",
-    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=1 Sinc F.P. Encodings and Convolutional Binding for Time Series Classification",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=1 Sinc F.P. Encodings and Component-wise Binding for Time Series Classification",
     "num_epochs": 100,
     "learning_rate": 0.003,
     "d_model": 64,
@@ -128,10 +128,10 @@
     "embedding_binding": "multiplicative"
   },
 
-  "Linear Convolutional β=2 Sinc Fractional Power Encoding TS Transformer Learnable": {
+  "Linear Component-wise β=2 Sinc Fractional Power Encoding TS Transformer Learnable": {
     "model_name": "linear_conv_2_sinc_fpe",
     "model": "encoder-only-transformer",
-    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=2 Sinc F.P. Encodings and Convolutional Binding for Time Series Classification",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=2 Sinc F.P. Encodings and Component-wise Binding for Time Series Classification",
     "num_epochs": 100,
     "learning_rate": 0.003,
     "d_model": 64,
@@ -148,10 +148,10 @@
     "embedding_binding": "multiplicative"
   },
 
-  "Linear Convolutional β=5 Sinc Fractional Power Encoding TS Transformer Learnable": {
+  "Linear Component-wise β=5 Sinc Fractional Power Encoding TS Transformer Learnable": {
     "model_name": "linear_conv_5_sinc_fpe",
     "model": "encoder-only-transformer",
-    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=5 Sinc F.P. Encodings and Convolutional Binding for Time Series Classification",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=5 Sinc F.P. Encodings and Component-wise Binding for Time Series Classification",
     "num_epochs": 100,
     "learning_rate": 0.003,
     "d_model": 64,
