@@ -16,6 +16,7 @@ from matplotlib import pyplot
 # First party imports
 from models.positional_encoding.factory import PositionalEncodingFactory, TSPositionalEncodingTypeStr
 from utils import Config
+from utils.plot import set_plot_style
 
 DEFAULT_ARGS = {
     "fractional_power": {"beta": 15.0, "kernel": "gaussian"},
@@ -274,12 +275,76 @@ def main(  # noqa: C901
     print("-" * 30 + "\n")
 
 
+def create_composite_heatmap_figure(
+    pe_types: list[TSPositionalEncodingTypeStr],
+    num_positions: int = 100,
+    embedding_dim: int = 128,
+    output_dir: Path = Path("plots"),
+) -> None:
+    """Creates a single composite figure with heatmaps for multiple PE types."""
+    print("--- Creating Composite Heatmap Figure ---")
+    num_types = len(pe_types)
+    fig, axes = pyplot.subplots(nrows=1, ncols=num_types, figsize=(19 * num_types, 10), sharex=True)
+    if num_types == 1:
+        axes = [axes]  # Make it iterable if only one plot
+
+    # --- Set font sizes for readability ---
+    pyplot.rcParams.update({"font.size": 26, "axes.labelsize": 26, "xtick.labelsize": 24, "ytick.labelsize": 24})
+
+    for i, pe_type in enumerate(pe_types):
+        ax = axes[i]
+        # --- Instantiate the Positional Encoding ---
+        pos_encoder = PositionalEncodingFactory.get_positional_encoding(
+            positional_encoding_arguments=pe_type,
+            num_positions=num_positions,
+            d_model=embedding_dim,
+        )
+        pe_weights = pos_encoder.encodings.detach().cpu().numpy().squeeze()
+        pe_weights = pe_weights[:num_positions, :]
+
+        # --- Determine Plotting Specifics ---
+        is_classic_sin = pe_type == "sinusoidal"
+        norm = mcolors.Normalize(vmin=-1.1, vmax=1.1)
+        cmap = "coolwarm_r"
+        if pe_type == "fractional_power":
+            # FPE is standardized, so let's find its actual range for better color mapping
+            norm = mcolors.Normalize(vmin=pe_weights.min(), vmax=pe_weights.max())
+
+        # --- Plotting ---
+        im = ax.imshow(pe_weights, aspect="auto", cmap=cmap, norm=norm)
+
+        # Add sub-caption style title
+        subplot_title = pos_encoder.name.replace("_", " ").replace("encoding", "").strip().title()
+        ax.set_title(f"({chr(97 + i)}) {subplot_title} PE", loc="left", fontweight="bold")
+
+        # Add split line for sinusoidal
+        if is_classic_sin:
+            sentinel = embedding_dim // 2
+            ax.axvline(x=sentinel - 0.5, color="black", linestyle="--", linewidth=1.5)
+
+    # Common Y and X-label and Colorbar
+    axes[0].set_ylabel("Position")
+    axes[num_types // 2].set_xlabel("Embedding Dimension")
+    fig.colorbar(im, ax=axes.ravel().tolist(), shrink=0.6, label="Encoding Value", location="right", pad=0.02)
+
+    # pyplot.tight_layout(rect=[0, 0, 0.95, 1])  # Adjust layout to make space for colorbar
+
+    composite_filename = output_dir / "composite_pe_heatmap.png"
+    pyplot.savefig(composite_filename, dpi=300)
+    print(f"Composite heatmap saved to {composite_filename}")
+    pyplot.show()
+    pyplot.close()
+
+
 if __name__ == "__main__":
     # --- Experiment Setup ---
     # How many sequence positions to show
     num_positions_to_visualize = 100
     # Embedding dimension
     embedding_dim = 128
+
+    # Set the plot style
+    set_plot_style()
 
     # --- Run Visualization for Each Type ---
     all_types: list[TSPositionalEncodingTypeStr] = [
@@ -289,13 +354,24 @@ if __name__ == "__main__":
         "split_sinusoidal",
     ]
 
+    plot_dir = Config.plot_dir / "positional_encodings"
+    plot_dir.mkdir(parents=True, exist_ok=True)
+
     for pe_type in all_types:
         main(
             pe_type=pe_type,
             embedding_dim=embedding_dim,
             num_positions=num_positions_to_visualize,
-            output_dir=Config.plot_dir / "positional_encodings",
+            output_dir=plot_dir,
             seed=42,
         )
 
     print(f"All plots saved in '{Config.plot_dir.resolve()}'")
+
+    # --- Generate the main composite figure for the thesis ---
+    create_composite_heatmap_figure(
+        pe_types=["sinusoidal", "fractional_power", "random"],
+        num_positions=num_positions_to_visualize,
+        embedding_dim=embedding_dim,
+        output_dir=plot_dir,
+    )
