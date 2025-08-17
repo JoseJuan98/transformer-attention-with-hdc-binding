@@ -10,7 +10,6 @@ from pathlib import Path
 # Third party imports
 import matplotlib.colors as mcolors
 import numpy
-import numpy as np
 import torch
 from matplotlib import pyplot
 
@@ -60,7 +59,7 @@ def main(  # noqa: C901
     pe_weights = pe_weights[:num_positions, :]
 
     # --- Determine Plotting Specifics based on Type ---
-    plot_title_prefix = f"{pos_encoder.name}"
+    # plot_title_prefix = f"{pos_encoder.name}"
     has_split = pe_type in ["fpe_sinusoid", "fpe_binary"]
     is_binary = pe_type == "fpe_binary"
     is_orig = pe_type == "fpe_orig"
@@ -100,14 +99,14 @@ def main(  # noqa: C901
     pyplot.figure(figsize=(12, 8))
 
     # Handle potential NaN/Inf values gracefully before plotting
-    if np.isnan(pe_weights).any() or np.isinf(pe_weights).any():
+    if numpy.isnan(pe_weights).any() or numpy.isinf(pe_weights).any():
         warnings.warn(f"NaN or Inf values found in '{pe_type}' weights. Clamping for visualization.")
-        pe_weights = np.nan_to_num(
-            pe_weights, nan=0.0, posinf=np.finfo(np.float32).max, neginf=np.finfo(np.float32).min
+        pe_weights = numpy.nan_to_num(
+            pe_weights, nan=0.0, posinf=numpy.finfo(numpy.float32).max, neginf=numpy.finfo(numpy.float32).min
         )
         # If norm wasn't set (e.g., for fpe_orig), set one now after clamping
         if norm is None:
-            val_min, val_max = np.min(pe_weights), np.max(pe_weights)
+            val_min, val_max = numpy.min(pe_weights), numpy.max(pe_weights)
             norm = mcolors.Normalize(vmin=val_min, vmax=val_max)
 
     # Squeeze to remove extra dimensions if present
@@ -117,7 +116,7 @@ def main(  # noqa: C901
     pyplot.colorbar(im, label="Encoding Value")
     pyplot.xlabel("Embedding Dimension")
     pyplot.ylabel("Position in Sequence")
-    pyplot.title(f"{plot_title_prefix} (Dim={embedding_dim})")
+    # pyplot.title(f"{plot_title_prefix} (Dim={embedding_dim})")
 
     # Add a vertical line to show the split if applicable
     if has_split:
@@ -165,7 +164,7 @@ def main(  # noqa: C901
     # --- Visualization 2: Encoding Vectors for Specific Positions ---
     print("\nPlotting Encoding Vectors for Specific Positions...")
     positions_to_plot = [0, 1, 5, 10, num_positions // 2, num_positions - 1]  # Select a few positions
-    dims = np.arange(embedding_dim)
+    dims = numpy.arange(embedding_dim)
 
     pyplot.figure(figsize=(12, 6))
     for pos in positions_to_plot:
@@ -174,7 +173,7 @@ def main(  # noqa: C901
 
     pyplot.xlabel("Embedding Dimension")
     pyplot.ylabel("Encoding Value")
-    pyplot.title(f"{plot_title_prefix}: Vectors at Specific Positions")
+    # pyplot.title(f"{plot_title_prefix}: Vectors at Specific Positions")
     if has_split:
         split_label = "Cos/Sin Split" if not is_binary else "Sign(Cos)/Sign(Sin) Split"
         pyplot.axvline(x=sentinel - 0.5, color="black", linestyle="--", linewidth=1, label=split_label)
@@ -232,7 +231,7 @@ def main(  # noqa: C901
         dimensions_to_plot.extend([sentinel - 1, sentinel, sentinel + 1])
         dimensions_to_plot = sorted(list(set(dimensions_to_plot)))  # Remove duplicates and sort
 
-    positions = np.arange(num_positions)
+    positions = numpy.arange(num_positions)
 
     pyplot.figure(figsize=(12, 6))
     for dim in dimensions_to_plot:
@@ -250,7 +249,7 @@ def main(  # noqa: C901
 
     pyplot.xlabel("Position in Sequence")
     pyplot.ylabel("Encoding Value")
-    pyplot.title(f"{plot_title_prefix}: Values Across Positions for Specific Dimensions")
+    # pyplot.title(f"{plot_title_prefix}: Values Across Positions for Specific Dimensions")
     pyplot.legend(loc="center left", bbox_to_anchor=(1, 0.5), fontsize="small")
     pyplot.grid(True, linestyle="--", alpha=0.6)
     pyplot.tight_layout()
