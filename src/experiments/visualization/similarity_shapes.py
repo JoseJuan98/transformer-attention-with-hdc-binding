@@ -16,8 +16,12 @@ from matplotlib import pyplot
 # First party imports
 from models.positional_encoding.factory import PositionalEncodingFactory
 from utils import Config
+from utils.plot import set_plot_style
 
 MetricStr = Literal["cosine", "product"]
+
+# Set the plot style globally
+set_plot_style()
 
 
 def calculate_similarity_from_center(
@@ -69,7 +73,7 @@ def calculate_similarity_from_center(
     return relative_positions.numpy(), similarities.numpy()
 
 
-def plot_similarity_from_center(
+def plot_similarity_from_center(  # noqa: C901
     plot_configurations: dict,
     plot_path: pathlib.Path | None = None,
     pos_ref: int | None = None,
@@ -77,6 +81,7 @@ def plot_similarity_from_center(
     d_model: int = 128,
     seed: int = 42,
     plot: bool = True,
+    use_config_key_for_label: bool = False,
     title: str | None = None,
     metric: MetricStr = "cosine",
 ) -> None:
@@ -99,6 +104,8 @@ def plot_similarity_from_center(
         plot (bool): Whether to display the plot using pyplot.show(). Defaults to True.
         title (str | None): Custom title for the plot. If None, a default title is generated.
         metric (MetricStr): Similarity metric ('cosine' or 'product'). Defaults to "cosine".
+        use_config_key_for_label (bool): If True, uses the configuration key as the label for the plot.
+            If False, generates a descriptive label based on the PE type and parameters.
     """
     # --- Set up the random seed for reproducibility ---
     torch.manual_seed(seed)
@@ -140,7 +147,7 @@ def plot_similarity_from_center(
             }
 
     print("\n--- Plotting Results ---")
-    pyplot.figure(figsize=(12, 7))
+    pyplot.figure(figsize=(19, 10))
 
     for config_key, result_data in similarity_results.items():
         relative_positions = result_data["positions"]
@@ -153,12 +160,15 @@ def plot_similarity_from_center(
             pe_type = config["type"]
             params = {k: v for k, v in config.items() if k != "type"}
 
-        # Create a descriptive label
-        params_str_parts = [f"{k}={v}" for k, v in params.items()]
-        label = pe_type  # Use the unique key as the base label
-        if params_str_parts:
-            # Optionally add type and params if key isn't descriptive enough
-            label = f"{pe_type} ({', '.join(params_str_parts)})"
+        if use_config_key_for_label:
+            label = config_key
+        else:
+            # Create a descriptive label
+            label = pe_type.replace("_", " ").strip().title()
+            params_str_parts = [f"{k}={v}" for k, v in params.items()]
+            if params_str_parts:
+                # Optionally add type and params if key isn't descriptive enough
+                label = f"{label} ({', '.join(params_str_parts)})"
 
         # Example of specific adjustments (keep if needed, or make configurable)
         if pe_type == "split_sinusoidal":
@@ -167,17 +177,18 @@ def plot_similarity_from_center(
 
         pyplot.plot(relative_positions, similarities, label=label, alpha=0.8, linewidth=1.5)
 
-    pyplot.xlabel("Relative Position (p - p_ref)")
-    ylabel = f"{metric.capitalize()} Similarity to p_ref={pos_ref}"
+    pyplot.xlabel("Relative Position")
+    ylabel = f"{metric.capitalize()} Similarity"
     pyplot.ylabel(ylabel)
-    default_title = (
-        f"{metric.capitalize()} Similarity relative to Position {pos_ref}\n"
-        f"(Dim={d_model}, Num Positions={num_positions})"
-    )
-    plot_title = default_title if title is None else title
-    pyplot.title(plot_title)
-    pyplot.axvline(0, color="red", linestyle=":", linewidth=1.5, label=f"Ref Pos {pos_ref}")
-    pyplot.legend(loc="lower right", fontsize="small")
+    # default_title = (
+    #     f"{metric.capitalize()} Similarity relative to Position {pos_ref}\n"
+    #     f"(Dim={d_model}, Num Positions={num_positions})"
+    # )
+    # plot_title = default_title if title is None else title
+    # pyplot.title(plot_title)
+    if pos_ref > 0:
+        pyplot.axvline(0, color="red", linestyle=":", linewidth=1.5, label=f"Ref Pos {pos_ref}")
+    pyplot.legend(loc="upper right", fontsize="small")
     pyplot.grid(True, linestyle="--", alpha=0.6)
     pyplot.axhline(0, color="black", linewidth=0.5, linestyle="--")
 
@@ -250,7 +261,15 @@ if __name__ == "__main__":
     # Example 3: different reference positions
     configs_for_pos_ref = {
         "Sinusoidal": "sinusoidal",
-        "FracPower (β=0.8)": {"type": "fractional_power", "beta": 0.8, "kernel": "gaussian"},
+        "Random": "random",
+        "Fractional Power $(\\text{Gauss}, \\beta=0.8)$": {
+            "type": "fractional_power",
+            "beta": 0.8,
+            "kernel": "gaussian",
+        },
+        "Fractional Power $(\\text{Sinc}, \\beta=1)$": {"type": "fractional_power", "beta": 1, "kernel": "sinc"},
+        "Fractional Power $(\\text{Sinc}, \\beta=2)$": {"type": "fractional_power", "beta": 2, "kernel": "sinc"},
+        "Fractional Power $(\\text{Sinc}, \\beta=5)$": {"type": "fractional_power", "beta": 5, "kernel": "sinc"},
     }
     print("\n=== Plotting Comparison for Different Reference Positions ===")
     for pos_ref_test in [
@@ -270,6 +289,7 @@ if __name__ == "__main__":
             / f"similarity_posref{pos_ref_test}_d{d_model}_n{num_positions_for_sim}_{metric_to_use}.png",
             plot=True,
             metric=metric_to_use,
+            use_config_key_for_label=True,
         )
 
     # Example 4: dot product as metric
