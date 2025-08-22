@@ -272,13 +272,7 @@ if __name__ == "__main__":
         "Fractional Power $(\\text{Sinc}, \\beta=5)$": {"type": "fractional_power", "beta": 5, "kernel": "sinc"},
     }
     print("\n=== Plotting Comparison for Different Reference Positions ===")
-    for pos_ref_test in [
-        0,
-        num_positions_for_sim // 4,
-        num_positions_for_sim // 2,
-        num_positions_for_sim * 3 // 4,
-        num_positions_for_sim - 1,
-    ]:
+    for pos_ref_test in [0, num_positions_for_sim // 2]:
         plot_similarity_from_center(
             plot_configurations=configs_for_pos_ref,
             num_positions=num_positions_for_sim,
