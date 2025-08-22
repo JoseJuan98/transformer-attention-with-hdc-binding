@@ -370,7 +370,7 @@ if __name__ == "__main__":
 
     # --- Generate the main composite figure for the thesis ---
     create_composite_heatmap_figure(
-        pe_types=["sinusoidal", "fractional_power", "random"],
+        pe_types=["sinusoidal", "split_sinusoidal", "fractional_power", "random"],
         num_positions=num_positions_to_visualize,
         embedding_dim=embedding_dim,
         output_dir=plot_dir,
