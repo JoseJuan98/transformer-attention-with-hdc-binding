@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Generates a high-quality visualization comparing the structural impact of different HDC bindings."""
-
 # Standard imports
 import pathlib
 
@@ -34,7 +33,7 @@ def create_binding_visualization(
 
     # --- Create Mock Token Embedding and Positional Encoding ---
     # Create a structured, wave-like mock token embedding for clear visualization
-    # This creates a pattern that varies smoothly across both time and dimension
+    # This creates a pattern that varies smoothly across both time and mebedding dimension
     dim_pattern = torch.linspace(0, 4 * torch.pi, d_model)
     pos_pattern = torch.linspace(0, 2 * torch.pi, num_positions).unsqueeze(1)
     mock_token_embedding = torch.sin(pos_pattern + dim_pattern)
@@ -58,8 +57,6 @@ def create_binding_visualization(
     convolutional_binder = binding_factory.get_binding_method("convolutional", d_model)
 
     # Apply each binding operation
-    # Note: Your forward pass shows you don't scale by sqrt(d_model) before binding,
-    # so we follow that logic here for a faithful representation.
     additive_result = additive_binder(mock_token_embedding, sinusoidal_pe).detach()  # type: ignore[misc]
     multiplicative_result = multiplicative_binder(mock_token_embedding, sinusoidal_pe).detach()  # type: ignore[misc]
     convolutional_result = convolutional_binder(mock_token_embedding, sinusoidal_pe).detach()  # type: ignore[misc]
@@ -74,11 +71,13 @@ def create_binding_visualization(
     axes[0].imshow(additive_result.numpy(), cmap=cmap, aspect="auto", interpolation="nearest")
     axes[0].set_title(r"$E_{token} + E_{pos}$", fontsize=30, pad=20)
     axes[0].axis("off")
+    # axes[0].set_ylabel("Embedding Dimension", fontsize=16)
 
     # Plot 2: Multiplicative Binding
     axes[1].imshow(multiplicative_result.numpy(), cmap=cmap, aspect="auto", interpolation="nearest")
     axes[1].set_title(r"$E_{token} \odot E_{pos}$", fontsize=30, pad=20)
     axes[1].axis("off")
+    # axes[1].set_xlabel("Position / Time Step", fontsize=16)
 
     # Plot 3: Circular Convolution Binding
     axes[2].imshow(convolutional_result.numpy(), cmap=cmap, aspect="auto", interpolation="nearest")
