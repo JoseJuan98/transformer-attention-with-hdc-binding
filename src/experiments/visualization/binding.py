@@ -5,6 +5,7 @@
 import pathlib
 
 # Third party imports
+import numpy
 import torch
 from matplotlib import pyplot
 
@@ -16,7 +17,7 @@ from utils.plot import set_plot_style
 
 
 def create_binding_visualization(
-    d_model: int = 128, num_positions: int = 256, output_path: pathlib.Path | None = None
+    d_model: int = 128, num_positions: int = 256, output_path: pathlib.Path | None = None, dimension_to_plot: int = 0
 ) -> None:
     """Generates and saves a visualization comparing the effects of different embedding binding methods.
 
@@ -24,6 +25,7 @@ def create_binding_visualization(
         d_model (int): The embedding dimension.
         num_positions (int): The sequence length.
         output_path (pathlib.Path): The path to save the final image.
+        dimension_to_plot (int): The specific embedding dimension to plot in the 1D signal comparison.
     """
     # --- Setup and Style ---
     pyplot.style.use("dark_background")
@@ -62,7 +64,7 @@ def create_binding_visualization(
     multiplicative_result = multiplicative_binder(mock_token_embedding, sinusoidal_pe).detach()  # type: ignore[misc]
     convolutional_result = convolutional_binder(mock_token_embedding, sinusoidal_pe).detach()  # type: ignore[misc]
 
-    # --- Plot the Results ---
+    # --- Plot the 2D Heatmaps of Each Binding Result ---
     fig, axes = pyplot.subplots(nrows=1, ncols=3, figsize=(18, 6), constrained_layout=True)
 
     # Colormap
@@ -85,15 +87,88 @@ def create_binding_visualization(
 
     # Save the figure
     if output_path:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        pyplot.savefig(output_path, bbox_inches="tight")
-        print(f"Plot saved to: {output_path}")
+        output_path.mkdir(parents=True, exist_ok=True)
+        pyplot.savefig(output_path / "binding_heatmap_comparison.png", bbox_inches="tight")
+        print(f"Heatmap plot saved to: {output_path}")
+
+    pyplot.show()
+    pyplot.close()
+
+    # Set default background style
+    pyplot.style.use("default")
+
+    # --- Extract the 1D Signals for Plotting ---
+
+    positions = numpy.arange(num_positions)
+    input_signal_1d = mock_token_embedding[:, dimension_to_plot].numpy()
+    pe_signal_1d = sinusoidal_pe[:, dimension_to_plot].numpy()
+    additive_1d = additive_result[:, dimension_to_plot].numpy()
+    multiplicative_1d = multiplicative_result[:, dimension_to_plot].numpy()
+    convolutional_1d = convolutional_result[:, dimension_to_plot].numpy()
+
+    # --- Plot the 1D Signals ---
+    fig, axs = pyplot.subplots(nrows=2, ncols=3, figsize=(19, 10))
+
+    # Plot original signals (the "ingredients") with lighter, dashed styles
+    axs[0][1].plot(
+        positions, input_signal_1d, label="Input Signal (Token)", linestyle="--", alpha=0.9
+    )  # , color="darkblue")
+    axs[0][1].plot(
+        positions, pe_signal_1d, label="Positional Encoding Signal", linestyle=":", alpha=0.9
+    )  # , color="darkgreen")
+
+    # Plot resulting signals (the "products") with thicker, solid lines
+    axs[1][0].plot(positions, additive_1d, label=r"Additive ($Input + PE$)", linewidth=2.5, color="red")
+    axs[1][1].plot(
+        positions, multiplicative_1d, label=r"Multiplicative ($Input \odot PE$)", linewidth=2.5, color="purple"
+    )
+    axs[1][2].plot(
+        positions,
+        convolutional_1d,
+        label=r"Convolutional ($Input \circledast PE$)",
+        linewidth=2.5,
+        color="black",
+    )
+
+    # Hide unused subplot (top-left)
+    axs[0][0].axis("off")
+    axs[0][2].axis("off")
+
+    # --- Final Adjustments ---
+    fig.suptitle(
+        f"Effect of Binding Operations on a Single Signal Dimension (dim={dimension_to_plot})",
+        fontsize=18,
+        fontweight="bold",
+    )
+    axs[1][1].set_xlabel("Position / Time Step", fontsize=14)
+    axs[0][1].set_ylabel("Signal Value", fontsize=14)
+    axs[1][0].set_ylabel("Signal Value", fontsize=14)
+    for ax in axs.flat:
+        # if the ax is off, skip it
+        if not ax.has_data():
+            continue
+
+        ax.legend(loc="upper right", fontsize=12)
+        ax.axhline(0, color="gray", linewidth=0.5)
+
+    pyplot.tight_layout()
+
+    if output_path:
+        pyplot.savefig(output_path / "binding_1d_signal_comparison.png", bbox_inches="tight")
+        print(f"1D signal comparison plot saved to: {output_path}")
 
     pyplot.show()
     pyplot.close()
 
 
 if __name__ == "__main__":
-    plot_path = Config.plot_dir / "binding" / "binding_comparison.png"
+    # Define output path
+    plot_path = Config.plot_dir / "binding"
 
-    create_binding_visualization(output_path=plot_path, d_model=128, num_positions=128)
+    # Create the visualizations
+    print("Generating binding method visualizations...")
+    create_binding_visualization(
+        output_path=plot_path,
+        d_model=128,
+        num_positions=128,
+    )
