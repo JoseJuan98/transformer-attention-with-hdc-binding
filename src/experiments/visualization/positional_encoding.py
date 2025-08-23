@@ -284,7 +284,7 @@ def create_composite_heatmap_figure(
     """Creates a single composite figure with heatmaps for multiple PE types."""
     print("--- Creating Composite Heatmap Figure ---")
     num_types = len(pe_types)
-    fig, axes = pyplot.subplots(nrows=1, ncols=num_types, figsize=(19 * num_types, 10), sharex=True)
+    fig, axes = pyplot.subplots(nrows=2, ncols=num_types // 2, figsize=(19, 8 * num_types // 2), sharex=True)
     if num_types == 1:
         axes = [axes]  # Make it iterable if only one plot
 
@@ -292,7 +292,7 @@ def create_composite_heatmap_figure(
     pyplot.rcParams.update({"font.size": 26, "axes.labelsize": 26, "xtick.labelsize": 24, "ytick.labelsize": 24})
 
     for i, pe_type in enumerate(pe_types):
-        ax = axes[i]
+        ax = axes.flat[i]
         # --- Instantiate the Positional Encoding ---
         pos_encoder = PositionalEncodingFactory.get_positional_encoding(
             positional_encoding_arguments=pe_type,
@@ -323,14 +323,14 @@ def create_composite_heatmap_figure(
             ax.axvline(x=sentinel - 0.5, color="black", linestyle="--", linewidth=1.5)
 
     # Common Y and X-label and Colorbar
-    axes[0].set_ylabel("Position")
-    axes[num_types // 2].set_xlabel("Embedding Dimension")
-    fig.colorbar(im, ax=axes.ravel().tolist(), shrink=0.6, label="Encoding Value", location="right", pad=0.02)
+    axes[0][0].set_ylabel("Position")
+    axes[1][num_types // 2 - 1].set_xlabel("Embedding Dimension")
+    fig.colorbar(im, ax=axes.ravel().tolist(), shrink=0.8, location="bottom", pad=0.1)  # label="Encoding Value"
 
     # pyplot.tight_layout(rect=[0, 0, 0.95, 1])  # Adjust layout to make space for colorbar
 
     composite_filename = output_dir / "composite_pe_heatmap.png"
-    pyplot.savefig(composite_filename, dpi=300)
+    pyplot.savefig(composite_filename)
     print(f"Composite heatmap saved to {composite_filename}")
     pyplot.show()
     pyplot.close()
@@ -356,17 +356,17 @@ if __name__ == "__main__":
 
     plot_dir = Config.plot_dir / "positional_encodings"
     plot_dir.mkdir(parents=True, exist_ok=True)
-
-    for pe_type in all_types:
-        main(
-            pe_type=pe_type,
-            embedding_dim=embedding_dim,
-            num_positions=num_positions_to_visualize,
-            output_dir=plot_dir,
-            seed=42,
-        )
-
-    print(f"All plots saved in '{Config.plot_dir.resolve()}'")
+    #
+    # for pe_type in all_types:
+    #     main(
+    #         pe_type=pe_type,
+    #         embedding_dim=embedding_dim,
+    #         num_positions=num_positions_to_visualize,
+    #         output_dir=plot_dir,
+    #         seed=42,
+    #     )
+    #
+    # print(f"All plots saved in '{Config.plot_dir.resolve()}'")
 
     # --- Generate the main composite figure for the thesis ---
     create_composite_heatmap_figure(
