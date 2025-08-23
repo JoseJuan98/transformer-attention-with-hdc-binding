@@ -78,7 +78,7 @@ def plot_1d_signal_comparison(
     dimension_to_plot: int,
     num_positions: int,
     output_path: pathlib.Path | None = None,
-) -> tuple[pyplot.Figure, pyplot.Axes]:
+) -> tuple[pyplot.Figure, numpy.ndarray[pyplot.Axes]]:
     """Plots a comparison of 1D signals from a single dimension of the embeddings.
 
     Args:
@@ -154,7 +154,9 @@ def plot_1d_signal_comparison(
     return fig, axs
 
 
-def replot_1d_signal_clean(fig: pyplot.Figure, axs: pyplot.Axes, output_path: pathlib.Path | None = None) -> None:
+def replot_1d_signal_clean(
+    fig: pyplot.Figure, axs: numpy.ndarray[pyplot.Axes], output_path: pathlib.Path | None = None
+) -> None:
     """Replots a given figure after removing titles, axes, and legends.
 
     Args:
@@ -165,12 +167,47 @@ def replot_1d_signal_clean(fig: pyplot.Figure, axs: pyplot.Axes, output_path: pa
     # Remove the super title
     fig.suptitle("")
 
-    # Turn off all axes, which removes labels, ticks, and spines
-    # for ax in axs.flat:
-    #     ax.axis("off")
-
     # Reactivate the figure
     pyplot.figure(fig.number)
+
+    # --- Add arrows pointing from the source plot to the destination plots ---
+    # Get the source subplot (ingredients)
+    source_ax = axs[0][1]
+    # Use figure coordinates (0,0 is bottom-left, 1,1 is top-right) for positioning
+    source_pos = source_ax.get_position()
+    x_start = source_pos.x0 + source_pos.width / 2
+    y_start = source_pos.y0  # Start from the bottom of the source plot
+
+    # Define destination subplots (products) and arrow curvatures
+    dest_info = {
+        axs[1][0]: 0.2,  # Additive result, curve right
+        axs[1][1]: 0,  # Multiplicative result, straight
+        axs[1][2]: -0.2,  # Convolutional result, curve left
+    }
+    hshifts = [-0.15, 0, 0.15]  # Slight horizontal shifts for clarity
+    vshifts = [0.1, 0, 0.1]  # Slight vertical shifts for clarity
+
+    for (dest_ax, rad), (hshift, vshift) in zip(dest_info.items(), zip(hshifts, vshifts)):
+        dest_pos = dest_ax.get_position()
+        x_end = dest_pos.x0 + dest_pos.width / 2
+        y_end = dest_pos.y1  # End at the top of the destination plot
+
+        # Define arrow properties
+        arrow_props = dict(
+            arrowstyle="->, head_width=0.4, head_length=0.8",
+            color="gray",
+            linewidth=2,
+            connectionstyle=f"arc3,rad={rad}",
+        )
+
+        # Add the arrow annotation to the FIGURE, not the axes
+        dest_ax.annotate(
+            "",  # No text
+            xy=(x_end, y_end),  # Arrow destination
+            xytext=(x_start + hshift, y_start + vshift),  # Arrow start
+            xycoords="figure fraction",
+            arrowprops=arrow_props,
+        )
 
     # Reactivate each axis and turn off the axes
     for ax in axs.flat:
@@ -178,7 +215,7 @@ def replot_1d_signal_clean(fig: pyplot.Figure, axs: pyplot.Axes, output_path: pa
         ax.axis("off")
 
     if output_path:
-        fig.savefig(output_path, bbox_inches="tight")
+        fig.savefig(output_path)  # , bbox_inches="tight")
         print(f"Cleaned 1D signal plot saved to: {output_path}")
 
     fig.show()
@@ -242,9 +279,9 @@ def plot_similarity_matrices(
     # fig.suptitle("Impact of Binding Operations on Embedding Similarity Structure", fontsize=30, fontweight="bold")
 
     # Add a single colorbar for the entire figure
-    cbar = fig.colorbar(im1, ax=axes, orientation="vertical", fraction=0.05, pad=0.02)
-    cbar.set_label("Cosine Similarity", fontsize=18)
-    cbar.ax.tick_params(labelsize=14)
+    fig.colorbar(im1, ax=axes, orientation="vertical", fraction=0.05, pad=0.02)  # = cbar
+    # cbar.set_label("Cosine Similarity", fontsize=18)
+    # cbar.ax.tick_params(labelsize=14)
 
     # Save the figure
     if output_path:

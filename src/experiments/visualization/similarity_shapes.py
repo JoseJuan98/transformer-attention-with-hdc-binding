@@ -24,7 +24,7 @@ MetricStr = Literal["cosine", "product"]
 set_plot_style()
 
 
-def calculate_similarity_from_center(
+def calculate_similarity_from_position(
     pe_weights: torch.Tensor, pos_ref: int, metric: MetricStr
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """Calculates the similarity between the reference position's encoding and all other positions' encodings.
@@ -73,7 +73,7 @@ def calculate_similarity_from_center(
     return relative_positions.numpy(), similarities.numpy()
 
 
-def plot_similarity_from_center(  # noqa: C901
+def plot_similarity_from_position(  # noqa: C901
     plot_configurations: dict,
     plot_path: pathlib.Path | None = None,
     pos_ref: int | None = None,
@@ -135,7 +135,7 @@ def plot_similarity_from_center(  # noqa: C901
         pe_weights = pos_encoder.encodings.detach().squeeze(0)
 
         # Calculate Similarity Profile
-        relative_positions, similarities = calculate_similarity_from_center(
+        relative_positions, similarities = calculate_similarity_from_position(
             pe_weights=pe_weights, pos_ref=pos_ref, metric=metric
         )
         if relative_positions.size > 0:  # Only store if calculation was successful
@@ -225,7 +225,7 @@ if __name__ == "__main__":
     }
 
     print("\n=== Plotting Comparison of Different PE Types ===")
-    plot_similarity_from_center(
+    plot_similarity_from_position(
         plot_configurations=configs_compare_types,
         num_positions=num_positions_for_sim,
         d_model=d_model,
@@ -246,7 +246,7 @@ if __name__ == "__main__":
     }
 
     print("\n=== Plotting Comparison of Fractional Power Parameters ===")
-    plot_similarity_from_center(
+    plot_similarity_from_position(
         plot_configurations=configs_compare_params,
         num_positions=num_positions_for_sim,
         d_model=d_model,
@@ -273,7 +273,7 @@ if __name__ == "__main__":
     }
     print("\n=== Plotting Comparison for Different Reference Positions ===")
     for pos_ref_test in [0, num_positions_for_sim // 2]:
-        plot_similarity_from_center(
+        plot_similarity_from_position(
             plot_configurations=configs_for_pos_ref,
             num_positions=num_positions_for_sim,
             pos_ref=pos_ref_test,  # Set specific reference position
@@ -288,7 +288,7 @@ if __name__ == "__main__":
 
     # Example 4: dot product as metric
     print("\n=== Plotting Comparison using Dot Product Metric ===")
-    plot_similarity_from_center(
+    plot_similarity_from_position(
         plot_configurations=configs_compare_types,  # Reuse type comparison config
         num_positions=num_positions_for_sim,
         d_model=d_model,
