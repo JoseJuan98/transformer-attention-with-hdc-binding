@@ -279,7 +279,7 @@ def plot_similarity_matrices(
     # fig.suptitle("Impact of Binding Operations on Embedding Similarity Structure", fontsize=30, fontweight="bold")
 
     # Add a single colorbar for the entire figure
-    fig.colorbar(im1, ax=axes, orientation="vertical", fraction=0.05, pad=0.02)  # = cbar
+    fig.colorbar(im1, ax=axes, orientation="vertical", shrink=0.8, fraction=0.05, pad=0.02)  # = cbar
     # cbar.set_label("Cosine Similarity", fontsize=18)
     # cbar.ax.tick_params(labelsize=14)
 
