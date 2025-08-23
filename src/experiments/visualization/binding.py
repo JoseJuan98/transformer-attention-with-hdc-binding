@@ -15,10 +15,29 @@ from utils import Config
 from utils.plot import set_plot_style
 
 
+def calculate_similarity_matrix(vectors: torch.Tensor) -> torch.Tensor:
+    """Calculates the pairwise cosine similarity matrix for a set of vectors.
+
+    Args:
+        vectors (torch.Tensor): A tensor of shape (num_vectors, dim).
+
+    Returns:
+        torch.Tensor: A similarity matrix of shape (num_vectors, num_vectors).
+    """
+    # Normalize each vector to unit length
+    vectors_norm = torch.nn.functional.normalize(vectors, p=2, dim=1)
+
+    # Compute the similarity matrix using matrix multiplication
+    return torch.matmul(vectors_norm, vectors_norm.T)
+
+
 def create_binding_visualization(
     d_model: int = 128, num_positions: int = 256, output_path: pathlib.Path | None = None, dimension_to_plot: int = 0
 ) -> None:
     """Generates and saves a visualization comparing the effects of different embedding binding methods.
+
+    Notes:
+        The dot product of two unit vectors is mathematically equivalent to their cosine similarity.
 
     Args:
         d_model (int): The embedding dimension.
@@ -159,6 +178,67 @@ def create_binding_visualization(
     pyplot.show()
     pyplot.close()
 
+    # for i in range(2):
+    #     for j in range(3):
+    #         axs[i][j].axis("off")
+    #
+    # pyplot.savefig(output_path / "cover_binding_1d_signal_comparison.png", bbox_inches="tight")
+    # pyplot.show()
+    # pyplot.close()
+
+    # --- Compute and Plot Similarity Matrices ---
+    sim_token = calculate_similarity_matrix(mock_token_embedding)
+    sim_pe = calculate_similarity_matrix(sinusoidal_pe)
+    sim_additive = calculate_similarity_matrix(additive_result)
+    sim_multiplicative = calculate_similarity_matrix(multiplicative_result)
+    sim_convolutional = calculate_similarity_matrix(convolutional_result)
+
+    # --- Plot the Similarity Heatmaps ---
+    fig, axes = pyplot.subplots(nrows=2, ncols=3, figsize=(18, 12), constrained_layout=True)
+    cmap = "magma"
+    vmin, vmax = -1.0, 1.0  # Cosine similarity range
+
+    # --- Top Row: Inputs ---
+    axes[0, 0].imshow(sim_token.numpy(), cmap=cmap, vmin=vmin, vmax=vmax, interpolation="nearest")
+    axes[0, 0].set_title("(a) $E_{token}$", fontsize=24, loc="left", fontweight="bold")
+
+    im1 = axes[0, 1].imshow(sim_pe.numpy(), cmap=cmap, vmin=vmin, vmax=vmax, interpolation="nearest")
+    axes[0, 1].set_title("(b) $E_{pos}$", fontsize=24, loc="left", fontweight="bold")
+
+    axes[0, 2].axis("off")  # Hide the unused subplot
+
+    # --- Bottom Row: Bound Results ---
+    axes[1, 0].imshow(sim_additive.numpy(), cmap=cmap, vmin=vmin, vmax=vmax, interpolation="nearest")
+    axes[1, 0].set_title(r"(c) $E_{token} + E_{pos}$", fontsize=24, loc="left", fontweight="bold")
+
+    axes[1, 1].imshow(sim_multiplicative.numpy(), cmap=cmap, vmin=vmin, vmax=vmax, interpolation="nearest")
+    axes[1, 1].set_title(r"(d) $E_{token} \odot E_{pos}$", fontsize=24, loc="left", fontweight="bold")
+
+    axes[1, 2].imshow(sim_convolutional.numpy(), cmap=cmap, vmin=vmin, vmax=vmax, interpolation="nearest")
+    axes[1, 2].set_title(r"(e) $E_{token} \circledast E_{pos}$", fontsize=24, loc="left", fontweight="bold")
+
+    # --- Final Adjustments ---
+    for ax in axes.flat:
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    # fig.suptitle("Impact of Binding Operations on Embedding Similarity Structure", fontsize=30, fontweight="bold")
+
+    # Add a single colorbar for the entire figure
+    cbar = fig.colorbar(im1, ax=axes, orientation="vertical", fraction=0.05, pad=0.02)
+    cbar.set_label("Cosine Similarity", fontsize=18)
+    cbar.ax.tick_params(labelsize=14)
+
+    # Save the figure
+    if output_path:
+        output_path.mkdir(parents=True, exist_ok=True)
+        pyplot.savefig(output_path / "binding_similarity_heatmap.png", bbox_inches="tight")
+        print(f"Similarity heatmap plot saved to: {output_path}")
+
+    pyplot.show()
+    pyplot.close()
+    pyplot.style.use("default")
+
 
 if __name__ == "__main__":
     # Define output path
@@ -166,6 +246,7 @@ if __name__ == "__main__":
 
     # Create the visualizations
     print("Generating binding method visualizations...")
+
     create_binding_visualization(
         output_path=plot_path,
         d_model=128,
