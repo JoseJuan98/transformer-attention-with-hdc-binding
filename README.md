@@ -83,7 +83,7 @@ This project builds upon the following key concepts and research:
 The core model is a Transformer-based classifier adapted for time series classification, incorporating the novel HDC-based positional encoding mechanism. The architecture allows for systematic comparison of different embedding types, binding methods, and positional encoding schemes.
 
 <div style="text-align: center">
-    <img src="docs/diagrams/Model_Blocks.png" alt="High-level design of the proposed time series transformer classifier architecture"/>
+    <img src="docs/diagrams/Model_Blocks.png" alt="High-level design of the proposed time series transformer classifier architecture" width="40%" height="40%"/>
     <p style="text-align: center">Figure 1: High-level design of the proposed time series transformer classifier architecture.</p>
 </div>
 
