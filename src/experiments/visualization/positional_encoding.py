@@ -288,8 +288,8 @@ def create_composite_heatmap_figure(
     if num_types == 1:
         axes = [axes]  # Make it iterable if only one plot
 
-    # --- Set font sizes for readability ---
-    pyplot.rcParams.update({"font.size": 26, "axes.labelsize": 26, "xtick.labelsize": 24, "ytick.labelsize": 24})
+    # --- Set font sizes and style for readability ---
+    set_plot_style()
 
     for i, pe_type in enumerate(pe_types):
         ax = axes.flat[i]
