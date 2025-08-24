@@ -14,6 +14,7 @@ from utils import Config
 from utils.plot import set_plot_style
 
 
+# TODO: unify with d_model visualization script
 def plot_metrics_by_binding(metrics: pandas.DataFrame, plot_path: pathlib.Path) -> None:
     """Plot metrics by binding operation.
 
