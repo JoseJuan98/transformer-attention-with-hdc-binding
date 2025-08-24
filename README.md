@@ -170,8 +170,8 @@ Key features include:
 * Efficient data handling and hardware utilization
 * Support for multiple hardware backends
 
-<div style="text-align: center">
-    <img src="docs/diagrams/Experiment_System.png" alt="High-level design of the experiment framework"/>
+<div align="center">
+    <img src="docs/diagrams/Experiment_System.png" alt="High-level design of the experiment framework" width="50%" height="50%"/>
     <p style="text-align: center">Figure 2: High-level design of the experiment framework.</p>
 </div>
 
