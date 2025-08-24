@@ -171,7 +171,7 @@ Key features include:
 * Support for multiple hardware backends
 
 <div align="center">
-    <img src="docs/diagrams/Experiment_System.png" alt="High-level design of the experiment framework" width="50%" height="50%"/>
+    <img src="docs/diagrams/Experiment_System.png" alt="High-level design of the experiment framework" width="80%" height="80%"/>
     <p style="text-align: center">Figure 2: High-level design of the experiment framework.</p>
 </div>
 
