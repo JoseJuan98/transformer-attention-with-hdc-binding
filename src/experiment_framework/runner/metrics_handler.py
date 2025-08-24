@@ -69,6 +69,9 @@ class MetricsHandler:
         # Aggregated metrics by model and dataset (to avoid re-computing it multiple times)
         self.dataset_and_model_metrics = pandas.DataFrame()
 
+        # Filtered metrics DataFrame to avoid re-computing it multiple times
+        self._filtered_metrics = pandas.DataFrame()
+
     def update_metrics(
         self,
         metrics: pandas.DataFrame,
@@ -152,7 +155,18 @@ class MetricsHandler:
             return numpy.nan
 
     def _get_filtered_metrics(self) -> pandas.DataFrame:
-        """Loads, cleans, and filters the raw metrics data."""
+        """Loads, cleans, and filters the raw metrics data.
+
+        Notes:
+            The Interquartile Range (IQR) method is used to filter out outliers, because it is robust, and it's a
+            well-established non-parametric method for identifying outliers.
+
+        """
+
+        if not self._filtered_metrics.empty:
+            print("Using cached filtered metrics.")
+            return self._filtered_metrics
+
         # Use the in-memory DataFrame if available and not empty, otherwise read from file
         if not self.results.empty:
             metrics = self.results.copy()
@@ -190,11 +204,14 @@ class MetricsHandler:
         # Use transform to broadcast group-wise calculations
         metrics["group_count"] = metrics.groupby(group_keys)[metric_col].transform("count")
 
-        # Calculate lower and upper bounds for filtering
-        lower_quantile = self.significance_level / 2  # 0.025
-        upper_quantile = 1 - (self.significance_level / 2)  # 0.975
-        metrics["lower_bound"] = metrics.groupby(group_keys)[metric_col].transform(lambda x: x.quantile(lower_quantile))
-        metrics["upper_bound"] = metrics.groupby(group_keys)[metric_col].transform(lambda x: x.quantile(upper_quantile))
+        # Calculate Q1, Q3, and IQR for filtering
+        Q1 = metrics.groupby(group_keys)[metric_col].transform("quantile", 0.25)
+        Q3 = metrics.groupby(group_keys)[metric_col].transform("quantile", 0.75)
+        IQR = Q3 - Q1
+
+        # Define the outlier bounds
+        metrics["lower_bound"] = Q1 - 1.5 * IQR
+        metrics["upper_bound"] = Q3 + 1.5 * IQR
 
         # Keep a row if the group is too small to filter OR if the value is within the bounds
         filter_mask = (metrics["group_count"] < self.min_runs_for_filter) | (
@@ -203,15 +220,15 @@ class MetricsHandler:
 
         filtered_metrics = metrics[filter_mask].copy()
 
-        rows_filtered_out = len(metrics) - len(filtered_metrics)
+        rows_filtered_out = metrics.shape[0] - filtered_metrics.shape[0]
         if rows_filtered_out > 0:
             print(
-                f"Filtered out {rows_filtered_out} runs falling outside the central "
-                f"{100 * (1 - self.significance_level)}% percentile range within their dataset/model group "
+                f"Filtered out {rows_filtered_out}/{metrics.shape[0]} rows as outliers falling outside the IQR bounds "
                 f"(for groups with >= {self.min_runs_for_filter} runs)."
             )
 
-        return filtered_metrics.drop(columns=["group_count", "lower_bound", "upper_bound"])
+        self._filtered_metrics = filtered_metrics.drop(columns=["group_count", "lower_bound", "upper_bound"])
+        return self._filtered_metrics
 
     def aggregate_test_acc_per_dataset_and_model(self) -> pandas.DataFrame:
         """Aggregates test accuracy per model and dataset after filtering outliers.
@@ -227,7 +244,7 @@ class MetricsHandler:
             print("Warning: No data remains after filtering. Cannot aggregate.")
             return pandas.DataFrame()
 
-        group_keys = ["dataset", "model"]
+        group_keys = ["dataset", "model", "train_samples", "sequence_length", "num_classes"]
 
         # Aggregate the filtered data
         agg_filtered = (
@@ -318,10 +335,9 @@ class MetricsHandler:
         return rank_aggregation
 
     def aggregate_test_acc_per_model(self) -> pandas.DataFrame:
-        """Aggregates test accuracy per model across all datasets."""
-        # TODO: filter the outliers as in the previous method
+        """Aggregates test accuracy per model from the filtered results."""
         return (
-            self.results.copy()
+            self._get_filtered_metrics()
             .groupby(["model"])["test_acc"]
             .agg(["mean", "std", "count"])
             .reset_index()
@@ -334,18 +350,34 @@ class MetricsHandler:
 
         # Get the average accuracy for each model across all datasets
         model_metrics = self.aggregate_test_acc_per_model()
-        model_metrics["dataset"] = "Average Test Accuracy"
+        avg_dataset_name = "Average"
+        model_metrics["dataset"] = avg_dataset_name
 
         # Pivot the model metrics to have models as columns
-        row_model_metrics = model_metrics.pivot(index="dataset", columns="model", values="mean")
+        row_model_metrics = model_metrics.pivot(index="dataset", columns="model", values="mean").reset_index()
 
         # Create a new "dataset" that is the average of each model across all datasets
-        pivot_table = agg_dataset_model_metrics.pivot(index="dataset", columns="model", values="confidence_interval")
+        # Pivot using a multi-level index to preserve the dataset columns
+        dataset_columns = ["dataset", "train_samples", "sequence_length", "num_classes"]
+        pivot_table = agg_dataset_model_metrics.pivot(
+            index=dataset_columns, columns="model", values="confidence_interval"
+        ).reset_index()
+
+        # Calculate the mean of each dataset column except "dataset"
+        for col in dataset_columns[1:]:
+            row_model_metrics[col] = pivot_table[col].mean().round(0).astype(int)
+
+        # Concatenate the average model metrics row with the dataset pivoted table
         pivot_table = pandas.concat([pivot_table, row_model_metrics])
+
+        # Reorder the columns to have the dataset columns first
+        pivot_table = pivot_table[
+            dataset_columns + sorted(list(set(pivot_table.columns.to_list()) - set(dataset_columns)))
+        ]
 
         output_path = self.metrics_path.parent / "summary_dataset_results.csv"
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        pivot_table.to_csv(output_path, index=True, header=True)
+        pivot_table.to_csv(output_path, index=False, header=True)
         print(f"Dataset results pivot table saved to {output_path}")
         return pivot_table
 

@@ -1,0 +1,10 @@
+model,mean_acc,mean_rank,std_rank,num_datasets
+linear_comp_wise_sinusoidal,0.6421,3.9074,2.1215,27
+linear_comp_wise_1_sinc_fpe,0.6347,3.9815,2.3554,27
+linear_comp_wise_5_sinc_fpe,0.6415,4.0000,2.5306,27
+linear_comp_wise_learnable_sinusoidal,0.6381,4.2222,2.2289,27
+linear_comp_wise_2_sinc_fpe,0.6335,4.2778,2.6397,27
+linear_comp_wise_0_8_gaussian_fpe,0.6341,4.4630,1.9900,27
+linear_comp_wise_learnable_random_pe,0.6137,5.8333,2.2404,27
+linear_comp_wise_random_pe,0.6048,7.1296,1.8584,27
+linear_no_pe,0.5610,7.1852,2.4813,27

@@ -19,6 +19,7 @@ import pandas
 from experiment_framework.runner.metrics_handler import MetricsHandler
 
 
+# Deprecated: This function is no longer used in the current implementation.
 def parse_baseline_results(json_path: pathlib.Path) -> pandas.DataFrame:
     """Parses the JSON file containing baseline model results into a DataFrame.
 
@@ -71,25 +72,28 @@ def parse_baseline_results(json_path: pathlib.Path) -> pandas.DataFrame:
 
 
 if __name__ == "__main__":
+    # Set pandas options for better display of DataFrames
+    pandas.set_option("display.max_columns", None)
+
+    # Set pandas to not truncate DataFrame output
+    pandas.set_option("display.width", 0)
+
     # Path to experiment's raw metrics CSV file
-    my_experiment_metrics_path = (
+    experiment_metrics_path = (
         pathlib.Path(__file__).parents[2]
         # / "docs/experiment_results/1_binding_version_1/metrics_binding_version_1.csv"
-        # / "docs/experiment_results/2_binding_N_L_4/metrics_binding_N_l_4.csv"
-        # / "docs/experiment_results/3_pe_version_1/metrics_pe_version_1.csv"
-        # / "docs/experiment_results/4_sota_version_1/metrics_sota_version_1.csv"
-        / "docs/experiment_results/5_d_model_v1/metrics_d_model_v1.csv"
+        # / "docs/experiment_results/2_N_L_version_1/metrics_N_L_version_1.csv"
+        # / "docs/experiment_results/3_d_model_v1/metrics_d_model_v1.csv"
+        # / "docs/experiment_results/4_conv_pe_version_1/metrics_pe_version_1.csv"
+        # / "docs/experiment_results/4_comp_wise_pe_version_1/metrics_pe_a_version_1.csv"
+        / "docs/experiment_results/5_sota_version_1/metrics_sota_version_1.csv"
     )
 
-    # Define output directory
-    output_dir = my_experiment_metrics_path.parent
-    output_dir.mkdir(exist_ok=True)
-
     # Validate paths
-    if not my_experiment_metrics_path.exists():
-        raise FileNotFoundError(f"Experiment metrics file not found at: {my_experiment_metrics_path}")
+    if not experiment_metrics_path.exists():
+        raise FileNotFoundError(f"Experiment metrics file not found at: {experiment_metrics_path}")
 
     # Aggregate experiment's results
-    print(f"--> Processing experiment results from: {my_experiment_metrics_path}")
-    handler = MetricsHandler(metrics_path=my_experiment_metrics_path, metrics_mode="append")
+    print(f"--> Processing experiment results from: {experiment_metrics_path}")
+    handler = MetricsHandler(metrics_path=experiment_metrics_path, metrics_mode="append")
     handler.aggregate_metrics()

@@ -44,12 +44,19 @@ This project investigates an alternative approach: using Hyperdimensional Comput
 
 Instead of simple addition, this work explores using HDC binding operations (e.g., component-wise multiplication, circular convolution) to integrate positional vectors with token embeddings. The hypothesis is that these operations can create richer, more discriminative representations of position-aware tokens, potentially addressing limitations of traditional positional encoding methods such as anisotropy in similarity spaces.
 
+
+<div style="text-align: center">
+    <img src="docs/plots/binding/binding_similarity_heatmap.png" alt="The impact of different binding operations on the position-wise cosine similarity structure of embeddings."/>
+    <p style="text-align: center">Figure 1: The impact of different binding operations on the position-wise cosine similarity structure of embeddings. Lighter colors indicate higher similarity. The top row shows the similarity of the input token embeddings ($E_{token}$) (a) and positional encodings ($E_{pos}$) (b). The bottom row shows the similarity of the resulting embeddings after applying additive (c), component-wise (d), and circular convolution (e) binding. Each operation produces a fundamentally different geometric structure.</p>
+</div>
+
 ## Key Research Questions
 
-* Can HDC binding methods improve the performance of Transformer models on time series classification tasks compared to traditional additive positional encoding?
-* How do different positional encoding schemes with varying similarity shapes affect model performance when combined with HDC binding methods?
-* Does the effectiveness of HDC binding methods change with model depth and capacity?
-* How do different input embedding types (linear projection vs. convolutional) interact with various binding methods?
+1. How do different HDC binding methods (component-wise multiplication, circular convolution) compare to the standard additive method for combining positional and token embeddings in Transformer models for TSC?
+2. Do the benefits of HDC binding methods vary with model depth ($N_L$)?
+3. How does embedding dimensions ($d_{model}$) influence the effectiveness of different binding methods?
+4. How does the shape of the similarity curve between PE affect the performance of Transformer models on TSC tasks?
+5. Will convolutional input embeddings benefit less from sophisticated binding methods than linear embeddings?
 
 ## Project Goals
 
@@ -200,6 +207,12 @@ The results include:
 * Statistical significance testing with condifence intervals
 
 A summary of key findings will be updated here upon completion of all experimental phases.
+
+## Things that I would like to improve
+
+* **Metrics**: The current metrics are limited to accuracy and loss. It would be beneficial to include additional metrics such as precision, recall, F1-score, and confusion matrices for a more comprehensive evaluation of model performance.
+* **Hyperparameter Tuning**: Create an experiment to seek higher model performance for the best configurations found by implementing automated hyperparameter tuning.
+* **Unit Tests**: The current unit tests are limited. It would be beneficial to add more tests, and increase the coverage of the codebase to ensure robustness and reliability.
 
 ## References
 

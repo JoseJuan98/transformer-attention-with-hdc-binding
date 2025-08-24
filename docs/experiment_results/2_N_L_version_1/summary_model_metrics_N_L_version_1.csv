@@ -1,0 +1,13 @@
+model,mean_acc,mean_rank,std_rank,num_datasets
+linear_component_wise_N_L_1,0.6397,3.8889,1.5771,27
+linear_component_wise_N_L_2,0.6355,4.1852,3.2438,27
+linear_circular_conv_N_L_1,0.6352,4.5370,3.2931,27
+linear_component_wise_N_L_4,0.6295,4.6481,3.0691,27
+linear_circular_conv_N_L_2,0.6318,5.3333,2.5115,27
+linear_circular_conv_N_L_4,0.6192,5.6111,2.5356,27
+linear_additive_N_L_2,0.5842,7.5556,3.0329,27
+linear_additive_N_L_4,0.5641,7.6481,3.1495,27
+linear_additive_N_L_1,0.5774,7.7778,3.6304,27
+linear_component_wise_N_L_8,0.5675,8.3148,2.4813,27
+linear_additive_N_L_8,0.5076,9.1481,3.0629,27
+linear_circular_conv_N_L_8,0.5460,9.3519,2.9247,27

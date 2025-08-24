@@ -7,13 +7,7 @@ import pathlib
 # First party imports
 from experiment_framework import ExperimentConfigFactory, ExperimentRunner, ModelConfigFactory
 
-experiments = {
-    1: "1_binding_methods",
-    2: "2_binding_methods_N_L_4",
-    3: "3_positional_encodings",
-    4: "4_sota",
-    5: "5_d_model",
-}
+experiments = {1: "1_binding_methods", 2: "2_N_L", 3: "3_d_model", 4: "4_conv_pe", 5: "5_sota", 6: "4_comp_wise_pe"}
 
 
 def parse_experiment_choice() -> int:
@@ -25,9 +19,9 @@ def parse_experiment_choice() -> int:
         "-exp",
         dest="exp",
         type=int,
-        choices=[0, 1, 2, 3, 4, 5],
+        choices=list(experiments.keys()) + [0],
         default=0,
-        help="Choose the experiment to run (1-5).",
+        help=f"Choose the experiment to run (1-{len(experiments)}).",
     )
     return args.parse_args().exp
 
@@ -36,10 +30,11 @@ def ask_user_for_experiment_choice() -> int:
     """Prompt the user to choose an experiment to run."""
     print("Choose an experiment to run:")
     print("1. TS Classification with different binding methods")
-    print("2. TS Classification with different binding methods with N_L=4")
-    print("3. TS Classification with different positional encodings")
-    print("4. TS Classification with State-of-the-Art (SOTA) models")
-    print("5. TS Classification with different d_model values")
+    print("2. TS Classification with different binding methods with different N_L values")
+    print("3. TS Classification with different d_model values")
+    print("4. TS Classification with different PEs with convolutional binding")
+    print("5. TS Classification with State-of-the-Art (SOTA) models")
+    print("6. TS Classification with different PEs with multiplicative binding")
 
     choice_msg = "> Enter the number of the experiment you want to run: "
     choice = int(input(choice_msg))

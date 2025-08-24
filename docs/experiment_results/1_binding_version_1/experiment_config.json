@@ -1,5 +1,5 @@
 {
-    "experiment_name": "time_series_classification_positional_encoding",
+    "experiment_name": "time_series_classification_binding_methods",
     "task": "time series classification",
     "model_configs": {
         "Linear Additive Sinusoidal TS Transformer": {
@@ -15,7 +15,8 @@
             "dropout": 0.1,
             "positional_encoding": "sinusoidal",
             "embedding_binding": "additive",
-            "embedding": "linear_projection"
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
         },
         "Linear Additive Split Sinusoidal TS Transformer": {
             "model_name": "linear_additive_split_sinusoidal",
@@ -30,7 +31,8 @@
             "dropout": 0.1,
             "positional_encoding": "split_sinusoidal",
             "embedding_binding": "additive",
-            "embedding": "linear_projection"
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
         },
         "1D Conv Additive Sinusoidal TS Transformer": {
             "model_name": "1d_conv_additive_sinusoidal",
@@ -45,7 +47,8 @@
             "dropout": 0.1,
             "positional_encoding": "sinusoidal",
             "embedding_binding": "additive",
-            "embedding": "1d_conv"
+            "embedding": "1d_conv",
+            "multihead_attention": "standard"
         },
         "Linear Component-Wise Sinusoidal TS Transformer": {
             "model_name": "linear_component_wise_sinusoidal",
@@ -60,7 +63,8 @@
             "dropout": 0.1,
             "positional_encoding": "sinusoidal",
             "embedding_binding": "multiplicative",
-            "embedding": "linear_projection"
+            "embedding": "linear_projection",
+            "multihead_attention": "standard"
         },
         "1D Conv Component-Wise Sinusoidal TS Transformer": {
             "model_name": "1d_conv_component_wise_sinusoidal",
@@ -75,12 +79,13 @@
             "dropout": 0.1,
             "positional_encoding": "sinusoidal",
             "embedding_binding": "multiplicative",
-            "embedding": "1d_conv"
+            "embedding": "1d_conv",
+            "multihead_attention": "standard"
         },
         "Linear Circular Convolutional Sinusoidal TS Transformer": {
-            "model": "encoder-only-transformer",
             "model_name": "linear_circular_conv_sinusoidal",
             "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Circular Convolutional Binding for Time Series Classification",
+            "model": "encoder-only-transformer",
             "num_epochs": 100,
             "learning_rate": 0.003,
             "d_model": 64,
@@ -88,9 +93,10 @@
             "d_ff": 256,
             "num_layers": 1,
             "dropout": 0.1,
-            "positional_encoding" : "sinusoidal",
+            "positional_encoding": "sinusoidal",
+            "embedding_binding": "convolutional",
             "embedding": "linear_projection",
-            "embedding_binding": "convolutional"
+            "multihead_attention": "standard"
         },
         "1D Conv Circular Convolution Sinusoidal TS Transformer": {
             "model_name": "1d_conv_circular_conv_sinusoidal",
@@ -105,7 +111,8 @@
             "dropout": 0.1,
             "positional_encoding": "sinusoidal",
             "embedding_binding": "convolutional",
-            "embedding": "1d_conv"
+            "embedding": "1d_conv",
+            "multihead_attention": "standard"
         },
         "1D Conv Circular Convolution Split Sinusoidal TS Transformer": {
             "model_name": "1d_conv_circular_conv_split_sinusoidal",
@@ -120,7 +127,8 @@
             "dropout": 0.1,
             "positional_encoding": "split_sinusoidal",
             "embedding_binding": "convolutional",
-            "embedding": "1d_conv"
+            "embedding": "1d_conv",
+            "multihead_attention": "standard"
         }
     },
     "dataset_names": [
@@ -167,7 +175,7 @@
     "validation_split": 0.2,
     "early_stopping_patience": 10,
     "accumulate_grad_batches": 64,
-    "gradient_clip_val": 1.0,
+    "gradient_clip_val": 4.0,
     "gradient_clip_algorithm": "norm",
     "use_swa": false,
     "swa_learning_rate": 0.0005,
@@ -178,5 +186,6 @@
         30,
         50,
         75
-    ]
+    ],
+    "preprocessing_only": false
 }
