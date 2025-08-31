@@ -293,6 +293,67 @@ def plot_similarity_matrices(
     pyplot.close()
 
 
+def plot_1d_signal_with_binding(
+    mock_token_embedding: torch.Tensor,
+    sinusoidal_pe: torch.Tensor,
+    binded_result: torch.Tensor,
+    binding_label: str,
+    file_name: str,
+    dimension_to_plot: int,
+    num_positions: int,
+    output_path: pathlib.Path | None = None,
+) -> None:
+    """Plots a comparison of 1D signals from a single dimension of the embeddings.
+
+    Args:
+        mock_token_embedding (torch.Tensor): The original token embeddings.
+        sinusoidal_pe (torch.Tensor): The positional encodings.
+        binded_result (torch.Tensor): The result of additive binding.
+        binding_label (str): The label for the binding method (e.g., "Additive", "Multiplicative").
+        file_name (str): The name of the file to save the plot as.
+        dimension_to_plot (int): The specific embedding dimension to plot.
+        num_positions (int): The sequence length.
+        output_path (pathlib.Path | None): The path to save the final image.
+    """
+    # --- Extract the 1D Signals for Plotting ---
+    positions = numpy.arange(num_positions)
+    input_signal_1d = mock_token_embedding[:, dimension_to_plot].numpy()
+    pe_signal_1d = sinusoidal_pe[:, dimension_to_plot].numpy()
+    additive_1d = binded_result[:, dimension_to_plot].numpy()
+
+    # --- Plot the 1D Signals ---
+    fig, (ax1, ax2) = pyplot.subplots(nrows=1, ncols=2, figsize=(14, 10), sharey=True)
+
+    # Plot original signals (the "ingredients") with lighter, dashed styles
+    ax1.plot(positions, input_signal_1d, label="Input Signal (Token)", linestyle="--", alpha=0.9)
+    ax1.plot(positions, pe_signal_1d, label="Positional Encoding Signal", linestyle=":", alpha=0.9)
+
+    # Plot resulting signals (the "products") with thicker, solid lines
+    ax2.plot(positions, additive_1d, label=binding_label, linewidth=2.5, color="red")
+
+    # --- Final Adjustments ---
+    ax1.set_xlabel("Position / Time Step", fontsize=14)
+    ax2.set_xlabel("Position / Time Step", fontsize=14)
+    ax1.set_ylabel("Signal Value", fontsize=14)
+
+    for ax in [ax1, ax2]:
+        # if the ax is off, skip it
+        if not ax.has_data():
+            continue
+
+        ax.legend(loc="upper right", fontsize=12)
+        ax.axhline(0, color="gray", linewidth=0.5)
+
+    pyplot.tight_layout()
+
+    if output_path:
+        pyplot.savefig(output_path / file_name, bbox_inches="tight")
+        print(f"1D signal comparison plot saved to: {output_path}")
+
+    pyplot.show()
+    pyplot.close()
+
+
 def create_binding_visualization(
     d_model: int = 128, num_positions: int = 256, output_path: pathlib.Path | None = None, dimension_to_plot: int = 0
 ) -> None:
@@ -383,6 +444,18 @@ def create_binding_visualization(
         additive_result=additive_result,
         multiplicative_result=multiplicative_result,
         convolutional_result=convolutional_result,
+        output_path=output_path,
+    )
+
+    # --- Plot 1D Signal with Additive Binding ---
+    plot_1d_signal_with_binding(
+        mock_token_embedding=mock_token_embedding,
+        sinusoidal_pe=sinusoidal_pe,
+        binded_result=additive_result,
+        binding_label=r"Additive ($Input + PE$)",
+        file_name="additive_binding_1d_signal.png",
+        dimension_to_plot=dimension_to_plot,
+        num_positions=num_positions,
         output_path=output_path,
     )
 
