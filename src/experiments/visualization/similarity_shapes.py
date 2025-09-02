@@ -87,6 +87,8 @@ def plot_similarity_from_position(  # noqa: C901
     legend: bool = True,
     figsize: tuple[float, float] = (19, 10),
     vertical_line: bool = True,
+    legend_location: str = "upper right",
+    extra_legend_info: str = "",
 ) -> None:
     """Generates and plots the similarity relative to a reference position for multiple PE configurations.
 
@@ -112,6 +114,7 @@ def plot_similarity_from_position(  # noqa: C901
         legend (bool): Whether to display the legend on the plot. Defaults to True.
         figsize (tuple): Figure size for the plot. Defaults to (19, 10).
         vertical_line (bool): Whether to draw a horizontal line at y=0 for reference. Defaults to True.
+        legend_location (str): Location of the legend on the plot. Defaults to "upper right".
     """
     # --- Set up the random seed for reproducibility ---
     torch.manual_seed(seed)
@@ -193,7 +196,10 @@ def plot_similarity_from_position(  # noqa: C901
     # plot_title = default_title if title is None else title
     # pyplot.title(plot_title)
     if legend:
-        pyplot.legend(loc="upper right", fontsize="small")
+        if extra_legend_info:
+            pyplot.plot([], [], " ", label=extra_legend_info)
+
+        pyplot.legend(loc=legend_location, fontsize="small")
 
     if vertical_line:
         pyplot.grid(True, linestyle="--", alpha=0.6)
@@ -206,6 +212,10 @@ def plot_similarity_from_position(  # noqa: C901
     pyplot.ylim(0, 1.05)
 
     pyplot.tight_layout()
+
+    # Make plot lines thicker for better visibility
+    for line in pyplot.gca().get_lines():
+        line.set_linewidth(2)
 
     if plot_path is not None:
         plot_path = pathlib.Path(plot_path)  # Ensure it's a Path object
@@ -327,4 +337,40 @@ if __name__ == "__main__":
         legend=False,
         figsize=(14, 10),
         vertical_line=False,
+    )
+
+    # Example 6: Presentation Plot
+    print("\n=== Plotting ===")
+    plot_similarity_from_position(
+        plot_configurations={
+            "Sinusoidal": "sinusoidal",
+            "Fractional Power $(\\beta=0.8)$": {
+                "type": "fractional_power",
+                "beta": 0.8,
+                "kernel": "gaussian",
+            },
+            "Fractional Power $(\\beta=2)$": {
+                "type": "fractional_power",
+                "beta": 2,
+                "kernel": "sinc",
+            },
+            "Fractional Power $(\\beta=1)$": {
+                "type": "fractional_power",
+                "beta": 1,
+                "kernel": "sinc",
+            },
+        },
+        num_positions=num_positions_for_sim,
+        pos_ref=num_positions_for_sim // 2,
+        d_model=d_model,
+        seed=seed,
+        plot_path=output_directory / f"presentation_{cosine_metric}_d{d_model}_n{num_positions_for_sim}.png",
+        plot=True,
+        metric=cosine_metric,
+        use_config_key_for_label=True,
+        legend=True,
+        figsize=(14, 10),
+        vertical_line=False,
+        legend_location="lower right",
+        extra_legend_info="($\\beta$: decaying power)",
     )
