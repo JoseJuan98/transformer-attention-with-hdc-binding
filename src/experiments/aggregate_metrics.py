@@ -11,6 +11,7 @@ Notes:
 # Standard imports
 import json
 import pathlib
+import warnings
 
 # Third party imports
 import pandas
@@ -78,16 +79,28 @@ if __name__ == "__main__":
     # Set pandas to not truncate DataFrame output
     pandas.set_option("display.width", 0)
 
+    # Define experiment paths
+    experiment_paths = {
+        1: "docs/experiment_results/1_binding_version_1/metrics_binding_version_1.csv",
+        2: "docs/experiment_results/2_N_L_version_1/metrics_N_L_version_1.csv",
+        3: "docs/experiment_results/3_d_model_v1/metrics_d_model_v1.csv",
+        4: "docs/experiment_results/4_conv_pe_version_1/metrics_pe_version_1.csv",
+        4.1: "docs/experiment_results/4_comp_wise_pe_version_1/metrics_pe_a_version_1.csv",
+        5: "docs/experiment_results/5_sota_version_1/metrics_sota_version_1.csv",
+    }
+
+    # Change this to select the desired experiment to process
+    choosen_experiment = 5
+
+    if choosen_experiment == 1:
+        warnings.warn(
+            "For the thesis, Split Sinusoidal results were removed from the ranking model metrics. For more details, "
+            "see docs/experiment_results/1_binding_version_1/README.md."
+        )
+        input("Press Enter to continue...")
+
     # Path to experiment's raw metrics CSV file
-    experiment_metrics_path = (
-        pathlib.Path(__file__).parents[2]
-        # / "docs/experiment_results/1_binding_version_1/metrics_binding_version_1.csv"
-        # / "docs/experiment_results/2_N_L_version_1/metrics_N_L_version_1.csv"
-        # / "docs/experiment_results/3_d_model_v1/metrics_d_model_v1.csv"
-        # / "docs/experiment_results/4_conv_pe_version_1/metrics_pe_version_1.csv"
-        # / "docs/experiment_results/4_comp_wise_pe_version_1/metrics_pe_a_version_1.csv"
-        / "docs/experiment_results/5_sota_version_1/metrics_sota_version_1.csv"
-    )
+    experiment_metrics_path = pathlib.Path(__file__).parents[2] / experiment_paths[choosen_experiment]
 
     # Validate paths
     if not experiment_metrics_path.exists():
