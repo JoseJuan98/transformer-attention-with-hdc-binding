@@ -115,6 +115,7 @@ def plot_similarity_from_position(  # noqa: C901
         figsize (tuple): Figure size for the plot. Defaults to (19, 10).
         vertical_line (bool): Whether to draw a horizontal line at y=0 for reference. Defaults to True.
         legend_location (str): Location of the legend on the plot. Defaults to "upper right".
+        extra_legend_info (str): Additional information to append to the legend entries. Defaults to "".
     """
     # --- Set up the random seed for reproducibility ---
     torch.manual_seed(seed)
