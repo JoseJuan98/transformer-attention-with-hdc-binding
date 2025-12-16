@@ -29,11 +29,12 @@ def plot_metrics_by_binding(metrics: pandas.DataFrame, plot_path: pathlib.Path) 
     models = ["additive", "component_wise", "circular_conv"]
     d_models = [32, 64, 128, 256, 512, 1024]
     x_ticks = list(range(len(d_models)))
-    lower_limit = 0.52
+    lower_limit = 52
 
     for model in models:
         # Original accuracy data
         acc = [metrics[metrics["model"] == f"linear_{model}_{d_model}"]["mean_acc"].values[0] for d_model in d_models]
+        acc = [x.tolist() * 100 for x in acc]
 
         # Create a set of smooth x-coordinates for the spline
         x_smooth = numpy.linspace(min(x_ticks), max(x_ticks), 300)
@@ -55,21 +56,21 @@ def plot_metrics_by_binding(metrics: pandas.DataFrame, plot_path: pathlib.Path) 
         for i, v in enumerate(acc):
             if v < lower_limit:
                 ax.annotate(
-                    f"{v * 100:.2f}",
-                    xy=(i - 1, 0.5225),
-                    xytext=(9, 1),
+                    f"{v:.2f}",
+                    xy=(i - 1, 52.25),
+                    xytext=(20, 1),
                     textcoords="offset points",
                     annotation_clip=False,
                 )
             else:
-                ax.annotate(f"{v * 100:.2f}", xy=(i, v), xytext=(-7, 7), textcoords="offset points")
+                ax.annotate(f"{v:.2f}", xy=(i, v), xytext=(-7, 7), textcoords="offset points")
 
     ax.set_xticks(x_ticks)
     ax.set_xticklabels(d_models, rotation=45)
-    ax.set_ylim([lower_limit, 0.6525])
+    ax.set_ylim([lower_limit, 65.25])
     ax.set_xlabel("$d_{model}$ (Embedding Dimension)")
     ax.set_ylabel("Mean Accuracy (%)")
-    ax.set_title("Mean Accuracy by $d_{model}$ for Different Binding Operations")
+    # ax.set_title("Mean Accuracy by $d_{model}$ for Different Binding Operations")
 
     # Add a legend
     ax.legend(loc="lower left")

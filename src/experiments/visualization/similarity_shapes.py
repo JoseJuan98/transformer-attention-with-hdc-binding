@@ -84,6 +84,11 @@ def plot_similarity_from_position(  # noqa: C901
     use_config_key_for_label: bool = False,
     title: str | None = None,
     metric: MetricStr = "cosine",
+    legend: bool = True,
+    figsize: tuple[float, float] = (19, 10),
+    vertical_line: bool = True,
+    legend_location: str = "upper right",
+    extra_legend_info: str = "",
 ) -> None:
     """Generates and plots the similarity relative to a reference position for multiple PE configurations.
 
@@ -106,6 +111,11 @@ def plot_similarity_from_position(  # noqa: C901
         metric (MetricStr): Similarity metric ('cosine' or 'product'). Defaults to "cosine".
         use_config_key_for_label (bool): If True, uses the configuration key as the label for the plot.
             If False, generates a descriptive label based on the PE type and parameters.
+        legend (bool): Whether to display the legend on the plot. Defaults to True.
+        figsize (tuple): Figure size for the plot. Defaults to (19, 10).
+        vertical_line (bool): Whether to draw a horizontal line at y=0 for reference. Defaults to True.
+        legend_location (str): Location of the legend on the plot. Defaults to "upper right".
+        extra_legend_info (str): Additional information to append to the legend entries. Defaults to "".
     """
     # --- Set up the random seed for reproducibility ---
     torch.manual_seed(seed)
@@ -147,7 +157,7 @@ def plot_similarity_from_position(  # noqa: C901
             }
 
     print("\n--- Plotting Results ---")
-    pyplot.figure(figsize=(19, 10))
+    pyplot.figure(figsize=figsize)
 
     for config_key, result_data in similarity_results.items():
         relative_positions = result_data["positions"]
@@ -186,13 +196,27 @@ def plot_similarity_from_position(  # noqa: C901
     # )
     # plot_title = default_title if title is None else title
     # pyplot.title(plot_title)
-    if pos_ref > 0:
-        pyplot.axvline(0, color="red", linestyle=":", linewidth=1.5, label=f"Ref Pos {pos_ref}")
-    pyplot.legend(loc="upper right", fontsize="small")
-    pyplot.grid(True, linestyle="--", alpha=0.6)
-    pyplot.axhline(0, color="black", linewidth=0.5, linestyle="--")
+    if legend:
+        if extra_legend_info:
+            pyplot.plot([], [], " ", label=extra_legend_info)
+
+        pyplot.legend(loc=legend_location, fontsize="small")
+
+    if vertical_line:
+        pyplot.grid(True, linestyle="--", alpha=0.6)
+        pyplot.axhline(0, color="black", linewidth=0.5, linestyle="--")
+
+        if pos_ref > 0:
+            pyplot.axvline(0, color="red", linestyle=":", linewidth=1.5, label=f"Ref Pos {pos_ref}")
+
+    # Set y-axis limits for better visibility
+    pyplot.ylim(0, 1.05)
 
     pyplot.tight_layout()
+
+    # Make plot lines thicker for better visibility
+    for line in pyplot.gca().get_lines():
+        line.set_linewidth(2)
 
     if plot_path is not None:
         plot_path = pathlib.Path(plot_path)  # Ensure it's a Path object
@@ -210,7 +234,7 @@ if __name__ == "__main__":
     num_positions_for_sim = 251
     d_model = 128
     seed = 42
-    metric_to_use: MetricStr = "cosine"
+    cosine_metric: MetricStr = "cosine"
     output_directory = Config.plot_dir / "positional_encodings" / "similarity"
     output_directory.mkdir(parents=True, exist_ok=True)
 
@@ -230,9 +254,9 @@ if __name__ == "__main__":
         num_positions=num_positions_for_sim,
         d_model=d_model,
         seed=seed,
-        plot_path=output_directory / f"similarity_types_d{d_model}_n{num_positions_for_sim}_{metric_to_use}.png",
+        plot_path=output_directory / f"similarity_types_d{d_model}_n{num_positions_for_sim}_{cosine_metric}.png",
         plot=True,
-        metric=metric_to_use,
+        metric=cosine_metric,
     )
 
     # Example 2: FPE with different parameters
@@ -252,10 +276,10 @@ if __name__ == "__main__":
         d_model=d_model,
         seed=seed,
         plot_path=output_directory
-        / f"similarity_fracpower_params_d{d_model}_n{num_positions_for_sim}_{metric_to_use}.png",
+        / f"similarity_fracpower_params_d{d_model}_n{num_positions_for_sim}_{cosine_metric}.png",
         plot=True,
-        metric=metric_to_use,
-        title=f"Fractional Power Similarity ({metric_to_use.capitalize()}) vs Parameters",
+        metric=cosine_metric,
+        title=f"Fractional Power Similarity ({cosine_metric.capitalize()}) vs Parameters",
     )
 
     # Example 3: different reference positions
@@ -280,9 +304,9 @@ if __name__ == "__main__":
             d_model=d_model,
             seed=seed,
             plot_path=output_directory
-            / f"similarity_posref{pos_ref_test}_d{d_model}_n{num_positions_for_sim}_{metric_to_use}.png",
+            / f"similarity_posref{pos_ref_test}_d{d_model}_n{num_positions_for_sim}_{cosine_metric}.png",
             plot=True,
-            metric=metric_to_use,
+            metric=cosine_metric,
             use_config_key_for_label=True,
         )
 
@@ -296,4 +320,58 @@ if __name__ == "__main__":
         plot_path=output_directory / f"similarity_dot_product_d{d_model}_n{num_positions_for_sim}.png",
         plot=True,
         metric="product",
+    )
+
+    # Example 5: Sinusoidal Cosine Similarity
+    print("\n=== Plotting Absolute Sinusoidal Cosine Similarity ===")
+
+    plot_similarity_from_position(
+        plot_configurations={"Sinusoidal": "sinusoidal"},
+        num_positions=num_positions_for_sim,
+        pos_ref=num_positions_for_sim // 2,
+        d_model=d_model,
+        seed=seed,
+        plot_path=output_directory / f"sinusoidal_{cosine_metric}_d{d_model}_n{num_positions_for_sim}.png",
+        plot=True,
+        metric=cosine_metric,
+        use_config_key_for_label=True,
+        legend=False,
+        figsize=(14, 10),
+        vertical_line=False,
+    )
+
+    # Example 6: Presentation Plot
+    print("\n=== Plotting ===")
+    plot_similarity_from_position(
+        plot_configurations={
+            "Sinusoidal": "sinusoidal",
+            "Fractional Power $(\\beta=0.8)$": {
+                "type": "fractional_power",
+                "beta": 0.8,
+                "kernel": "gaussian",
+            },
+            "Fractional Power $(\\beta=2)$": {
+                "type": "fractional_power",
+                "beta": 2,
+                "kernel": "sinc",
+            },
+            "Fractional Power $(\\beta=1)$": {
+                "type": "fractional_power",
+                "beta": 1,
+                "kernel": "sinc",
+            },
+        },
+        num_positions=num_positions_for_sim,
+        pos_ref=num_positions_for_sim // 2,
+        d_model=d_model,
+        seed=seed,
+        plot_path=output_directory / f"presentation_{cosine_metric}_d{d_model}_n{num_positions_for_sim}.png",
+        plot=True,
+        metric=cosine_metric,
+        use_config_key_for_label=True,
+        legend=True,
+        figsize=(14, 10),
+        vertical_line=False,
+        legend_location="lower right",
+        extra_legend_info="($\\beta$: decaying power)",
     )

@@ -14,7 +14,6 @@ from utils import Config
 from utils.plot import set_plot_style
 
 
-# TODO: unify with d_model visualization script
 def plot_metrics_by_binding(metrics: pandas.DataFrame, plot_path: pathlib.Path) -> None:
     """Plot metrics by binding operation.
 
@@ -30,11 +29,12 @@ def plot_metrics_by_binding(metrics: pandas.DataFrame, plot_path: pathlib.Path) 
     models = ["additive", "component_wise", "circular_conv"]
     n_ls = [1, 2, 4, 8]
     x_ticks = list(range(len(n_ls)))
-    lower_limit = 0.50
+    lower_limit = 50
 
     for model in models:
         # Original accuracy data
         acc = [metrics[metrics["model"] == f"linear_{model}_N_L_{n_l}"]["mean_acc"].values[0] for n_l in n_ls]
+        acc = [x.tolist() * 100 for x in acc]
 
         # Create a set of smooth x-coordinates for the spline
         x_smooth = numpy.linspace(min(x_ticks), max(x_ticks), 300)
@@ -54,14 +54,14 @@ def plot_metrics_by_binding(metrics: pandas.DataFrame, plot_path: pathlib.Path) 
 
         # Annotation loop remains the same, as it annotates the original points
         for i, v in enumerate(acc):
-            ax.annotate(f"{v * 100:.2f}", xy=(i, v), xytext=(-7, 7), textcoords="offset points")
+            ax.annotate(f"{v:.2f}", xy=(i, v), xytext=(-7, 7), textcoords="offset points")
 
     ax.set_xticks(x_ticks)
     ax.set_xticklabels(n_ls)
-    ax.set_ylim([lower_limit, 0.6525])
+    ax.set_ylim([lower_limit, 65.25])
     ax.set_xlabel("$N_L$ (Number of Layers)")
     ax.set_ylabel("Mean Accuracy (%)")
-    ax.set_title("Mean Accuracy by $N_L$ for Different Binding Operations")
+    # ax.set_title("Mean Accuracy by $N_L$ for Different Binding Operations")
 
     pyplot.tight_layout()
 
