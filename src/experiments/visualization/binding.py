@@ -322,7 +322,7 @@ def plot_1d_signal_with_binding(
     additive_1d = binded_result[:, dimension_to_plot].numpy()
 
     # --- Plot the 1D Signals ---
-    fig, (ax1, ax2) = pyplot.subplots(nrows=1, ncols=2, figsize=(14, 10), sharey=True)
+    _, (ax1, ax2) = pyplot.subplots(nrows=1, ncols=2, figsize=(14, 10), sharey=True)
 
     # Plot original signals (the "ingredients") with lighter, dashed styles
     ax1.plot(positions, input_signal_1d, label="Input Signal (Token)", linestyle="--", alpha=0.9)
