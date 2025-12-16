@@ -90,9 +90,9 @@ if __name__ == "__main__":
     }
 
     # Change this to select the desired experiment to process
-    choosen_experiment = 5
+    chosen_experiment = 5
 
-    if choosen_experiment == 1:
+    if chosen_experiment == 1:
         warnings.warn(
             "For the thesis, Split Sinusoidal results were removed from the ranking model metrics. For more details, "
             "see docs/experiment_results/1_binding_version_1/README.md."
@@ -100,7 +100,7 @@ if __name__ == "__main__":
         input("Press Enter to continue...")
 
     # Path to experiment's raw metrics CSV file
-    experiment_metrics_path = pathlib.Path(__file__).parents[2] / experiment_paths[choosen_experiment]
+    experiment_metrics_path = pathlib.Path(__file__).parents[2] / experiment_paths[chosen_experiment]
 
     # Validate paths
     if not experiment_metrics_path.exists():
