@@ -69,30 +69,24 @@ def plot_cd_diagram(metrics: pandas.DataFrame, output_path: pathlib.Path | None 
 
     # Save the plot to a file if output_path is provided
     if output_path is not None:
-        pyplot.savefig(plot_path, bbox_inches="tight")
+        pyplot.savefig(output_path, bbox_inches="tight")
 
     pyplot.show()
 
 
-if __name__ == "__main__":
-    # Set parameters for the plot
-    # relative_file_path = "1_binding_version_1/binding_v1_CD.png"
-    # experiment = "Experiment 1"
-    relative_file_path = "5_sota_version_1/sota_v1_CD.png"
-    experiment = "Experiment 5"
+def plot_cd_diagram_of_experiment(experiment_name: str, plot_name: str, experiment_metrics_path: pathlib.Path) -> None:
+    """Plot the CD diagram for a given experiment.
 
+    Args:
+        experiment_name (str): Name of the experiment.
+        plot_name (pathlib.Path): Relative path to save the CD diagram plot.
+        experiment_metrics_path (pathlib.Path): Path to the CSV file containing experiment metrics.
+    """
     # Set pandas options for better display of DataFrames
     pandas.set_option("display.max_columns", None)
 
     # Set pandas to not truncate DataFrame output
     pandas.set_option("display.width", 0)
-
-    # Path to experiment's raw metrics CSV file
-    experiment_metrics_path = (
-        pathlib.Path(__file__).parents[3]
-        # / "docs/experiment_results/1_binding_version_1/summary_dataset_results.csv"
-        / "docs/experiment_results/5_sota_version_1/summary_dataset_results.csv"
-    )
 
     # Define output directory
     output_dir = experiment_metrics_path.parent
@@ -106,7 +100,7 @@ if __name__ == "__main__":
     metrics = pandas.read_csv(experiment_metrics_path, header=0)
 
     # For Experiment 1, the `split_sinusoidal` variants are not included in the CD diagram, as explained in the README for experiment 1 results directory.
-    if "Experiment 1" in experiment:
+    if "Experiment 1" in experiment_name:
         # Remove the columns that contains 'split_sinusoidal' in their names.
         split_sin_columns = metrics.columns[metrics.columns.str.contains("split_sinusoidal")].tolist()
 
@@ -115,8 +109,35 @@ if __name__ == "__main__":
             metrics.drop(columns=split_sin_columns, inplace=True)
 
     # Define the output path for the CD diagram
-    plot_path = Config.plot_dir / "experiment" / relative_file_path
+    plot_path = Config.plot_dir / "experiment" / plot_name
     plot_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Plot the CD diagram
     plot_cd_diagram(metrics=metrics, output_path=plot_path)
+
+
+if __name__ == "__main__":
+
+    # Path to experiment's raw metrics CSV file
+    exp_results_dir = pathlib.Path(__file__).parents[3] / "docs" / "experiment_results"
+
+    # Set parameters for the plot
+    exp_to_plot: list[dict[str, str | pathlib.Path]] = [
+        {
+            "experiment_name": "Experiment 1",
+            "plot_path": "1_binding_version_1/binding_v1_CD.png",
+            "experiment_metrics_path": exp_results_dir / "1_binding_version_1/summary_dataset_results.csv",
+        },
+        {
+            "experiment_name": "Experiment 5",
+            "plot_path": "5_sota_version_1/sota_v1_CD.png",
+            "experiment_metrics_path": exp_results_dir / "5_sota_version_1/summary_dataset_results.csv",
+        },
+    ]
+
+    for exp in exp_to_plot:
+        plot_cd_diagram_of_experiment(
+            experiment_name=str(exp["experiment_name"]),
+            plot_name=str(exp["plot_path"]),
+            experiment_metrics_path=pathlib.Path(exp["experiment_metrics_path"]),
+        )
