@@ -10,6 +10,7 @@ from matplotlib import pyplot
 from scipy.interpolate import make_interp_spline
 
 # First party imports
+from experiments.visualization.metrics import get_metrics
 from utils import Config
 from utils.plot import set_plot_style
 
@@ -77,18 +78,12 @@ def plot_metrics_by_binding(metrics: pandas.DataFrame, plot_path: pathlib.Path) 
 
 
 if __name__ == "__main__":
-    # Set pandas options for better display of DataFrames
-    pandas.set_option("display.max_columns", None)
-
-    # Set pandas to not truncate DataFrame output
-    pandas.set_option("display.width", 0)
-
     # Path to experiment's raw metrics CSV file
     experiment_metrics_path = (
         pathlib.Path(__file__).parents[3]
         / "docs/experiment_results/2_N_L_version_1/summary_model_metrics_N_L_version_1.csv"
     )
-    metrics_by_model = pandas.read_csv(filepath_or_buffer=experiment_metrics_path, header=0)
+    metrics_by_model = get_metrics(metrics_path=experiment_metrics_path)
 
     # Plot path
     plot_path = Config.plot_dir / "experiment" / "2_N_L_version_1" / "n_l_v1_accuracy_plot.png"

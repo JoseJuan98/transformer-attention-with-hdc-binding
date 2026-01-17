@@ -10,6 +10,7 @@ import pandas
 from matplotlib import pyplot
 
 # First party imports
+from experiments.visualization.metrics import get_metrics
 from utils import Config
 from utils.plot import set_plot_style
 
@@ -82,22 +83,7 @@ def plot_cd_diagram_of_experiment(experiment_name: str, plot_name: str, experime
         plot_name (pathlib.Path): Relative path to save the CD diagram plot.
         experiment_metrics_path (pathlib.Path): Path to the CSV file containing experiment metrics.
     """
-    # Set pandas options for better display of DataFrames
-    pandas.set_option("display.max_columns", None)
-
-    # Set pandas to not truncate DataFrame output
-    pandas.set_option("display.width", 0)
-
-    # Define output directory
-    output_dir = experiment_metrics_path.parent
-    output_dir.mkdir(exist_ok=True)
-
-    # Validate paths
-    if not experiment_metrics_path.exists():
-        raise FileNotFoundError(f"Experiment metrics file not found at: {experiment_metrics_path}")
-
-    # Load the experiment metrics CSV file into a DataFrame
-    metrics = pandas.read_csv(experiment_metrics_path, header=0)
+    metrics = get_metrics(experiment_metrics_path)
 
     # For Experiment 1, the `split_sinusoidal` variants are not included in the CD diagram, as explained in the README for experiment 1 results directory.
     if "Experiment 1" in experiment_name:
