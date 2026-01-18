@@ -21,7 +21,7 @@ rc_config = {
     # Figure and axes settings
     # 'figure.figsize': (12, 6),  # Default figure size
     "figure.figsize": (19, 10),
-    'figure.dpi': 100,  # Resolution for modern clarity
+    'figure.dpi': 300,  # Resolution for modern clarity
     'figure.autolayout': True,  # Optimize figure for tight layout
     'axes.titlesize': 18,  # Title font size
     'axes.titleweight': 'bold',  # Bold title

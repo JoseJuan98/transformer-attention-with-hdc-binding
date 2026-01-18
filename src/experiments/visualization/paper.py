@@ -377,6 +377,9 @@ def plot_cd_diagram_of_experiment(experiment_name: str, plot_name: str, exp_data
     # Metrics by dataset
     metrics_by_dataset = get_metrics(exp_dataset_metrics)
 
+    # Metrics by model
+    metrics_by_model = get_metrics(exp_model_metrics)
+
     # For Experiment 1, the `split_sinusoidal` variants are not included in the CD diagram, as explained in the README for experiment 1 results directory.
     if "Experiment 1" in experiment_name:
         # Remove the columns that contains 'split_sinusoidal' in their names.
@@ -391,16 +394,13 @@ def plot_cd_diagram_of_experiment(experiment_name: str, plot_name: str, exp_data
     plot_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Plot the CD diagram
-    # plot_cd_diagram(metrics=metrics_by_dataset, output_path=plot_path)
-
-    # # Metrics by model
-    metrics_by_model = get_metrics(exp_model_metrics)
+    plot_cd_diagram(metrics=metrics_by_dataset, output_path=plot_path)
 
     # Create bar plot of mean accuracies
-    # plot_bar_mean_accuracies(metrics=metrics_by_model, output_path=plot_path.parent / "mean_accuracies.png")
-    #
-    # # Create bar plot of dataset accuracies
-    # plot_bar_dataset_acc(metrics=metrics_by_dataset, output_path=plot_path.parent / "dataset_accuracies.png")
+    plot_bar_mean_accuracies(metrics=metrics_by_model, output_path=plot_path.parent / "mean_accuracies.png")
+
+    # Create bar plot of dataset accuracies
+    plot_bar_dataset_acc(metrics=metrics_by_dataset, output_path=plot_path.parent / "dataset_accuracies.png")
 
     # Create scatter plot of relative accuracies
     plot_relative_accuracy_scatter(metrics=metrics_by_dataset, output_path=plot_path.parent / "relative_accuracies.png")
@@ -413,7 +413,8 @@ if __name__ == "__main__":
 
     # Set parameters for the plot
     exp1_dir_name = "1_binding_version_1"
-    # exp5_dir_name = "5_sota_version_1"
+    # exp4_comp_dir_name = "..."
+    # exp4_cconv_dir_name = "..."
     exp_to_plot: list[dict[str, str | pathlib.Path]] = [
         {
             "experiment_name": "Experiment 1",
@@ -422,10 +423,10 @@ if __name__ == "__main__":
             "exp_model_metrics": exp_results_dir / exp1_dir_name / "summary_model_metrics_binding_version_1.csv",
         },
         # {
-        #     "experiment_name": "Experiment 5",
-        #     "plot_path": f"{exp5_dir_name}/sota_v1_CD.png",
-        #     "exp_dataset_metrics": exp_results_dir / exp5_dir_name / "summary_dataset_results.csv",
-        #     "exp_model_metrics": exp_results_dir / exp5_dir_name / "",
+        #     "experiment_name": "Experiment 4 Component Wise",
+        #     "plot_path": f"{exp4_comp_dir_name}/component_wise_1_CD.png",
+        #     "exp_dataset_metrics": exp_results_dir / exp4_comp_dir_name / "summary_dataset_results.csv",
+        #     "exp_model_metrics": exp_results_dir / exp4_comp_dir_name / "",
         # },
     ]
 
