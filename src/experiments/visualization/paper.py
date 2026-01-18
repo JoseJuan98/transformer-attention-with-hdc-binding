@@ -15,6 +15,7 @@ from matplotlib import pyplot
 from experiments.visualization.metrics import get_metrics
 from utils import Config
 from utils.plot import set_plot_style
+from experiments.visualization.vis_config import rc_config, modern_palette
 
 
 def get_average_acc(value):
@@ -133,7 +134,6 @@ def plot_bar_dataset_acc(metrics: pandas.DataFrame, output_path: pathlib.Path) -
         metrics (pandas.DataFrame): DataFrame containing experiment metrics.
         output_path (pathlib.Path): Path to save the bar plot.
     """
-    from experiments.visualization.vis_config import rc_config, modern_palette
 
     # Apply style configuration
     matplotlib.rcParams.update(rc_config)
@@ -190,13 +190,30 @@ def plot_bar_dataset_acc(metrics: pandas.DataFrame, output_path: pathlib.Path) -
         # Cycle through palette if we have more models than colors
         color = modern_palette[i % len(modern_palette)]
 
-        ax.bar(
+        # Draw bars
+        rects = ax.bar(
             x + offset,
             metrics_[model_name],
             width=bar_width,
             label=model_name,
             color=color
         )
+
+        # # Annotate bars
+        # for rect in rects:
+        #     height = rect.get_height()
+        #     # Only annotate if height is visible
+        #     if height > 0:
+        #         ax.text(
+        #             rect.get_x() + rect.get_width() / 2,  # X: Center of bar
+        #             height + 1,  # Y: Just above bar
+        #             f'{height:.1f}',  # Text: 1 decimal place
+        #             ha='center',
+        #             va='bottom',
+        #             # rotation=90,  # Vertical rotation
+        #             fontsize=8,  # Smaller font
+        #             color='black'
+        #         )
 
     # Styling and Labels
     ax.set_ylabel("Accuracy (%)")
@@ -230,6 +247,121 @@ def plot_bar_dataset_acc(metrics: pandas.DataFrame, output_path: pathlib.Path) -
 
     pyplot.show()
 
+
+def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathlib.Path) -> None:
+    """Plot a scatter plot of accuracy relative to the dataset mean.
+
+    Each point represents a dataset. The Y-value is (Model Accuracy - Dataset Mean Accuracy).
+    Points are grouped by model on the X-axis.
+
+    Args:
+        metrics (pandas.DataFrame): DataFrame containing experiment metrics.
+        output_path (pathlib.Path): Path to save the plot.
+    """
+    # Apply style
+    matplotlib.rcParams.update(rc_config)
+
+    # Prepare Data
+    metrics_ = metrics.copy()
+
+    # Drop metadata
+    cols_to_drop = ["train_samples", "sequence_length", "num_classes"]
+    metrics_.drop(columns=[c for c in cols_to_drop if c in metrics_.columns], inplace=True)
+
+    if "dataset" in metrics_.columns:
+        metrics_.set_index("dataset", inplace=True)
+
+    # Convert strings to floats
+    metrics_ = metrics_.map(get_average_acc)
+
+    # Convert to percentage
+    metrics_ = metrics_ * 100
+
+    # Calculate Relative Accuracy
+    # Calculate the mean accuracy for each dataset (row-wise)
+    dataset_means = metrics_.mean(axis=1)
+
+    # Subtract the dataset mean from the model accuracy
+    # Positive value = Model performed better than average on this dataset
+    # Negative value = Model performed worse than average
+    relative_acc = metrics_.sub(dataset_means, axis=0)
+
+    # Format Model Names
+    relative_acc.columns = (
+        relative_acc.columns
+        .str.replace("_", " ")
+        .str.title()
+        .str.replace("Sinusoidal", "")
+        .str.replace("Component", "Comp.")
+        .str.strip()
+    )
+
+    # Plotting
+    num_models = len(relative_acc.columns)
+    fig, ax = pyplot.subplots(figsize=(max(10, num_models), 10))
+
+    # Create X coordinates
+    x_positions = numpy.arange(num_models)
+
+    # Plot each model's cloud
+    for i, model in enumerate(relative_acc.columns):
+        values = relative_acc[model].values
+
+        # Add "Jitter" to X to spread the points out horizontally
+        # np.random.normal creates a distribution around the center 'i'
+        jitter = numpy.random.normal(0, 0.08, size=len(values))
+
+        color = modern_palette[i % len(modern_palette)]
+
+        # Plot the scatter points (The Cloud)
+        ax.scatter(
+            x_positions[i] + jitter,
+            values,
+            alpha=0.6,
+            s=40,
+            color=color,
+            edgecolor='white',
+            linewidth=0.5,
+            label=model if i == -1 else ""  # Don't add to legend, labels are on X-axis
+        )
+
+        # Optional: Add a marker for the Mean of the model's relative performance
+        mean_val = values.mean()
+        ax.scatter(
+            x_positions[i],
+            mean_val,
+            s=200,
+            marker='_',
+            color='black',
+            linewidth=3,
+            zorder=10
+        )
+
+    # Styling
+    # Add a reference line at 0 (The Dataset Average)
+    ax.axhline(0, color='gray', linestyle='--', linewidth=1, alpha=0.7, label='Accuracy Average')
+
+    ax.set_ylabel("Accuracy Difference from Mean (%)")
+    # ax.set_title("Relative Performance of Models across Datasets")
+
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels(relative_acc.columns, rotation=45, ha="right")
+
+    # Add a small legend just for the reference line
+    ax.legend(loc='upper right', frameon=True)
+
+    # Adjust Y limits to make sure clouds aren't cut off
+    y_max = relative_acc.max().max()
+    y_min = relative_acc.min().min()
+    padding = (y_max - y_min) * 0.1
+    ax.set_ylim(y_min - padding, y_max + padding)
+
+    pyplot.tight_layout()
+
+    if output_path is not None:
+        pyplot.savefig(output_path, bbox_inches="tight")
+
+    pyplot.show()
 
 
 
@@ -265,10 +397,13 @@ def plot_cd_diagram_of_experiment(experiment_name: str, plot_name: str, exp_data
     metrics_by_model = get_metrics(exp_model_metrics)
 
     # Create bar plot of mean accuracies
-    plot_bar_mean_accuracies(metrics=metrics_by_model, output_path=plot_path.parent / "mean_accuracies.png")
+    # plot_bar_mean_accuracies(metrics=metrics_by_model, output_path=plot_path.parent / "mean_accuracies.png")
+    #
+    # # Create bar plot of dataset accuracies
+    # plot_bar_dataset_acc(metrics=metrics_by_dataset, output_path=plot_path.parent / "dataset_accuracies.png")
 
-    # Create bar plot of dataset accuracies
-    plot_bar_dataset_acc(metrics=metrics_by_dataset, output_path=plot_path.parent / "dataset_accuracies.png")
+    # Create scatter plot of relative accuracies
+    plot_relative_accuracy_scatter(metrics=metrics_by_dataset, output_path=plot_path.parent / "relative_accuracies.png")
 
 
 if __name__ == "__main__":
