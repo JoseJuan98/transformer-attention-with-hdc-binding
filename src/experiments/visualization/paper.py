@@ -44,11 +44,6 @@ def plot_cd_diagram(metrics: pandas.DataFrame, output_path: pathlib.Path | None 
         metrics (pandas.DataFrame): DataFrame containing experiment metrics.
         output_path (pathlib.Path): Path to save the CD diagram.
     """
-    # Format the metrics DataFrame
-    metrics.drop(columns=["train_samples", "sequence_length", "num_classes"], inplace=True)
-    metrics.set_index("dataset", inplace=True)
-    metrics.columns = metrics.columns.str.replace("_", " ").str.title()
-
     # Get only the accuracy values
     metrics = metrics.map(get_average_acc)
 
@@ -93,15 +88,6 @@ def plot_bar_mean_accuracies(metrics: pandas.DataFrame, output_path: pathlib.Pat
     # Convert to percentage
     mean_accuracies["mean_acc"] = mean_accuracies["mean_acc"] * 100
 
-    # Adjust name of model for better display
-    mean_accuracies["model"] = (
-        mean_accuracies["model"]
-        .str.replace("_", " ")
-        .str.title()
-        .str.replace("Sinusoidal", "")
-        .str.replace("Component", "Comp.")
-    )
-
     # Create bar plot
     fig, ax = pyplot.subplots(nrows=1, ncols=1)
     ax.bar(mean_accuracies["model"], mean_accuracies["mean_acc"], label=mean_accuracies["model"], color=modern_palette)
@@ -138,31 +124,11 @@ def plot_bar_dataset_acc(metrics: pandas.DataFrame, output_path: pathlib.Path) -
     # Apply style configuration
     matplotlib.rcParams.update(rc_config)
 
-    # Prepare Data
     # Create a copy to avoid modifying the original dataframe outside this function
     metrics_ = metrics.copy()
 
-    # Drop metadata columns if they exist
-    cols_to_drop = ["train_samples", "sequence_length", "num_classes"]
-    metrics_.drop(columns=[c for c in cols_to_drop if c in metrics_.columns], inplace=True)
-
-    # Set dataset as index
-    if "dataset" in metrics_.columns:
-        metrics_.set_index("dataset", inplace=True)
-
     # Convert "mean ± std" strings to float values and to percentage
     metrics_ = metrics_.map(get_average_acc) * 100
-
-    # Format Model Names (Columns)
-    # Apply the same string formatting as in plot_bar_mean_accuracies
-    metrics_.columns = (
-        metrics_.columns
-        .str.replace("_", " ")
-        .str.title()
-        .str.replace("Sinusoidal", "")
-        .str.replace("Component", "Comp.")
-        .str.strip()
-    )
 
     # Setup Plot Dimensions
     num_datasets = len(metrics_)
@@ -261,15 +227,8 @@ def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathl
     # Apply style
     matplotlib.rcParams.update(rc_config)
 
-    # Prepare Data
+    # Create a copy to avoid modifying the original dataframe outside this function
     metrics_ = metrics.copy()
-
-    # Drop metadata
-    cols_to_drop = ["train_samples", "sequence_length", "num_classes"]
-    metrics_.drop(columns=[c for c in cols_to_drop if c in metrics_.columns], inplace=True)
-
-    if "dataset" in metrics_.columns:
-        metrics_.set_index("dataset", inplace=True)
 
     # Convert strings to floats
     metrics_ = metrics_.map(get_average_acc)
@@ -285,16 +244,6 @@ def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathl
     # Positive value = Model performed better than average on this dataset
     # Negative value = Model performed worse than average
     relative_acc = metrics_.sub(dataset_means, axis=0)
-
-    # Format Model Names
-    relative_acc.columns = (
-        relative_acc.columns
-        .str.replace("_", " ")
-        .str.title()
-        .str.replace("Sinusoidal", "")
-        .str.replace("Component", "Comp.")
-        .str.strip()
-    )
 
     # Plotting
     num_models = len(relative_acc.columns)
@@ -380,10 +329,36 @@ def plot_cd_diagram_of_experiment(experiment_name: str, plot_name: str, exp_data
     # Metrics by model
     metrics_by_model = get_metrics(exp_model_metrics)
 
+    # Data Preparation
+    # Drop metadata columns if they exist
+    cols_to_drop = ["train_samples", "sequence_length", "num_classes"]
+    metrics_by_dataset.drop(columns=cols_to_drop, inplace=True, errors="ignore")
+
+    # Set index for dataset metrics
+    metrics_by_dataset.set_index("dataset", inplace=True)
+
+    metrics_by_model["model"] = (
+        metrics_by_model["model"]
+        .str.replace("_", " ")
+        .str.title()
+        .str.replace("Sinusoidal", "")
+        .str.replace("Component", "Comp.")
+    )
+
+    # Format Model Names
+    metrics_by_dataset.columns = (
+        metrics_by_dataset.columns
+        .str.replace("_", " ")
+        .str.title()
+        .str.replace("Sinusoidal", "")
+        .str.replace("Component", "Comp.")
+        .str.strip()
+    )
+
     # For Experiment 1, the `split_sinusoidal` variants are not included in the CD diagram, as explained in the README for experiment 1 results directory.
     if "Experiment 1" in experiment_name:
         # Remove the columns that contains 'split_sinusoidal' in their names.
-        split_sin_columns = metrics_by_dataset.columns[metrics_by_dataset.columns.str.contains("split_sinusoidal")].tolist()
+        split_sin_columns = metrics_by_dataset.columns[metrics_by_dataset.columns.str.contains("Split")].tolist()
 
         if split_sin_columns:
             print(f"Removing columns: {split_sin_columns} from the metrics DataFrame.")
@@ -392,18 +367,19 @@ def plot_cd_diagram_of_experiment(experiment_name: str, plot_name: str, exp_data
     # Define the output path for the CD diagram
     plot_path = Config.plot_dir / "experiment" / plot_name
     plot_path.parent.mkdir(parents=True, exist_ok=True)
+    plot_suffix = plot_name.split("/")[-1].replace("_CD.png", "")
 
     # Plot the CD diagram
     plot_cd_diagram(metrics=metrics_by_dataset, output_path=plot_path)
 
     # Create bar plot of mean accuracies
-    plot_bar_mean_accuracies(metrics=metrics_by_model, output_path=plot_path.parent / "mean_accuracies.png")
+    plot_bar_mean_accuracies(metrics=metrics_by_model, output_path=plot_path.parent / f"{plot_suffix}_mean_accuracies.png")
 
     # Create bar plot of dataset accuracies
-    plot_bar_dataset_acc(metrics=metrics_by_dataset, output_path=plot_path.parent / "dataset_accuracies.png")
+    plot_bar_dataset_acc(metrics=metrics_by_dataset, output_path=plot_path.parent / f"{plot_suffix}_dataset_accuracies.png")
 
     # Create scatter plot of relative accuracies
-    plot_relative_accuracy_scatter(metrics=metrics_by_dataset, output_path=plot_path.parent / "relative_accuracies.png")
+    plot_relative_accuracy_scatter(metrics=metrics_by_dataset, output_path=plot_path.parent / f"{plot_suffix}_relative_accuracies.png")
 
 
 if __name__ == "__main__":
@@ -418,22 +394,29 @@ if __name__ == "__main__":
     exp_to_plot: list[dict[str, str | pathlib.Path]] = [
         {
             "experiment_name": "Experiment 1",
-            "plot_path": f"{exp1_dir_name}/binding_v1_CD.png",
+            "plot_name": f"{exp1_dir_name}/binding_v1_CD.png",
             "exp_dataset_metrics": exp_results_dir / exp1_dir_name / "summary_dataset_results.csv",
             "exp_model_metrics": exp_results_dir / exp1_dir_name / "summary_model_metrics_binding_version_1.csv",
         },
         # {
         #     "experiment_name": "Experiment 4 Component Wise",
-        #     "plot_path": f"{exp4_comp_dir_name}/component_wise_1_CD.png",
+        #     "plot_name": f"{exp4_comp_dir_name}/component_wise_1_CD.png",
         #     "exp_dataset_metrics": exp_results_dir / exp4_comp_dir_name / "summary_dataset_results.csv",
         #     "exp_model_metrics": exp_results_dir / exp4_comp_dir_name / "",
+        # },
+        # {
+        #     "experiment_name": "Experiment 4 CConv",
+        #     "plot_name": f"{exp4_cconv_dir_name}/cconv_1_CD.png",
+        #     "exp_dataset_metrics": exp_results_dir / exp4_cconv_dir_name / "summary_dataset_results.csv",
+        #     "exp_model_metrics": exp_results_dir / exp4_cconv_dir_name / "",
         # },
     ]
 
     for exp in exp_to_plot:
         plot_cd_diagram_of_experiment(
-            experiment_name=str(exp["experiment_name"]),
-            plot_name=str(exp["plot_path"]),
-            exp_dataset_metrics=pathlib.Path(exp["exp_dataset_metrics"]),
-            exp_model_metrics=pathlib.Path(exp["exp_model_metrics"]),
+            # experiment_name=str(exp["experiment_name"]),
+            # plot_name=str(exp["plot_path"]),
+            # exp_dataset_metrics=pathlib.Path(exp["exp_dataset_metrics"]),
+            # exp_model_metrics=pathlib.Path(exp["exp_model_metrics"]),
+            **exp
         )
