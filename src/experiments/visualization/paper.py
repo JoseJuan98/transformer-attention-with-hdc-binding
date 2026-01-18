@@ -209,7 +209,7 @@ def plot_bar_dataset_acc(metrics: pandas.DataFrame, output_path: pathlib.Path) -
     pyplot.tight_layout()
 
     if output_path is not None:
-        pyplot.savefig(output_path)
+        pyplot.savefig(output_path, bbox_inches="tight")
 
     pyplot.show()
 
