@@ -1,0 +1,303 @@
+# -*- coding: utf-8 -*-
+"""Critical Difference (CD) Diagram Visualization Module."""
+
+# Standard imports
+import pathlib
+
+# Third party imports
+import autorank
+import matplotlib
+import pandas
+import numpy
+from matplotlib import pyplot
+
+# First party imports
+from experiments.visualization.metrics import get_metrics
+from utils import Config
+from utils.plot import set_plot_style
+
+
+def get_average_acc(value):
+    """Convert a string representing accuracy (with or without confidence interval) to a float."""
+    # Ensure the value is a string before trying to split it
+    if not isinstance(value, str):
+        return value
+
+    try:
+        if " ± " in value:
+            # Handle 'accuracy ± confidence' format
+            parts = value.split(" ± ")
+            return float(parts[0])
+        else:
+            # Handle single number format (like in the last row)
+            return float(value)
+    except (ValueError, IndexError):
+        # If conversion to float fails or split doesn't work, return original
+        return value
+
+
+def plot_cd_diagram(metrics: pandas.DataFrame, output_path: pathlib.Path | None = None) -> None:
+    """Plot a Critical Difference (CD) diagram from the given metrics DataFrame.
+
+    Args:
+        metrics (pandas.DataFrame): DataFrame containing experiment metrics.
+        output_path (pathlib.Path): Path to save the CD diagram.
+    """
+    # Format the metrics DataFrame
+    metrics.drop(columns=["train_samples", "sequence_length", "num_classes"], inplace=True)
+    metrics.set_index("dataset", inplace=True)
+    metrics.columns = metrics.columns.str.replace("_", " ").str.title()
+
+    # Get only the accuracy values
+    metrics = metrics.map(get_average_acc)
+
+    # Autorank is used to run the Friedman test and the Nemenyi post-hoc test.
+    # 'alpha=0.05' is the standard significance level.
+    # 'order="descending"' because higher accuracy is better.
+    result = autorank.autorank(
+        data=metrics, alpha=0.05, verbose=True, order="descending", force_mode="nonparametric", approach="frequentist"
+    )
+
+    print("Statistical Analysis Report:")
+    print(result)
+    print("-" * 30)
+
+    # Create and Save the CD Diagram
+    set_plot_style()
+    pyplot.rcParams["grid.linewidth"] = 3
+    fig, ax = pyplot.subplots(nrows=1, ncols=1)
+
+    # The plot_stats function generates the CD diagram.
+    autorank.plot_stats(result, ax=ax)
+
+    # Save the plot to a file if output_path is provided
+    if output_path is not None:
+        pyplot.savefig(output_path, bbox_inches="tight")
+
+    pyplot.show()
+
+def plot_bar_mean_accuracies(metrics: pandas.DataFrame, output_path: pathlib.Path) -> None:
+    """Plot a bar chart of mean accuracies for different models.
+
+    Args:
+        metrics (pandas.DataFrame): DataFrame containing experiment metrics.
+        output_path (pathlib.Path): Path to save the bar plot.
+    """
+    from experiments.visualization.vis_config import rc_config, modern_palette
+    matplotlib.rcParams.update(rc_config)
+
+    # Get accuracy columns
+    mean_accuracies = metrics[["model", "mean_acc"]].copy().sort_values(by="mean_acc", ascending=False)
+
+    # Convert to percentage
+    mean_accuracies["mean_acc"] = mean_accuracies["mean_acc"] * 100
+
+    # Adjust name of model for better display
+    mean_accuracies["model"] = (
+        mean_accuracies["model"]
+        .str.replace("_", " ")
+        .str.title()
+        .str.replace("Sinusoidal", "")
+        .str.replace("Component", "Comp.")
+    )
+
+    # Create bar plot
+    fig, ax = pyplot.subplots(nrows=1, ncols=1)
+    ax.bar(mean_accuracies["model"], mean_accuracies["mean_acc"], label=mean_accuracies["model"], color=modern_palette)
+
+    # Set labels and title
+    ax.set_ylabel("Mean Accuracy (%)")
+    ax.set_title("Mean Accuracies of Different Models")
+    ax.set_xticks(range(len(mean_accuracies["model"])))
+    ax.set_xticklabels(mean_accuracies["model"].tolist())#, rotation=45, ha="right")
+
+    # Annotate bars with accuracy values
+    for i, v in enumerate(mean_accuracies["mean_acc"]):
+        ax.text(i, v + 0.5, f"{v:.2f}%", ha="center")
+
+    # Adjust ylimit
+    ax.set_ylim(mean_accuracies["mean_acc"].min() - 4.37, mean_accuracies["mean_acc"].max() + 2)
+
+    pyplot.tight_layout()
+
+    if output_path is not None:
+        pyplot.savefig(output_path)
+
+    pyplot.show()
+
+
+def plot_bar_dataset_acc(metrics: pandas.DataFrame, output_path: pathlib.Path) -> None:
+    """Plot a grouped bar chart of accuracies for different datasets and models.
+
+    Args:
+        metrics (pandas.DataFrame): DataFrame containing experiment metrics.
+        output_path (pathlib.Path): Path to save the bar plot.
+    """
+    from experiments.visualization.vis_config import rc_config, modern_palette
+
+    # Apply style configuration
+    matplotlib.rcParams.update(rc_config)
+
+    # Prepare Data
+    # Create a copy to avoid modifying the original dataframe outside this function
+    metrics_ = metrics.copy()
+
+    # Drop metadata columns if they exist
+    cols_to_drop = ["train_samples", "sequence_length", "num_classes"]
+    metrics_.drop(columns=[c for c in cols_to_drop if c in metrics_.columns], inplace=True)
+
+    # Set dataset as index
+    if "dataset" in metrics_.columns:
+        metrics_.set_index("dataset", inplace=True)
+
+    # Convert "mean ± std" strings to float values and to percentage
+    metrics_ = metrics_.map(get_average_acc) * 100
+
+    # Format Model Names (Columns)
+    # Apply the same string formatting as in plot_bar_mean_accuracies
+    metrics_.columns = (
+        metrics_.columns
+        .str.replace("_", " ")
+        .str.title()
+        .str.replace("Sinusoidal", "")
+        .str.replace("Component", "Comp.")
+        .str.strip()
+    )
+
+    # Setup Plot Dimensions
+    num_datasets = len(metrics_)
+    num_models = len(metrics_.columns)
+
+    # Calculate figure size: ensure it's wide enough if there are many datasets
+    fig_width = max(10, num_datasets)
+    fig, ax = pyplot.subplots(figsize=(fig_width, 14))
+
+    # Calculate Bar Positions
+    # X locations for the groups
+    x = numpy.arange(0, num_datasets)
+    # Total width allocated for one group (dataset)
+    total_width = 0.8
+    # Width of an individual bar
+    bar_width = total_width / num_models
+
+    # Plot Bars
+    for i, model_name in enumerate(metrics_.columns):
+        # Calculate offset to center the group of bars on the tick
+        # (i - num_models/2) centers the group around 0
+        # + 0.5 shifts it to center (if even number of bars)
+        offset = (i - num_models / 2) * bar_width + (bar_width / 2)
+
+        # Cycle through palette if we have more models than colors
+        color = modern_palette[i % len(modern_palette)]
+
+        ax.bar(
+            x + offset,
+            metrics_[model_name],
+            width=bar_width,
+            label=model_name,
+            color=color
+        )
+
+    # Styling and Labels
+    ax.set_ylabel("Accuracy (%)")
+
+    # Set X-ticks
+    ax.set_xticks(x)
+    ax.set_xticklabels(metrics_.index, rotation=45, ha="right")
+
+    # Add Legend (placed outside top or bottom usually better for many models)
+    # Here we place it above the plot
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width, box.height * 0.95])
+
+    ax.legend(
+        loc="lower center",
+        bbox_to_anchor=(0.5, -1),
+        ncol=min(num_models, 3),
+        frameon=False
+    )
+
+    # Set Y-axis limits (0 to 100 with some headroom)
+    # ax.set_ylim(0, 105)
+
+    # Add grid for readability
+    ax.grid(axis='y', linestyle='--', alpha=0.5)
+
+    pyplot.tight_layout()
+
+    if output_path is not None:
+        pyplot.savefig(output_path)
+
+    pyplot.show()
+
+
+
+
+def plot_cd_diagram_of_experiment(experiment_name: str, plot_name: str, exp_dataset_metrics: pathlib.Path, exp_model_metrics: pathlib.Path) -> None:
+    """Plot the CD diagram for a given experiment.
+
+    Args:
+        experiment_name (str): Name of the experiment.
+        plot_name (pathlib.Path): Relative path to save the CD diagram plot.
+        exp_dataset_metrics (pathlib.Path): Path to the CSV file containing experiment metrics.
+        exp_model_metrics (pathlib.Path): Path to the CSV file containing model metrics.
+    """
+    # Metrics by dataset
+    metrics_by_dataset = get_metrics(exp_dataset_metrics)
+
+    # For Experiment 1, the `split_sinusoidal` variants are not included in the CD diagram, as explained in the README for experiment 1 results directory.
+    if "Experiment 1" in experiment_name:
+        # Remove the columns that contains 'split_sinusoidal' in their names.
+        split_sin_columns = metrics_by_dataset.columns[metrics_by_dataset.columns.str.contains("split_sinusoidal")].tolist()
+
+        if split_sin_columns:
+            print(f"Removing columns: {split_sin_columns} from the metrics DataFrame.")
+            metrics_by_dataset.drop(columns=split_sin_columns, inplace=True)
+
+    # Define the output path for the CD diagram
+    plot_path = Config.plot_dir / "experiment" / plot_name
+    plot_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Plot the CD diagram
+    # plot_cd_diagram(metrics=metrics_by_dataset, output_path=plot_path)
+
+    # # Metrics by model
+    metrics_by_model = get_metrics(exp_model_metrics)
+
+    # Create bar plot of mean accuracies
+    plot_bar_mean_accuracies(metrics=metrics_by_model, output_path=plot_path.parent / "mean_accuracies.png")
+
+    # Create bar plot of dataset accuracies
+    plot_bar_dataset_acc(metrics=metrics_by_dataset, output_path=plot_path.parent / "dataset_accuracies.png")
+
+
+if __name__ == "__main__":
+
+    # Path to experiment's raw metrics CSV file
+    exp_results_dir = pathlib.Path(__file__).parents[3] / "docs" / "experiment_results"
+
+    # Set parameters for the plot
+    exp1_dir_name = "1_binding_version_1"
+    # exp5_dir_name = "5_sota_version_1"
+    exp_to_plot: list[dict[str, str | pathlib.Path]] = [
+        {
+            "experiment_name": "Experiment 1",
+            "plot_path": f"{exp1_dir_name}/binding_v1_CD.png",
+            "exp_dataset_metrics": exp_results_dir / exp1_dir_name / "summary_dataset_results.csv",
+            "exp_model_metrics": exp_results_dir / exp1_dir_name / "summary_model_metrics_binding_version_1.csv",
+        },
+        # {
+        #     "experiment_name": "Experiment 5",
+        #     "plot_path": f"{exp5_dir_name}/sota_v1_CD.png",
+        #     "exp_dataset_metrics": exp_results_dir / exp5_dir_name / "summary_dataset_results.csv",
+        #     "exp_model_metrics": exp_results_dir / exp5_dir_name / "",
+        # },
+    ]
+
+    for exp in exp_to_plot:
+        plot_cd_diagram_of_experiment(
+            experiment_name=str(exp["experiment_name"]),
+            plot_name=str(exp["plot_path"]),
+            exp_dataset_metrics=pathlib.Path(exp["exp_dataset_metrics"]),
+            exp_model_metrics=pathlib.Path(exp["exp_model_metrics"]),
+        )
