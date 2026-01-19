@@ -340,6 +340,7 @@ def plot_paper_diagrams(
     exp_dataset_metrics: pathlib.Path,
     exp_model_metrics: pathlib.Path,
     baseline_conf: dict,
+    models: list | None = None,
     target_models: tuple = ("none", "none"),
     top_n: int = 10,
 ) -> None:
@@ -352,6 +353,8 @@ def plot_paper_diagrams(
         exp_model_metrics (pathlib.Path): Path to the CSV file containing model metrics.
         baseline_conf (dict): Configuration dict defining which models to use as baselines and their corresponding
             target models.
+        models (list | None): List of model names to include in the plots. If None, include all models. Defaults to
+            None.
         target_models (tuple): Tuple of two model names to calculate divergence for selecting top datasets. Defaults to
             ("none", "none"), which means no sorting by divergence.
         top_n (int): Number of top datasets to plot based on divergence between two target models. Defaults to 10.
@@ -374,14 +377,10 @@ def plot_paper_diagrams(
     metrics_by_model["model"] = format_model_names(metrics_by_model["model"])
     metrics_by_dataset.columns = format_model_names(metrics_by_dataset.columns)
 
-    # For Experiment 1, the `split_sinusoidal` variants are not included in the CD diagram, as explained in the README for experiment 1 results directory.
-    if "Experiment 1" in experiment_name:
-        # Remove the columns that contains 'split_sinusoidal' in their names.
-        split_sin_columns = metrics_by_dataset.columns[metrics_by_dataset.columns.str.contains("Split")].tolist()
-
-        if split_sin_columns:
-            print(f"Removing columns: {split_sin_columns} from the metrics DataFrame.")
-            metrics_by_dataset.drop(columns=split_sin_columns, inplace=True)
+    if models is not None:
+        # Filter to include only specified models
+        metrics_by_model = metrics_by_model[metrics_by_model["model"].isin(models)]
+        metrics_by_dataset = metrics_by_dataset[[col for col in metrics_by_dataset.columns if col in models]]
 
     # Define the output path for the CD diagram
     plot_path = Config.plot_dir / "experiment" / plot_name
@@ -425,8 +424,8 @@ if __name__ == "__main__":
 
     # Set parameters for the plot
     exp1_dir_name = "1_binding_version_1"
-    # exp4_comp_dir_name = "..."
-    # exp4_cconv_dir_name = "..."
+    exp4_comp_dir_name = "4_comp_wise_pe_version_1"
+    exp4_cconv_dir_name = "4_conv_pe_version_1"
     exp_to_plot: list[dict[str, str | pathlib.Path]] = [
         {
             "experiment_name": "Experiment 1",
@@ -434,18 +433,26 @@ if __name__ == "__main__":
             "exp_dataset_metrics": exp_results_dir / exp1_dir_name / "summary_dataset_results.csv",
             "exp_model_metrics": exp_results_dir / exp1_dir_name / "summary_model_metrics_binding_version_1.csv",
             "top_n": 10,
+            "models": [
+                "Linear Comp. Wise",
+                "Linear Circular Conv.",
+                "Linear Additive",
+                "1D Conv. Comp. Wise",
+                "1D Conv. Circular Conv.",
+                "1D Conv. Additive",
+            ],
             "target_models": ("1D Conv. Circular Conv.", "1D Conv. Additive"),
             "baseline_conf": {
                 "Linear Additive": ["Linear Comp. Wise", "Linear Circular Conv."],
                 "1D Conv. Additive": ["1D Conv. Comp. Wise", "1D Conv. Circular Conv."],
             },
         },
-        # {
-        #     "experiment_name": "Experiment 4 Component Wise",
-        #     "plot_name": f"{exp4_comp_dir_name}/component_wise_1_CD.png",
-        #     "exp_dataset_metrics": exp_results_dir / exp4_comp_dir_name / "summary_dataset_results.csv",
-        #     "exp_model_metrics": exp_results_dir / exp4_comp_dir_name / "",
-        # },
+        {
+            "experiment_name": "Experiment 4 Component Wise",
+            "plot_name": f"{exp4_comp_dir_name}/component_wise_1_CD.png",
+            "exp_dataset_metrics": exp_results_dir / exp4_comp_dir_name / "summary_dataset_results.csv",
+            "exp_model_metrics": exp_results_dir / exp4_comp_dir_name / "",
+        },
         # {
         #     "experiment_name": "Experiment 4 CConv",
         #     "plot_name": f"{exp4_cconv_dir_name}/cconv_1_CD.png",
