@@ -335,7 +335,13 @@ def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathl
 
 
 def plot_cd_diagram_of_experiment(
-    experiment_name: str, plot_name: str, exp_dataset_metrics: pathlib.Path, exp_model_metrics: pathlib.Path
+    experiment_name: str,
+    plot_name: str,
+    exp_dataset_metrics: pathlib.Path,
+    exp_model_metrics: pathlib.Path,
+    baseline_conf: dict,
+    target_models: tuple = ("none", "none"),
+    top_n: int = 10,
 ) -> None:
     """Plot the CD diagram for a given experiment.
 
@@ -395,18 +401,15 @@ def plot_cd_diagram_of_experiment(
     plot_bar_dataset_acc(
         metrics=metrics_by_dataset,
         output_path=plot_path.parent / f"{plot_suffix}_top10_dataset_accuracies.png",
-        top_n=10,
-        target_models=("1D Conv. Circular Conv.", "1D Conv. Additive"),
+        top_n=top_n,
+        target_models=target_models,
     )
 
     # Create scatter plot of relative accuracies
     plot_relative_accuracy_scatter(
         metrics=metrics_by_dataset,
         output_path=plot_path.parent / f"{plot_suffix}_relative_accuracies.png",
-        baseline_conf={
-            "Linear Additive": ["Linear Comp. Wise", "Linear Circular Conv."],
-            "1D Conv. Additive": ["1D Conv. Comp. Wise", "1D Conv. Circular Conv."],
-        },
+        baseline_conf=baseline_conf,
     )
 
 
@@ -425,6 +428,12 @@ if __name__ == "__main__":
             "plot_name": f"{exp1_dir_name}/binding_v1_CD.png",
             "exp_dataset_metrics": exp_results_dir / exp1_dir_name / "summary_dataset_results.csv",
             "exp_model_metrics": exp_results_dir / exp1_dir_name / "summary_model_metrics_binding_version_1.csv",
+            "top_n": 10,
+            "target_models": ("1D Conv. Circular Conv.", "1D Conv. Additive"),
+            "baseline_conf": {
+                "Linear Additive": ["Linear Comp. Wise", "Linear Circular Conv."],
+                "1D Conv. Additive": ["1D Conv. Comp. Wise", "1D Conv. Circular Conv."],
+            },
         },
         # {
         #     "experiment_name": "Experiment 4 Component Wise",
