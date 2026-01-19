@@ -22,13 +22,15 @@ def save_plot(filename: str) -> None:
 
 def set_plot_style() -> None:
     """Set the plot style for matplotlib."""
-    pyplot.rcParams.update({
-        # Set the default figure size
-        "figure.figsize": (19, 10),
-        # Increase text size
-        "font.size": 22,
-        # Set the legend font size
-        "legend.fontsize": 22,
-        # Set the axes label size
-        "axes.labelsize": 24
-    })
+    pyplot.rcParams.update(
+        {
+            # Set the default figure size
+            "figure.figsize": (19, 10),
+            # Increase text size
+            "font.size": 22,
+            # Set the legend font size
+            "legend.fontsize": 22,
+            # Set the axes label size
+            "axes.labelsize": 24,
+        }
+    )
