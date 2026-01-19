@@ -139,14 +139,9 @@ def plot_bar_dataset_acc(
     # Convert "mean ± std" strings to float values and to percentage
     metrics_ = metrics_.map(get_average_acc) * 100
 
-    # Setup Plot Dimensions
-    num_datasets = len(metrics_)
-    num_models = len(metrics_.columns)
-
     # Select Top N Datasets with Highest Divergence between the Two Target Models
-    top_n = top_n if top_n > 0 else num_datasets
-    target_model_1 = target_models[0]  # "1d_conv_circular_conv_sinusoidal"
-    target_model_2 = target_models[1]  # "1d_conv_additive_sinusoidal"
+    top_n = top_n if top_n > 0 else len(metrics_)
+    target_model_1, target_model_2 = target_models
 
     # Check if these columns exist to avoid errors
     if target_model_1 in metrics_.columns and target_model_2 in metrics_.columns:
@@ -166,9 +161,13 @@ def plot_bar_dataset_acc(
         print(f"Warning: Target models for sorting not found. Plotting first {top_n} datasets.")
         metrics_ = metrics_.head(top_n)
 
+    # Setup Plot Dimensions
+    num_datasets = len(metrics_)
+    num_models = len(metrics_.columns)
+
     # Calculate figure size: ensure it's wide enough if there are many datasets
-    # fig_width = max(10, num_datasets)
-    fig, ax = pyplot.subplots(figsize=(27, 14))
+    fig_width = max(top_n, num_datasets)
+    fig, ax = pyplot.subplots(figsize=(fig_width, 14))
 
     # Calculate Bar Positions
     # X locations for the groups
@@ -380,8 +379,12 @@ def plot_cd_diagram_of_experiment(
     # Create bar plot of dataset accuracies
     plot_bar_dataset_acc(
         metrics=metrics_by_dataset, output_path=plot_path.parent / f"{plot_suffix}_dataset_accuracies.png",
-        # TODO:
-        # target_models=("1d conv circular conv", "1d conv additive "), top_n=10
+    )
+
+    # top10 bar plot of dataset
+    plot_bar_dataset_acc(
+        metrics=metrics_by_dataset, output_path=plot_path.parent / f"{plot_suffix}_top10_dataset_accuracies.png",
+        top_n=10, target_models=("1D Conv. Circular Conv.", "1D Conv. Additive")
     )
 
     # Create scatter plot of relative accuracies
