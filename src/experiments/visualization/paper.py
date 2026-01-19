@@ -235,10 +235,14 @@ def plot_bar_dataset_acc(
 
 
 def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathlib.Path) -> None:
-    """Plot a scatter plot of accuracy relative to the dataset mean.
+    """Plot a scatter plot of accuracy relative to specific Additive Baselines.
 
-    Each point represents a dataset. The Y-value is (Model Accuracy - Dataset Mean Accuracy).
-    Points are grouped by model on the X-axis.
+    Each point represents a dataset.
+    The Y-value is (Model Accuracy - Baseline Accuracy).
+
+    Baselines:
+    - Linear Additive for [Linear Comp. Wise, Linear Circular Conv.]
+    - 1D Conv. Additive for [1D Conv. Comp. Wise, 1D Conv. Circular Conv.]
 
     Args:
         metrics (pandas.DataFrame): DataFrame containing experiment metrics.
@@ -247,7 +251,7 @@ def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathl
     # Apply style
     matplotlib.rcParams.update(rc_config)
 
-    # Create a copy to avoid modifying the original dataframe outside this function
+    # Create a copy to avoid modifying the original dataframe
     metrics_ = metrics.copy()
 
     # Convert strings to floats
@@ -256,18 +260,51 @@ def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathl
     # Convert to percentage
     metrics_ = metrics_ * 100
 
-    # Calculate Relative Accuracy
-    # Calculate the mean accuracy for each dataset (row-wise)
-    dataset_means = metrics_.mean(axis=1)
+    # TODO: improve hardcoding of model names
+    # Initialize a dataframe for relative accuracies
+    relative_acc = pandas.DataFrame(index=metrics_.index)
 
-    # Subtract the dataset mean from the model accuracy
-    # Positive value = Model performed better than average on this dataset
-    # Negative value = Model performed worse than average
-    relative_acc = metrics_.sub(dataset_means, axis=0)
+    # Linear Group Calculation
+    # Baseline: Linear Additive
+    if "Linear Additive" in metrics_.columns:
+        baseline = metrics_["Linear Additive"]
+
+        # Calculate diffs (Target - Baseline)
+        # We include the baseline itself (result will be 0) to show it as the reference point on the plot
+        cols_linear = ["Linear Additive", "Linear Comp. Wise", "Linear Circular Conv."]
+        for col in cols_linear:
+            if col in metrics_.columns:
+                relative_acc[col] = metrics_[col] - baseline
+
+        relative_acc.drop(columns=["Linear Additive"], inplace=True)
+
+    # 1D Conv Group Calculation
+    # Baseline: 1D Conv. Additive
+    if "1D Conv. Additive" in metrics_.columns:
+        baseline = metrics_["1D Conv. Additive"]
+
+        cols_conv = ["1D Conv. Additive", "1D Conv. Comp. Wise", "1D Conv. Circular Conv."]
+        for col in cols_conv:
+            if col in metrics_.columns:
+                relative_acc[col] = metrics_[col] - baseline
+
+        relative_acc.drop(columns=["1D Conv. Additive"], inplace=True)
+
+    # Reorder columns for better visualization
+    # This groups the Linear models together and Conv models together on the X-axis
+    desired_order = [
+        # "Linear Additive",
+        "Linear Comp. Wise", "Linear Circular Conv.",
+        # "1D Conv. Additive",
+        "1D Conv. Comp. Wise", "1D Conv. Circular Conv."
+    ]
+    # Filter to ensure we only select columns that exist in the data
+    final_cols = [c for c in desired_order if c in relative_acc.columns]
+    relative_acc = relative_acc[final_cols]
 
     # Plotting
     num_models = len(relative_acc.columns)
-    fig, ax = pyplot.subplots(figsize=(max(10, num_models), 10))
+    fig, ax = pyplot.subplots(figsize=(max(10, num_models * 1.5), 10))
 
     # Create X coordinates
     x_positions = numpy.arange(num_models)
@@ -277,12 +314,12 @@ def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathl
         values = relative_acc[model].values
 
         # Add "Jitter" to X to spread the points out horizontally
-        # np.random.normal creates a distribution around the center 'i'
         jitter = numpy.random.normal(0, 0.08, size=len(values))
 
+        # Assign colors
         color = modern_palette[i % len(modern_palette)]
 
-        # Plot the scatter points (The Cloud)
+        # Plot the scatter points
         ax.scatter(
             x_positions[i] + jitter,
             values,
@@ -294,16 +331,15 @@ def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathl
             label=model if i == -1 else "",  # Don't add to legend, labels are on X-axis
         )
 
-        # Optional: Add a marker for the Mean of the model's relative performance
+        # Add a marker for the Mean of the model's relative performance
         mean_val = values.mean()
         ax.scatter(x_positions[i], mean_val, s=200, marker="_", color="black", linewidth=3, zorder=10)
 
     # Styling
-    # Add a reference line at 0 (The Dataset Average)
-    ax.axhline(0, color="gray", linestyle="--", linewidth=1, alpha=0.7, label=r"Mean Accuracy ($\Delta=0$)")
+    # Reference line at 0 now represents the Additive Baseline
+    ax.axhline(0, color="gray", linestyle="--", linewidth=1, alpha=0.7, label=r"Additive Baseline ($\Delta=0$)")
 
     ax.set_ylabel(r"$\Delta$ Accuracy (%)")
-    # ax.set_title("Relative Performance of Models across Datasets")
 
     ax.set_xticks(x_positions)
     ax.set_xticklabels(relative_acc.columns, rotation=45, ha="right")
@@ -311,10 +347,10 @@ def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathl
     # Add a small legend just for the reference line
     ax.legend(loc="upper right", frameon=True)
 
-    # Adjust Y limits to make sure clouds aren't cut off
+    # Adjust Y limits
     y_max = relative_acc.max().max()
     y_min = relative_acc.min().min()
-    padding = (y_max - y_min) * 0.1
+    padding = (y_max - y_min) * 0.1 if (y_max - y_min) > 0 else 1.0
     ax.set_ylim(y_min - padding, y_max + padding)
 
     pyplot.tight_layout()
@@ -324,6 +360,11 @@ def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathl
 
     pyplot.show()
 
+    # Print Summary Statistics
+    mean_increase = "+" + relative_acc.mean().rename("Mean Acc. Increase").round(2).astype(str)
+    max_increase = "+" + relative_acc.max().rename("Max Acc. Increase").round(2).astype(str)
+    summary_df = pandas.concat([mean_increase, max_increase], axis=1)
+    print(f"Summary of Mean and Max Accuracy Increases per Model:\n{summary_df}")
 
 def plot_cd_diagram_of_experiment(
     experiment_name: str, plot_name: str, exp_dataset_metrics: pathlib.Path, exp_model_metrics: pathlib.Path
