@@ -145,14 +145,20 @@ def plot_bar_dataset_acc(
 
     # Check if these columns exist to avoid errors
     if target_model_1 in metrics_.columns and target_model_2 in metrics_.columns:
+
+        # Separate out the Average row for later re-insertion
+        avg = metrics_[metrics_.index == "Average"]
+        metrics_ = metrics_[metrics_.index != "Average"]
+
         # Calculate absolute difference
         metrics_["_diff"] = (metrics_[target_model_1] - metrics_[target_model_2]).abs()
 
         # Sort descending
         metrics_ = metrics_.sort_values(by="_diff", ascending=False)
 
-        # Select top N datasets
+        # Select top N datasets + Average
         metrics_ = metrics_.head(top_n)
+        metrics_ = pandas.concat([metrics_, avg])
 
         # Remove the temporary diff column so it doesn't get plotted
         metrics_.drop(columns=["_diff"], inplace=True)
@@ -343,7 +349,7 @@ def plot_paper_diagrams(
     naming_mapping: dict | None = None,
     models: list | None = None,
     target_models: tuple = ("none", "none"),
-    top_n: int = 10,
+    top_n: int = 9,
 ) -> None:
     """Plot the CD diagram for a given experiment.
 
@@ -359,7 +365,8 @@ def plot_paper_diagrams(
             models. Defaults to None.
         target_models (tuple): Tuple of two model names to calculate divergence for selecting top datasets. Defaults to
             ("none", "none"), which means no sorting by divergence.
-        top_n (int): Number of top datasets to plot based on divergence between two target models. Defaults to 10.
+        top_n (int): Number of top datasets to plot based on divergence between two target models. Defaults to 9. It
+            adds the "Average" of all datasets automatically.
     """
     # Metrics by dataset
     metrics_by_dataset = get_metrics(exp_dataset_metrics)
@@ -382,7 +389,7 @@ def plot_paper_diagrams(
     if models is not None:
         # Filter to include only specified models
         metrics_by_model = metrics_by_model[metrics_by_model["model"].isin(models)]
-        metrics_by_dataset = metrics_by_dataset[[col for col in metrics_by_dataset.columns if col in models]]
+        metrics_by_dataset = metrics_by_dataset[[col for col in models if col in metrics_by_dataset.columns]]
 
     # Define the output path for the CD diagram
     plot_path = Config.plot_dir / "experiment" / plot_name
@@ -434,7 +441,7 @@ if __name__ == "__main__":
             "plot_name": f"{exp1_dir_name}/binding_v1_CD.png",
             "exp_dataset_metrics": exp_results_dir / exp1_dir_name / "summary_dataset_results.csv",
             "exp_model_metrics": exp_results_dir / exp1_dir_name / "summary_model_metrics_binding_version_1.csv",
-            "top_n": 10,
+            "top_n": 9,
             "naming_mapping": {"Sinusoidal": ""},
             "models": [
                 "Linear Comp. Wise",
@@ -450,12 +457,29 @@ if __name__ == "__main__":
                 "1D Conv. Additive": ["1D Conv. Comp. Wise", "1D Conv. Circular Conv."],
             },
         },
-        {
-            "experiment_name": "Experiment 4 Component Wise",
-            "plot_name": f"{exp4_comp_dir_name}/component_wise_1_CD.png",
-            "exp_dataset_metrics": exp_results_dir / exp4_comp_dir_name / "summary_dataset_results.csv",
-            "exp_model_metrics": exp_results_dir / exp4_comp_dir_name / "",
-        },
+        # {
+        #     "experiment_name": "Experiment 4 Component Wise",
+        #     "plot_name": f"{exp4_comp_dir_name}/component_wise_1_CD.png",
+        #     "exp_dataset_metrics": exp_results_dir / exp4_comp_dir_name / "summary_dataset_results.csv",
+        #     "exp_model_metrics": exp_results_dir / exp4_comp_dir_name / "summary_model_metrics_pe_a_version_1.csv",
+        #     "top_n": 9,
+        #     "naming_mapping": {
+        #         "Linear": "", "Comp. Wise": "", "No Pe": "Null", "1 Sinc Fpe": "Sinc 1 FPE", "2 Sinc Fpe": "Sinc 2 FPE",
+        #         "5 Sinc Fpe": "Sinc 5 FPE", "Random Pe": "Random"
+        #     },
+        #     "models": [
+        #         "Null",
+        #         "Random",
+        #         "Sinusoidal",
+        #         "Sinc 1 FPE",
+        #         "Sinc 2 FPE",
+        #         "Sinc 5 FPE",
+        #     ],
+        #     "target_models": ("Sinc 1 FPE", "Null"),
+        #     "baseline_conf": {
+        #         "Null": ["Random", "Sinusoidal", "Sinc 1 FPE", "Sinc 2 FPE", "Sinc 5 FPE"],
+        #     },
+        # },
         # {
         #     "experiment_name": "Experiment 4 CConv",
         #     "plot_name": f"{exp4_cconv_dir_name}/cconv_1_CD.png",
