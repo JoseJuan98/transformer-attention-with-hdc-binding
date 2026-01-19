@@ -517,5 +517,28 @@ if __name__ == "__main__":
     ]
 
     # Generate plots for each experiment
-    for exp in exp_to_plot:
-        plot_paper_diagrams(**exp)
+    for exp in plotting_config:
+        plot_paper_diagrams(**exp)  # type: ignore[arg-type]
+
+    # Exp plot only the CD diagram for quick checks
+    metrics_by_dataset = get_metrics(exp_results_dir / "5_sota_version_1" / "summary_dataset_results.csv")
+    cols_to_drop = ["train_samples", "sequence_length", "num_classes"]
+    metrics_by_dataset.drop(columns=cols_to_drop, inplace=True, errors="ignore")
+
+    # Set index for dataset metrics
+    metrics_by_dataset.set_index("dataset", inplace=True)
+    metrics_by_dataset.columns = format_model_names(
+        metrics_by_dataset.columns,
+        additional_mapping={
+            "Linear": "",
+            "Rope": "RoPE",
+            "Mla": "MLA",
+            "Conv.tran": "ConvTran",
+            "Fpe": "FPE",
+            "5 Sinc Fpe": "Sinc 5 FPE",
+            "0 8 Gaussian": "Gaussian 0.8",
+        },
+    )
+
+    plot_path = Config.plot_dir / "experiment" / "5_sota_version_1" / "sota_v1b_CD.png"
+    plot_cd_diagram(metrics=metrics_by_dataset, output_path=plot_path)
