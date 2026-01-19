@@ -7,7 +7,7 @@ import pathlib
 import pandas
 
 
-def get_metrics(metrics_path: str | pathlib.Path) -> pandas.DataFrame:
+def get_metrics(metrics_path: pathlib.Path) -> pandas.DataFrame:
     """Load experiment metrics from a CSV file into a pandas DataFrame.
 
     Args:

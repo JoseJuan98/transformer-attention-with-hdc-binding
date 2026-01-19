@@ -151,7 +151,7 @@ def plot_bar_dataset_acc(
         metrics_ = metrics_[metrics_.index != "Average"]
 
         # Calculate the difference
-        metrics_["_diff"] = (metrics_[target_model_1] - metrics_[target_model_2])
+        metrics_["_diff"] = metrics_[target_model_1] - metrics_[target_model_2]
 
         # Sort descending
         metrics_ = metrics_.sort_values(by="_diff", ascending=False)
@@ -194,9 +194,10 @@ def plot_bar_dataset_acc(
         color = modern_palette[i % len(modern_palette)]
 
         # Draw bars
-        rects = ax.bar(x + offset, metrics_[model_name], width=bar_width, label=model_name, color=color)
+        ax.bar(x + offset, metrics_[model_name], width=bar_width, label=model_name, color=color)
 
         # # Annotate bars
+        # # rects is what is returned by ax.bar(...) before
         # for rect in rects:
         #     height = rect.get_height()
         #     # Only annotate if height is visible
@@ -240,7 +241,9 @@ def plot_bar_dataset_acc(
     pyplot.show()
 
 
-def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathlib.Path, baseline_conf: dict, legend_label: str | None = None) -> None:
+def plot_relative_accuracy_scatter(
+    metrics: pandas.DataFrame, output_path: pathlib.Path, baseline_conf: dict, legend_label: str | None = None
+) -> None:
     """Plot a scatter plot of accuracy relative to specific Additive Baselines.
 
     Each point represents a dataset.
@@ -352,7 +355,7 @@ def plot_paper_diagrams(
     models: list | None = None,
     target_models: tuple = ("none", "none"),
     top_n: int = 9,
-relative_acc_legend_label: str | None = None
+    relative_acc_legend_label: str | None = None,
 ) -> None:
     """Plot the CD diagram for a given experiment.
 
@@ -430,7 +433,7 @@ relative_acc_legend_label: str | None = None
         metrics=metrics_by_dataset,
         output_path=plot_path.parent / f"{plot_suffix}_relative_accuracies.png",
         baseline_conf=baseline_conf,
-        legend_label=relative_acc_legend_label
+        legend_label=relative_acc_legend_label,
     )
 
 
@@ -443,7 +446,7 @@ if __name__ == "__main__":
     exp1_dir_name = "1_binding_version_1"
     exp4_comp_dir_name = "4_comp_wise_pe_version_1"
     exp4_cconv_dir_name = "4_conv_pe_version_1"
-    exp_to_plot: list[dict[str, str | pathlib.Path]] = [
+    plotting_config = [
         {
             "experiment_name": "Experiment 1",
             "plot_name": f"{exp1_dir_name}/binding_v1_CD.png",
@@ -473,8 +476,13 @@ if __name__ == "__main__":
             "exp_model_metrics": exp_results_dir / exp4_comp_dir_name / "summary_model_metrics_pe_a_version_1.csv",
             "top_n": 9,
             "naming_mapping": {
-                "Linear": "", "Comp. Wise": "", "No Pe": "Null", "1 Sinc Fpe": "Sinc 1 FPE", "2 Sinc Fpe": "Sinc 2 FPE",
-                "5 Sinc Fpe": "Sinc 5 FPE", "Random Pe": "Random"
+                "Linear": "",
+                "Comp. Wise": "",
+                "No Pe": "Null",
+                "1 Sinc Fpe": "Sinc 1 FPE",
+                "2 Sinc Fpe": "Sinc 2 FPE",
+                "5 Sinc Fpe": "Sinc 5 FPE",
+                "Random Pe": "Random",
             },
             "models": [
                 "Null",
@@ -497,8 +505,13 @@ if __name__ == "__main__":
             "exp_model_metrics": exp_results_dir / exp4_cconv_dir_name / "summary_model_metrics_pe_version_1.csv",
             "top_n": 9,
             "naming_mapping": {
-                "Linear": "", "Conv.": "", "No Pe": "Null", "1 Sinc Fpe": "Sinc 1 FPE", "2 Sinc Fpe": "Sinc 2 FPE",
-                "5 Sinc Fpe": "Sinc 5 FPE", "Random Pe": "Random"
+                "Linear": "",
+                "Conv.": "",
+                "No Pe": "Null",
+                "1 Sinc Fpe": "Sinc 1 FPE",
+                "2 Sinc Fpe": "Sinc 2 FPE",
+                "5 Sinc Fpe": "Sinc 5 FPE",
+                "Random Pe": "Random",
             },
             "models": [
                 "Null",

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+"""Configuration for modern and visually appealing matplotlib plots."""
 # Third party imports
 import matplotlib
 
