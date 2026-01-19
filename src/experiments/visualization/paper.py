@@ -12,7 +12,7 @@ import pandas
 from matplotlib import pyplot
 
 # First party imports
-from experiments.visualization.metrics import get_metrics
+from experiments.visualization.metrics import get_metrics, format_model_names
 from experiments.visualization.vis_config import modern_palette, rc_config
 from utils import Config
 from utils.plot import set_plot_style
@@ -116,12 +116,18 @@ def plot_bar_mean_accuracies(metrics: pandas.DataFrame, output_path: pathlib.Pat
     pyplot.show()
 
 
-def plot_bar_dataset_acc(metrics: pandas.DataFrame, output_path: pathlib.Path) -> None:
+def plot_bar_dataset_acc(
+    metrics: pandas.DataFrame, output_path: pathlib.Path, top_n: int = -1, target_models: tuple = ("none", "none")
+) -> None:
     """Plot a grouped bar chart of accuracies for different datasets and models.
 
     Args:
         metrics (pandas.DataFrame): DataFrame containing experiment metrics.
         output_path (pathlib.Path): Path to save the bar plot.
+        top_n (int): Number of top datasets to plot based on divergence between two target models. Defaults to -1 (all
+            datasets).
+        target_models (tuple): Tuple of two model names to calculate divergence for selecting top datasets. Defaults to
+            ("none", "none"), which means no sorting by divergence.
     """
 
     # Apply style configuration
@@ -137,9 +143,32 @@ def plot_bar_dataset_acc(metrics: pandas.DataFrame, output_path: pathlib.Path) -
     num_datasets = len(metrics_)
     num_models = len(metrics_.columns)
 
+    # Select Top N Datasets with Highest Divergence between the Two Target Models
+    top_n = top_n if top_n > 0 else num_datasets
+    target_model_1 = target_models[0]  # "1d_conv_circular_conv_sinusoidal"
+    target_model_2 = target_models[1]  # "1d_conv_additive_sinusoidal"
+
+    # Check if these columns exist to avoid errors
+    if target_model_1 in metrics_.columns and target_model_2 in metrics_.columns:
+        # Calculate absolute difference
+        metrics_["_diff"] = (metrics_[target_model_1] - metrics_[target_model_2]).abs()
+
+        # Sort descending
+        metrics_ = metrics_.sort_values(by="_diff", ascending=False)
+
+        # Select top N datasets
+        metrics_ = metrics_.head(top_n)
+
+        # Remove the temporary diff column so it doesn't get plotted
+        metrics_.drop(columns=["_diff"], inplace=True)
+        print(f"Plotting top {top_n} datasets with highest divergence between Circular and Additive.")
+    else:
+        print(f"Warning: Target models for sorting not found. Plotting first {top_n} datasets.")
+        metrics_ = metrics_.head(top_n)
+
     # Calculate figure size: ensure it's wide enough if there are many datasets
-    fig_width = max(10, num_datasets)
-    fig, ax = pyplot.subplots(figsize=(fig_width, 14))
+    # fig_width = max(10, num_datasets)
+    fig, ax = pyplot.subplots(figsize=(27, 14))
 
     # Calculate Bar Positions
     # X locations for the groups
@@ -322,22 +351,9 @@ def plot_cd_diagram_of_experiment(
     # Set index for dataset metrics
     metrics_by_dataset.set_index("dataset", inplace=True)
 
-    metrics_by_model["model"] = (
-        metrics_by_model["model"]
-        .str.replace("_", " ")
-        .str.title()
-        .str.replace("Sinusoidal", "")
-        .str.replace("Component", "Comp.")
-    )
-
     # Format Model Names
-    metrics_by_dataset.columns = (
-        metrics_by_dataset.columns.str.replace("_", " ")
-        .str.title()
-        .str.replace("Sinusoidal", "")
-        .str.replace("Component", "Comp.")
-        .str.strip()
-    )
+    metrics_by_model["model"] = format_model_names(metrics_by_model["model"])
+    metrics_by_dataset.columns = format_model_names(metrics_by_dataset.columns)
 
     # For Experiment 1, the `split_sinusoidal` variants are not included in the CD diagram, as explained in the README for experiment 1 results directory.
     if "Experiment 1" in experiment_name:
@@ -363,7 +379,9 @@ def plot_cd_diagram_of_experiment(
 
     # Create bar plot of dataset accuracies
     plot_bar_dataset_acc(
-        metrics=metrics_by_dataset, output_path=plot_path.parent / f"{plot_suffix}_dataset_accuracies.png"
+        metrics=metrics_by_dataset, output_path=plot_path.parent / f"{plot_suffix}_dataset_accuracies.png",
+        # TODO:
+        # target_models=("1d conv circular conv", "1d conv additive "), top_n=10
     )
 
     # Create scatter plot of relative accuracies

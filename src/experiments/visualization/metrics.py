@@ -31,3 +31,23 @@ def get_metrics(metrics_path: str | pathlib.Path) -> pandas.DataFrame:
         raise FileNotFoundError(f"Experiment metrics file not found at: {metrics_path}")
 
     return pandas.read_csv(metrics_path, header=0)
+
+
+def format_model_names(series: pandas.Series) -> pandas.Series:
+    """Format model names for better readability.
+
+    Args:
+        series (pandas.Series): Series containing model names.
+
+    Returns:
+        pandas.Series: Formatted model names.
+    """
+    return (
+        series
+        .str.replace("_", " ")
+        .str.title()
+        .str.replace("Sinusoidal", "")
+        .str.replace("Component", "Comp.")
+        .str.replace("Conv", "Conv.")
+        .str.strip()
+    )
