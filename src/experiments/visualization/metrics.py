@@ -33,20 +33,29 @@ def get_metrics(metrics_path: str | pathlib.Path) -> pandas.DataFrame:
     return pandas.read_csv(metrics_path, header=0)
 
 
-def format_model_names(series: pandas.Series) -> pandas.Series:
+def format_model_names(series: pandas.Series, additional_mapping: dict | None = None) -> pandas.Series:
     """Format model names for better readability.
 
     Args:
         series (pandas.Series): Series containing model names.
+        additional_mapping (dict | None): Optional dictionary for additional custom replacements.
 
     Returns:
         pandas.Series: Formatted model names.
     """
-    return (
+    # Basic replacements for better readability
+    series = (
         series.str.replace("_", " ")
         .str.title()
-        .str.replace("Sinusoidal", "")
-        .str.replace("Component", "Comp.")
+        .str.replace("Component", "Comp")
+        .str.replace("Comp", "Comp.")
         .str.replace("Conv", "Conv.")
-        .str.strip()
     )
+
+    # Apply additional custom replacements if provided
+    if additional_mapping:
+        for key, value in additional_mapping.items():
+            series = series.str.replace(key, value)
+
+    # Strip leading and trailing whitespace
+    return series.str.strip()

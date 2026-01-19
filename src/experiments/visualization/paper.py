@@ -340,6 +340,7 @@ def plot_paper_diagrams(
     exp_dataset_metrics: pathlib.Path,
     exp_model_metrics: pathlib.Path,
     baseline_conf: dict,
+    naming_mapping: dict | None = None,
     models: list | None = None,
     target_models: tuple = ("none", "none"),
     top_n: int = 10,
@@ -353,8 +354,9 @@ def plot_paper_diagrams(
         exp_model_metrics (pathlib.Path): Path to the CSV file containing model metrics.
         baseline_conf (dict): Configuration dict defining which models to use as baselines and their corresponding
             target models.
-        models (list | None): List of model names to include in the plots. If None, include all models. Defaults to
-            None.
+        naming_mapping (dict | None): Optional mapping to rename models for clarity in plots. Defaults to None.
+        models (list | None): List of model names after naming formatting to include in the plots. If None, include all
+            models. Defaults to None.
         target_models (tuple): Tuple of two model names to calculate divergence for selecting top datasets. Defaults to
             ("none", "none"), which means no sorting by divergence.
         top_n (int): Number of top datasets to plot based on divergence between two target models. Defaults to 10.
@@ -374,8 +376,8 @@ def plot_paper_diagrams(
     metrics_by_dataset.set_index("dataset", inplace=True)
 
     # Format Model Names
-    metrics_by_model["model"] = format_model_names(metrics_by_model["model"])
-    metrics_by_dataset.columns = format_model_names(metrics_by_dataset.columns)
+    metrics_by_model["model"] = format_model_names(metrics_by_model["model"], additional_mapping=naming_mapping)
+    metrics_by_dataset.columns = format_model_names(metrics_by_dataset.columns, additional_mapping=naming_mapping)
 
     if models is not None:
         # Filter to include only specified models
@@ -433,6 +435,7 @@ if __name__ == "__main__":
             "exp_dataset_metrics": exp_results_dir / exp1_dir_name / "summary_dataset_results.csv",
             "exp_model_metrics": exp_results_dir / exp1_dir_name / "summary_model_metrics_binding_version_1.csv",
             "top_n": 10,
+            "naming_mapping": {"Sinusoidal": ""},
             "models": [
                 "Linear Comp. Wise",
                 "Linear Circular Conv.",
