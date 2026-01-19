@@ -12,7 +12,7 @@ import pandas
 from matplotlib import pyplot
 
 # First party imports
-from experiments.visualization.metrics import get_metrics, format_model_names
+from experiments.visualization.metrics import format_model_names, get_metrics
 from experiments.visualization.vis_config import modern_palette, rc_config
 from utils import Config
 from utils.plot import set_plot_style
@@ -234,19 +234,16 @@ def plot_bar_dataset_acc(
     pyplot.show()
 
 
-def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathlib.Path) -> None:
+def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathlib.Path, baseline_conf: dict) -> None:
     """Plot a scatter plot of accuracy relative to specific Additive Baselines.
 
     Each point represents a dataset.
     The Y-value is (Model Accuracy - Baseline Accuracy).
 
-    Baselines:
-    - Linear Additive for [Linear Comp. Wise, Linear Circular Conv.]
-    - 1D Conv. Additive for [1D Conv. Comp. Wise, 1D Conv. Circular Conv.]
-
     Args:
         metrics (pandas.DataFrame): DataFrame containing experiment metrics.
         output_path (pathlib.Path): Path to save the plot.
+        baseline_conf (dict): Configuration dict defining which models to use as baselines and their corresponding target models.
     """
     # Apply style
     matplotlib.rcParams.update(rc_config)
@@ -260,47 +257,17 @@ def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathl
     # Convert to percentage
     metrics_ = metrics_ * 100
 
-    # TODO: improve hardcoding of model names
     # Initialize a dataframe for relative accuracies
     relative_acc = pandas.DataFrame(index=metrics_.index)
 
-    # Linear Group Calculation
-    # Baseline: Linear Additive
-    if "Linear Additive" in metrics_.columns:
-        baseline = metrics_["Linear Additive"]
+    # Group Calculation of Relative Accuracies
+    for baseline_name, cols in baseline_conf.items():
+        baseline = metrics_[baseline_name]
 
         # Calculate diffs (Target - Baseline)
-        # We include the baseline itself (result will be 0) to show it as the reference point on the plot
-        cols_linear = ["Linear Additive", "Linear Comp. Wise", "Linear Circular Conv."]
-        for col in cols_linear:
+        for col in cols:
             if col in metrics_.columns:
                 relative_acc[col] = metrics_[col] - baseline
-
-        relative_acc.drop(columns=["Linear Additive"], inplace=True)
-
-    # 1D Conv Group Calculation
-    # Baseline: 1D Conv. Additive
-    if "1D Conv. Additive" in metrics_.columns:
-        baseline = metrics_["1D Conv. Additive"]
-
-        cols_conv = ["1D Conv. Additive", "1D Conv. Comp. Wise", "1D Conv. Circular Conv."]
-        for col in cols_conv:
-            if col in metrics_.columns:
-                relative_acc[col] = metrics_[col] - baseline
-
-        relative_acc.drop(columns=["1D Conv. Additive"], inplace=True)
-
-    # Reorder columns for better visualization
-    # This groups the Linear models together and Conv models together on the X-axis
-    desired_order = [
-        # "Linear Additive",
-        "Linear Comp. Wise", "Linear Circular Conv.",
-        # "1D Conv. Additive",
-        "1D Conv. Comp. Wise", "1D Conv. Circular Conv."
-    ]
-    # Filter to ensure we only select columns that exist in the data
-    final_cols = [c for c in desired_order if c in relative_acc.columns]
-    relative_acc = relative_acc[final_cols]
 
     # Plotting
     num_models = len(relative_acc.columns)
@@ -366,6 +333,7 @@ def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathl
     summary_df = pandas.concat([mean_increase, max_increase], axis=1)
     print(f"Summary of Mean and Max Accuracy Increases per Model:\n{summary_df}")
 
+
 def plot_cd_diagram_of_experiment(
     experiment_name: str, plot_name: str, exp_dataset_metrics: pathlib.Path, exp_model_metrics: pathlib.Path
 ) -> None:
@@ -419,18 +387,26 @@ def plot_cd_diagram_of_experiment(
 
     # Create bar plot of dataset accuracies
     plot_bar_dataset_acc(
-        metrics=metrics_by_dataset, output_path=plot_path.parent / f"{plot_suffix}_dataset_accuracies.png",
+        metrics=metrics_by_dataset,
+        output_path=plot_path.parent / f"{plot_suffix}_dataset_accuracies.png",
     )
 
     # top10 bar plot of dataset
     plot_bar_dataset_acc(
-        metrics=metrics_by_dataset, output_path=plot_path.parent / f"{plot_suffix}_top10_dataset_accuracies.png",
-        top_n=10, target_models=("1D Conv. Circular Conv.", "1D Conv. Additive")
+        metrics=metrics_by_dataset,
+        output_path=plot_path.parent / f"{plot_suffix}_top10_dataset_accuracies.png",
+        top_n=10,
+        target_models=("1D Conv. Circular Conv.", "1D Conv. Additive"),
     )
 
     # Create scatter plot of relative accuracies
     plot_relative_accuracy_scatter(
-        metrics=metrics_by_dataset, output_path=plot_path.parent / f"{plot_suffix}_relative_accuracies.png"
+        metrics=metrics_by_dataset,
+        output_path=plot_path.parent / f"{plot_suffix}_relative_accuracies.png",
+        baseline_conf={
+            "Linear Additive": ["Linear Comp. Wise", "Linear Circular Conv."],
+            "1D Conv. Additive": ["1D Conv. Comp. Wise", "1D Conv. Circular Conv."],
+        },
     )
 
 

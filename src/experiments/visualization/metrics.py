@@ -43,8 +43,7 @@ def format_model_names(series: pandas.Series) -> pandas.Series:
         pandas.Series: Formatted model names.
     """
     return (
-        series
-        .str.replace("_", " ")
+        series.str.replace("_", " ")
         .str.title()
         .str.replace("Sinusoidal", "")
         .str.replace("Component", "Comp.")
