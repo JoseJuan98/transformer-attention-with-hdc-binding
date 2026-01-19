@@ -334,7 +334,7 @@ def plot_relative_accuracy_scatter(metrics: pandas.DataFrame, output_path: pathl
     print(f"Summary of Mean and Max Accuracy Increases per Model:\n{summary_df}")
 
 
-def plot_cd_diagram_of_experiment(
+def plot_paper_diagrams(
     experiment_name: str,
     plot_name: str,
     exp_dataset_metrics: pathlib.Path,
@@ -350,6 +350,11 @@ def plot_cd_diagram_of_experiment(
         plot_name (pathlib.Path): Relative path to save the CD diagram plot.
         exp_dataset_metrics (pathlib.Path): Path to the CSV file containing experiment metrics.
         exp_model_metrics (pathlib.Path): Path to the CSV file containing model metrics.
+        baseline_conf (dict): Configuration dict defining which models to use as baselines and their corresponding
+            target models.
+        target_models (tuple): Tuple of two model names to calculate divergence for selecting top datasets. Defaults to
+            ("none", "none"), which means no sorting by divergence.
+        top_n (int): Number of top datasets to plot based on divergence between two target models. Defaults to 10.
     """
     # Metrics by dataset
     metrics_by_dataset = get_metrics(exp_dataset_metrics)
@@ -450,7 +455,7 @@ if __name__ == "__main__":
     ]
 
     for exp in exp_to_plot:
-        plot_cd_diagram_of_experiment(
+        plot_paper_diagrams(
             # experiment_name=str(exp["experiment_name"]),
             # plot_name=str(exp["plot_path"]),
             # exp_dataset_metrics=pathlib.Path(exp["exp_dataset_metrics"]),
