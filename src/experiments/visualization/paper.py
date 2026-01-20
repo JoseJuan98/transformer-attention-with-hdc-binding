@@ -494,9 +494,9 @@ if __name__ == "__main__":
             ],
             "target_models": ("Sinc 1 FPE", "Null"),
             "baseline_conf": {
-                "Null": ["Random", "Sinusoidal", "Sinc 1 FPE", "Sinc 2 FPE", "Sinc 5 FPE"],
+                "Sinusoidal": ["Null", "Random", "Sinc 1 FPE", "Sinc 2 FPE", "Sinc 5 FPE"],
             },
-            "relative_acc_legend_label": "Null Baseline",
+            "relative_acc_legend_label": "Sinusoidal Baseline",
         },
         {
             "experiment_name": "Experiment 4 CConv",
@@ -523,9 +523,9 @@ if __name__ == "__main__":
             ],
             "target_models": ("Sinc 5 FPE", "Null"),
             "baseline_conf": {
-                "Null": ["Random", "Sinusoidal", "Sinc 1 FPE", "Sinc 2 FPE", "Sinc 5 FPE"],
+                "Sinusoidal": ["Null", "Random", "Sinc 1 FPE", "Sinc 2 FPE", "Sinc 5 FPE"],
             },
-            "relative_acc_legend_label": "Null Baseline",
+            "relative_acc_legend_label": "Sinusoidal Baseline",
         },
     ]
 
