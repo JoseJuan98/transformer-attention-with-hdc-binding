@@ -277,11 +277,11 @@ def plot_relative_accuracy_scatter(
         # Calculate diffs (Target - Baseline)
         for col in cols:
             if col in metrics_.columns:
-                relative_acc[col] = metrics_[col] - baseline
+                relative_acc[col] = (metrics_[col] / baseline) - 1
 
     # Plotting
     num_models = len(relative_acc.columns)
-    fig, ax = pyplot.subplots(figsize=(max(10, num_models * 1.5), 10))
+    fig, ax = pyplot.subplots(figsize=(19, 10))
 
     # Create X coordinates
     x_positions = numpy.arange(num_models)
