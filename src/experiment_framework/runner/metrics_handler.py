@@ -160,7 +160,6 @@ class MetricsHandler:
         Notes:
             The Interquartile Range (IQR) method is used to filter out outliers, because it is robust, and it's a
             well-established non-parametric method for identifying outliers.
-
         """
 
         if not self._filtered_metrics.empty:
