@@ -28,8 +28,8 @@ rc_config = {
     "figure.autolayout": True,  # Optimize figure for tight layout
     "axes.titlesize": 18,  # Title font size
     "axes.titleweight": "bold",  # Bold title
-    "axes.labelsize": 18,  # Axis labels font size
-    "axes.labelweight": "bold",  # Bold axis labels
+    "axes.labelsize": 22,  # Axis labels font size
+    # "axes.labelweight": "bold",  # Bold axis labels
     "axes.edgecolor": "#333333",  # Dark gray axis lines
     "axes.linewidth": 1.5,  # Thicker axis lines
     # Grid settings
@@ -38,8 +38,8 @@ rc_config = {
     "grid.linewidth": 0.8,  # Thin gridlines
     "axes.grid": True,  # Enable grid by default
     # Ticks settings
-    "xtick.labelsize": 16,  # X-axis tick font size
-    "ytick.labelsize": 16,  # Y-axis tick font size
+    "xtick.labelsize": 20,  # X-axis tick font size
+    "ytick.labelsize": 20,  # Y-axis tick font size
     "xtick.color": "#333333",  # Dark gray tick color
     "ytick.color": "#333333",  # Dark gray tick color
     "xtick.major.size": 6,  # Major tick size
