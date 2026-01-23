@@ -458,6 +458,7 @@ def plot_paper_diagrams(
         ylim=relative_ylim
     )
 
+    # Create scatter plot of absolute accuracies
     abs_acc = plot_relative_accuracy_scatter(
         dataset_metrics=metrics_by_dataset,
         output_path=plot_path.parent / f"{plot_suffix}_absolute_accuracies.png",
@@ -468,6 +469,7 @@ def plot_paper_diagrams(
     )
 
     # Print Summary Statistics
+    summaries = []
     for baseline_col, cols in baseline_conf.items():
         baseline = metrics_by_model[metrics_by_model["model"] == baseline_col]["mean_acc"].values.item()
 
@@ -481,10 +483,14 @@ def plot_paper_diagrams(
         summary_diff["mean_acc"] = (summary_diff["mean_acc"] * 100).round(4)
         summary_diff["Max Absolute Difference (%)"] = (abs_acc[cols].max()).round(2)
         summary_diff["Max Relative Difference"] = (relative_acc[cols].max()).round(4)
+        summaries.append(summary_diff)
 
-        print(f"\n{'-'*10} Summary for Exp. {experiment_name} Baseline {baseline_col} {'-'*10}\n")
-        print(f"Summary of Accuracies Difference per Model:\n\n{summary_diff.to_latex()}\n\n\n")
-        print(f"{'-'* 40}\n")
+    summary_diff = pandas.concat(summaries)
+
+    print(f"\n{'-'*10} Summary for Exp. {experiment_name} {'-'*10}\n")
+    print(f"Baseline/s: {', '.join(baseline_conf.keys())}\n")
+    print(f"Summary of Accuracies Difference per Model:\n\n{summary_diff.to_latex()}\n")
+    print(f"{'-'* 40}\n")
 
 
 if __name__ == "__main__":
@@ -496,6 +502,7 @@ if __name__ == "__main__":
     exp1_dir_name = "1_binding_version_1"
     exp4_comp_dir_name = "4_comp_wise_pe_version_1"
     exp4_cconv_dir_name = "4_conv_pe_version_1"
+
     plotting_config = [
         {
             "experiment_name": "Experiment 1",
@@ -520,36 +527,38 @@ if __name__ == "__main__":
             "relative_acc_legend_label": "Linear & 1D Conv. Additive Baselines",
             "relative_ylim": (-.5, 1.3),
         },
-        # {
-        #     "experiment_name": "Experiment 4 Component Wise",
-        #     "plot_name": f"{exp4_comp_dir_name}/component_wise_1_CD.png",
-        #     "exp_dataset_metrics_path": exp_results_dir / exp4_comp_dir_name / "summary_dataset_results.csv",
-        #     "exp_model_metrics_path": exp_results_dir / exp4_comp_dir_name / "summary_model_metrics_pe_a_version_1.csv",
-        #     "top_n": 9,
-        #     "naming_mapping": {
-        #         "Linear": "",
-        #         "Comp. Wise": "",
-        #         "No Pe": "Null",
-        #         "1 Sinc Fpe": "FPE $\u03B2=1$",
-        #         "2 Sinc Fpe": "FPE $\u03B2=2$",
-        #         "5 Sinc Fpe": "FPE $\u03B2=5$",
-        #         "Random Pe": "Random",
-        #     },
-        #     "models": [
-        #         "Null",
-        #         "Random",
-        #         "Sinusoidal",
-        #         "FPE $\u03B2=1$",
-        #         "FPE $\u03B2=2$",
-        #         "FPE $\u03B2=5$",
-        #     ],
-        #     "target_models": ("Sinc 1 FPE", "Null"),
-        #     "baseline_conf": {
-        #         "Sinusoidal": ["Null", "Random", "FPE $\u03B2=1$", "FPE $\u03B2=2$", "FPE $\u03B2=5$"],
-        #     },
-        #     "relative_acc_legend_label": "Sinusoidal Baseline",
+        {
+            "experiment_name": "Experiment 4 Component Wise",
+            "plot_name": f"{exp4_comp_dir_name}/component_wise_1_CD.png",
+            "exp_dataset_metrics_path": exp_results_dir / exp4_comp_dir_name / "summary_dataset_results.csv",
+            "exp_model_metrics_path": exp_results_dir / exp4_comp_dir_name / "summary_model_metrics_pe_a_version_1.csv",
+            "top_n": 9,
+            "naming_mapping": {
+                "Linear": "",
+                "Comp. Wise": "",
+                "No Pe": "Null",
+                "1 Sinc Fpe": "FPE $\u03B2=1$",
+                "2 Sinc Fpe": "FPE $\u03B2=2$",
+                "5 Sinc Fpe": "FPE $\u03B2=5$",
+                "Random Pe": "Random",
+            },
+            "models": [
+                "Null",
+                "Random",
+                "Sinusoidal",
+                "FPE $\u03B2=1$",
+                "FPE $\u03B2=2$",
+                "FPE $\u03B2=5$",
+            ],
+            "target_models": ("Sinc 1 FPE", "Null"),
+            "baseline_conf": {
+                "Sinusoidal": ["Null", "Random", "FPE $\u03B2=1$", "FPE $\u03B2=2$", "FPE $\u03B2=5$"],
+            },
+            "relative_acc_legend_label": "Sinusoidal Baseline",
+            "relative_ylim": (-0.45, 0.4),
+            "abs_ylim": (-25, 10),
         #     # y_min=-25, no padding
-        # },
+        },
         {
             "experiment_name": "Experiment 4 CConv",
             "plot_name": f"{exp4_cconv_dir_name}/cconv_1_CD.png",
@@ -603,8 +612,9 @@ if __name__ == "__main__":
             "Mla": "MLA",
             "Conv.tran": "ConvTran",
             "Fpe": "FPE",
-            "5 Sinc Fpe": "FPE $\u03B2=5$",
-            "0 8 Gaussian": "Gaussian $\u03B2=0.8$",
+            "5 Sinc FPE": "FPE $\u03B2=5$",
+            "0 8 Gaussian FPE": "FPE $\u03B2=0.8$",
+            "Adaptive Sin Pe": "Adaptive Sinusoidal",
         },
     )
 
