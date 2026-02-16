@@ -203,16 +203,15 @@ class MultiHeadLatentAttention(BaseMultiHeadAttention):
             torch.Tensor: The output tensor of shape (batch_size, seq_len, embed_dim).
         """
         # In self-attention, q, k, and v are the same.
-        hidden_states = q
-        batch_size, seq_len, _ = hidden_states.shape
+        batch_size, seq_len, _ = q.shape
 
         # Project query and split into non-rotary (nope) and rotary (rope) parts.
-        q_proj = self.q_b_proj(self.q_a_layernorm(self.q_a_proj(hidden_states)))
+        q_proj = self.q_b_proj(self.q_a_layernorm(self.q_a_proj(q)))
         q_proj = q_proj.view(batch_size, seq_len, self.num_heads, self.q_head_dim).transpose(1, 2)
         q_nope, q_pe = torch.split(q_proj, [self.qk_nope_head_dim, self.qk_rope_head_dim], dim=-1)
 
-        # Project hidden_states to get the compressed KV latent vector and the rotary key part.
-        kv_proj = self.kv_a_proj_with_mqa(hidden_states)
+        # Project q to get the compressed KV latent vector and the rotary key part.
+        kv_proj = self.kv_a_proj_with_mqa(q)
         compressed_kv, k_pe = torch.split(kv_proj, [self.kv_lora_rank, self.num_heads * self.qk_rope_head_dim], dim=-1)
         compressed_kv = self.kv_a_layernorm(compressed_kv)
         k_pe = k_pe.view(batch_size, seq_len, self.num_heads, self.qk_rope_head_dim).transpose(1, 2)
