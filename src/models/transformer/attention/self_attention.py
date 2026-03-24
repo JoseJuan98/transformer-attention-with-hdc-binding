@@ -74,6 +74,9 @@ class SelfAttention(torch.nn.Module):
     ) -> torch.Tensor:
         """Performs the forward pass of the self-attention mechanism.
 
+        .. math::
+            $Attention(Q, K, V) = softmax(Q K^T / \\sqrt{d_k}) V$
+
         Args:
             q (torch.Tensor): The queries tensor of shape (batch_size, seq_len, embed_dim).
             k (torch.Tensor): The keys tensor of shape (batch_size, seq_len, embed_dim).
