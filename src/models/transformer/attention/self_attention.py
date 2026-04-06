@@ -72,7 +72,10 @@ class SelfAttention(torch.nn.Module):
     def forward(
         self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, mask: torch.Tensor | None = None
     ) -> torch.Tensor:
-        """Performs the forward pass of the self-attention mechanism.
+        r"""Performs the forward pass of the self-attention mechanism.
+
+        .. math::
+            $Attention(Q, K, V) = softmax(Q \cdot K^T / \sqrt{d_k}) \cdot V$
 
         Args:
             q (torch.Tensor): The queries tensor of shape (batch_size, seq_len, embed_dim).

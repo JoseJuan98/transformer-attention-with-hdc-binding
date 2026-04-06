@@ -1,6 +1,6 @@
 model,mean_acc,mean_rank,std_rank,num_datasets
 linear_component_wise_sinusoidal,0.6397,2.8333,1.0190,27
-linear_circular_conv_sinusoidal,0.6352,2.9074,1.4481,27
+linear_circular_conv_sinusoidal,0.6338,2.9074,1.4481,27
 1d_conv_component_wise_sinusoidal,0.6419,2.9259,1.6391,27
 1d_conv_circular_conv_sinusoidal,0.6463,3.3148,1.5389,27
 1d_conv_additive_sinusoidal,0.5437,4.3148,1.8971,27
