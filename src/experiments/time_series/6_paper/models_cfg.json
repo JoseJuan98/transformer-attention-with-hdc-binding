@@ -1,0 +1,160 @@
+{
+  "Linear Convolutional Sinusoidal PE TS Transformer (Baseline)": {
+    "model_name": "linear_conv_sinusoidal",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings, Absolute Sinusoidal Positional Encoding and Convolutional Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : {
+      "type": "sinusoidal",
+      "learnable": false
+    },
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  },
+
+  "Linear Convolutional β=0 Sinc Fractional Power Encoding TS Transformer Learnable": {
+    "model_name": "linear_conv_0_sinc_fpe",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=0 Sinc F.P. Encodings and Convolutional Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : {
+      "type": "fractional_power",
+      "beta": 0,
+      "kernel": "sinc"
+    },
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  },
+
+  "Linear Convolutional β=0.41 Sinc Fractional Power Encoding TS Transformer Learnable": {
+    "model_name": "linear_conv_0_41_sinc_fpe",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=0.41 Sinc F.P. Encodings and Convolutional Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : {
+      "type": "fractional_power",
+      "beta": 0.41,
+      "kernel": "sinc"
+    },
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  },
+
+  "Linear Convolutional β=1 Sinc Fractional Power Encoding TS Transformer Learnable": {
+    "model_name": "linear_conv_1_sinc_fpe",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=1 Sinc F.P. Encodings and Convolutional Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : {
+      "type": "fractional_power",
+      "beta": 1,
+      "kernel": "sinc"
+    },
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  },
+
+    "Linear Convolutional β=1.83 Sinc Fractional Power Encoding TS Transformer Learnable": {
+    "model_name": "linear_conv_1_83_sinc_fpe",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=1.83 Sinc F.P. Encodings and Convolutional Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : {
+      "type": "fractional_power",
+      "beta": 1.83,
+      "kernel": "sinc"
+    },
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  },
+
+  "Linear Convolutional β=3 Sinc Fractional Power Encoding TS Transformer Learnable": {
+    "model_name": "linear_conv_3_sinc_fpe",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=3 Sinc F.P. Encodings and Convolutional Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : {
+      "type": "fractional_power",
+      "beta": 3,
+      "kernel": "sinc"
+    },
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  },
+
+  "Linear Convolutional β=4.66 Sinc Fractional Power Encoding TS Transformer Learnable": {
+    "model_name": "linear_conv_4_66_sinc_fpe",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=4.66 Sinc F.P. Encodings and Convolutional Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : {
+      "type": "fractional_power",
+      "beta": 4.66,
+      "kernel": "sinc"
+    },
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  },
+
+  "Linear Convolutional β=7 Sinc Fractional Power Encoding TS Transformer Learnable": {
+    "model_name": "linear_conv_7_sinc_fpe",
+    "model": "encoder-only-transformer",
+    "desc": "Encoder Only Transformer with Linear Projection Embeddings,β=7 Sinc F.P. Encodings and Convolutional Binding for Time Series Classification",
+    "num_epochs": 100,
+    "learning_rate": 0.003,
+    "d_model": 64,
+    "num_heads": 8,
+    "d_ff": 256,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "positional_encoding" : {
+      "type": "fractional_power",
+      "beta": 7,
+      "kernel": "sinc"
+    },
+    "embedding": "linear_projection",
+    "embedding_binding": "convolutional"
+  }
+}
