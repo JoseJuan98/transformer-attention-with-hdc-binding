@@ -4,7 +4,7 @@
 ## File Structure
 
 
-The experiment results are organized in the following file structure: 
+The experiment results are organized in the following file structure:
 
 - `metrics_<version>.csv`: Contains raw metrics for each experiment run, including model, dataset, run, accuracy and loss of train, test and validation, training time, size in MBytes, and other parameters.
 - `aggregated_by_dataset_metrics_<version>.csv`: Contains aggregated metrics for each dataset and dataset after filtering outliers, calculating the mean, std, and a 95% confidence interval.
