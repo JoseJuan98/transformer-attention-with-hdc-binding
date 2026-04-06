@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Configuration for modern and visually appealing matplotlib plots."""
+"""Visualization configuration used for a paper."""
 # Third party imports
 import matplotlib
 
