@@ -1,0 +1,9 @@
+model,mean_acc,mean_rank,std_rank,num_datasets
+linear_conv_7_sinc_fpe,0.4782,3.5556,2.2029,27
+linear_conv_4_66_sinc_fpe,0.4578,4.0741,2.2305,27
+linear_conv_sinusoidal,0.4628,4.2593,2.3179,27
+linear_conv_3_sinc_fpe,0.4456,4.3519,2.1114,27
+linear_conv_1_83_sinc_fpe,0.4262,4.6111,2.1941,27
+linear_conv_0_41_sinc_fpe,0.4435,4.6667,2.4337,27
+linear_conv_1_sinc_fpe,0.4537,4.7037,2.1806,27
+linear_conv_0_sinc_fpe,0.4028,5.7778,2.3260,27
