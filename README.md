@@ -1,11 +1,17 @@
 # Enhancing Transformer Attention with HDC Binding for Positional Encodings
 
-[![Lint](https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/lint.yml/badge.svg)](https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/lint.yml)
-[![Unit Test](https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/test.yml/badge.svg)](https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/test.yml)
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-green.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.6+-orange.svg)](https://pytorch.org/)
+<div style="line-height: 1;text-align: center;">
+  <a href="https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/lint.yml/badge.svg"><img alt="Lint"
+    src="https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/lint.yml/badge.svg"/></a>
+  <a href="https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/test.yml/badge.svg"><img alt="Test"
+    src="https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/test.yml/badge.svg"/></a>
+  <br>
+  <a href="https://opensource.org/licenses/MIT"><img alt="MIT Licence" src="https://img.shields.io/badge/License-MIT-yellow.svg"/></a>
+  <a href="https://www.python.org/downloads/"><img alt="Python" src="https://img.shields.io/badge/python-3.11+-green.svg"/></a>
+  <a href="https://pytorch.org/"><img alt="Python" src="https://img.shields.io/badge/PyTorch-2.6+-orange.svg"/></a>
+  <br>
+  <a href="https://urn.kb.se/resolve?urn=urn%3Anbn%3Ase%3Altu%3Adiva-115150"><b>Thesis Link</b>👁️</a>
+</div>
 
 This repository contains the code and resources for my Master's thesis, which explores the use of Hyperdimensional Computing (HDC)
 binding methods to enhance positional encoding in Transformer models. The project primarily focuses on time series classification (TSC),
