@@ -1,6 +1,6 @@
 # Enhancing Transformer Attention with HDC Binding for Positional Encodings
 
-<div style="text-align: center;">
+<div align="center" style="text-align: center;">
   <a href="https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/lint.yml/badge.svg"><img alt="Lint"
     src="https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/lint.yml/badge.svg"/></a>
   <a href="https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/test.yml/badge.svg"><img alt="Test"
