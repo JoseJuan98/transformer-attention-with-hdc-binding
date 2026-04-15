@@ -1,13 +1,21 @@
 # Enhancing Transformer Attention with HDC Binding for Positional Encodings
 
-[![Lint](https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/lint.yml/badge.svg)](https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/lint.yml)
-[![Unit Test](https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/test.yml/badge.svg)](https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/test.yml)
+<div style="text-align: center;">
+  <a href="https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/lint.yml/badge.svg"><img alt="Lint"
+    src="https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/lint.yml/badge.svg"/></a>
+  <a href="https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/test.yml/badge.svg"><img alt="Test"
+    src="https://github.com/JoseJuan98/transformer-attention-with-hdc-binding/actions/workflows/test.yml/badge.svg"/></a>
+  <br>
+  <a href="https://opensource.org/licenses/MIT"><img alt="MIT Licence" src="https://img.shields.io/badge/License-MIT-yellow.svg"/></a>
+  <a href="https://www.python.org/downloads/"><img alt="Python" src="https://img.shields.io/badge/python-3.11+-green.svg"/></a>
+  <a href="https://pytorch.org/"><img alt="Python" src="https://img.shields.io/badge/PyTorch-2.6+-orange.svg"/></a>
+  <br>
+  <a href=""><b>Paper Link (TBD)</b>️</a>
+  <br>
+  <a href="https://urn.kb.se/resolve?urn=urn%3Anbn%3Ase%3Altu%3Adiva-115150"><b>Thesis Link</b></a>
+</div>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-green.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.6+-orange.svg)](https://pytorch.org/)
-
-This repository contains the code and resources for my Master's thesis, which explores the use of Hyperdimensional Computing (HDC)
+This repository contains the code and resources for my Master's thesis [1], which explores the use of Hyperdimensional Computing (HDC)
 binding methods to enhance positional encoding in Transformer models. The project primarily focuses on time series classification (TSC),
 with potential extensions to natural language processing (NLP) tasks.
 
@@ -64,7 +72,7 @@ Instead of simple addition, this work explores using HDC binding operations (e.g
 2. **Time Series Classification:** Apply the developed models to a diverse range of univariate and multivariate time series datasets from the UCR/UEA archive.
 3. **Comparison with Baselines:** Compare the performance of HDC-based positional encoding against strong baselines, including:
    * Vanilla Transformer with standard positional encoding adapted for time series.
-   * ConvTran (Foumani et al., 2024) [2], a state-of-the-art model for time series classification.
+   * ConvTran (Foumani et al., 2024) [3], a state-of-the-art model for time series classification.
 4. **Experimental Evaluation:** Systematically investigate the impact of different similarity shapes in absolute position encoding and their interaction with binding methods.
 5. **Scalability Analysis:** Examine how the benefits of HDC binding scale with model capacity and depth.
 6. **Potential NLP Extension:** If time and resources allow, explore the application of HDC binding to a small-scale NLP task.
@@ -73,9 +81,9 @@ Instead of simple addition, this work explores using HDC binding operations (e.g
 
 This project builds upon the following key concepts and research:
 
-* **Transformers:** The fundamental architecture for sequence processing, as introduced in "Attention is all you need" (Vaswani et al., 2017) [1].
+* **Transformers:** The fundamental architecture for sequence processing, as introduced in "Attention is all you need" (Vaswani et al., 2017) [2].
 * **Positional Encoding:** Methods for incorporating positional information into Transformer models, including absolute and relative positional encoding schemes.
-* **Time Series Transformers:** Adaptations of the Transformer architecture for time series data, such as ConvTran (Foumani et al., 2024) [2], which introduces Time Absolute Position Encoding (tAPE) and Efficient Relative Position Encoding (eRPE).
+* **Time Series Transformers:** Adaptations of the Transformer architecture for time series data, such as ConvTran (Foumani et al., 2024) [3], which introduces Time Absolute Position Encoding (tAPE) and Efficient Relative Position Encoding (eRPE).
 * **Hyperdimensional Computing (HDC):** A computational paradigm that uses high-dimensional vectors and specific algebraic operations (binding, bundling, permutation) to represent and manipulate information in a neurally-inspired manner.
 
 ## Proposed Architecture
@@ -216,9 +224,11 @@ A summary of key findings will be updated here upon completion of all experiment
 
 ## References
 
-[1] Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., ... & Polosukhin, I. (2017). Attention is all you need. In *Advances in neural information processing systems* (pp. 5998-6008).
+[1] J. Pena, "Beyond Addition: Enhancing Time Series Transformers with Hyperdimensional Binding", Dissertation, 2025.
 
-[2] Foumani, M. N., Koley, S., Oudah, M., & Ganna, A. (2024). ConvTran: A Convolutional Transformer for Time Series Classification. *arXiv preprint arXiv:2402.00486*.
+[2] Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., ... & Polosukhin, I. (2017). Attention is all you need. In *Advances in neural information processing systems* (pp. 5998-6008).
+
+[3] Foumani, M. N., Koley, S., Oudah, M., & Ganna, A. (2024). ConvTran: A Convolutional Transformer for Time Series Classification. *arXiv preprint arXiv:2402.00486*.
 
 ## License
 
