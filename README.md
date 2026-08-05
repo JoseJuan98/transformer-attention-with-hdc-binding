@@ -53,7 +53,7 @@ This project investigates an alternative approach: using Hyperdimensional Comput
 Instead of simple addition, this work explores using HDC binding operations (e.g., component-wise multiplication, circular convolution) to integrate positional vectors with token embeddings. The hypothesis is that these operations can create richer, more discriminative representations of position-aware tokens, potentially addressing limitations of traditional positional encoding methods such as anisotropy in similarity spaces.
 
 
-<div aligm="center">
+<div align="center">
     <img src="docs/plots/binding/binding_similarity_heatmap.png" alt="The impact of different binding operations on the position-wise cosine similarity structure of embeddings." width="50%" height="50%"/>
     <p style="text-align: center">Figure 1: The impact of different binding operations on the position-wise cosine similarity structure of embeddings. Lighter colors indicate higher similarity. The top row shows the similarity of the input token embeddings ($E_{token}$) (a) and positional encodings ($E_{pos}$) (b). The bottom row shows the similarity of the resulting embeddings after applying additive (c), component-wise (d), and circular convolution (e) binding. Each operation produces a fundamentally different geometric structure.</p>
 </div>
