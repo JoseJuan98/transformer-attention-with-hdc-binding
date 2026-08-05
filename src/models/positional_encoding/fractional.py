@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """FPE-based positional encoding modules.
 
-This code is based on an implementation provided by M.Sc. Kenny Schlegel, who shared their work with me.
+This code is based on an implementation provided by Dr. Kenny Schlegel, who shared their work with me.
 
 Individual's information:
 - GitHub: https://github.com/scken
-- Academic affiliation: Ph.D. student at Chemnitz University of Technology
+- Academic affiliation: Postdoctoral Researcher at Chemnitz University of Technology
 - University profile: https://www.tu-chemnitz.de/etit/proaut/en/team/kennySchlegel.html
 
 
