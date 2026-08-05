@@ -14,7 +14,7 @@ experiments = {
     4: "4_conv_pe",
     5: "5_sota",
     6: "4_comp_wise_pe",
-    7: "6_paper"
+    7: "6_paper",
 }
 
 
