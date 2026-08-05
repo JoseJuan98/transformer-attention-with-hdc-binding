@@ -61,9 +61,10 @@ lint:
 test:
 	@poetry run pytest
 
-## Run experiment for time series classification
+## Run experiment for time series classification. <Optional> `exp=<experiment number-[1,7]>` (default None, ask user for input)
 run-ts:
 	@export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True && \
+	export PYTORCH_ALLOC_CONF=expandable_segments:True && \
 	poetry run python src/experiments/time_series/run.py -exp="$(or $(exp), 0)"
 
 ## Alias for clean + run-ts

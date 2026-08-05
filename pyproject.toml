@@ -7,7 +7,7 @@ authors = [
 ]
 license = "LICENSE"
 readme = "README.md"
-requires-python = ">=3.11,<3.15"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "numpy (>=2.1.3)",
     "tensorboard (>=2.19.0)",
@@ -15,7 +15,7 @@ dependencies = [
     "seaborn (>=0.13.2)",
     "pandas[computation,performance] (>=2.2.3)",
     "scikit-learn (>=1.6.1)",
-    "sktime (>=0.36.0)",
+    "sktime (>=0.36.0,<=0.38.0)",
     "tqdm (>=4.67.1,<5.0.0)",
     "scipy (>=1.15.2)",
     "aiohttp (>=3.11.15)",

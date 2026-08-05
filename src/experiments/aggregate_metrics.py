@@ -87,10 +87,11 @@ if __name__ == "__main__":
         4: "docs/experiment_results/4_conv_pe_version_1/metrics_pe_version_1.csv",
         4.1: "docs/experiment_results/4_comp_wise_pe_version_1/metrics_pe_a_version_1.csv",
         5: "docs/experiment_results/5_sota_version_1/metrics_sota_version_1.csv",
+        6: "docs/experiment_results/6_paper_pe_version_1/metrics_pe_version_1.csv",
     }
 
     # Change this to select the desired experiment to process
-    chosen_experiment = 5
+    chosen_experiment = 6
 
     if chosen_experiment == 1:
         warnings.warn(
